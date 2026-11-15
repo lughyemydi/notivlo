@@ -428,6 +428,10 @@ footer a{color:var(--muted)}
   var SB_URL = 'https://tftwbhkypzsrhwaxkgbr.supabase.co';
   var SB_KEY = 'sb_publishable_eTd8_Mo9HYVN50IjkTv0ag_B3d9MW2W';
 
+  /* Bumped with each release, so a report can be tied to the build it came
+     from. The privacy note under the form says this is sent. */
+  var APP_VERSION = '1.0.0-beta.1';
+
   var form = document.getElementById('fb-form');
   var msgEl = document.getElementById('fb-msg');
   var mailEl = document.getElementById('fb-email');
@@ -463,6 +467,7 @@ footer a{color:var(--muted)}
       message: message.slice(0, 4000),
       email: email ? email.slice(0, 254) : null,
       surface: 'web',
+      app_version: APP_VERSION,
       user_agent: String(navigator.userAgent || '').slice(0, 400)
     };
 
