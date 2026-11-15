@@ -1,0 +1,535 @@
+/* ==========================================================================
+   Concrete & Signal
+   --------------------------------------------------------------------------
+   A theme layer over soft-clay.css. Clay is warm, rounded and raised; this is
+   flat: a concrete ground, one loud orange, ink hairlines instead of cards,
+   and monospaced labels. The design system it follows lives at
+   https://claude.ai/artifact/PaU54GTmaHxX2V2T8WzmBQ.
+
+   It is a layer rather than a rewrite, so it goes in and comes out with one
+   line per page: the <link> in each page's <helmet>, directly after
+   soft-clay.css. Remove the links and the app is clay again.
+
+   Three things to know when editing it:
+
+   1. Order matters. Everything here must load AFTER soft-clay.css, whose own
+      declarations this file re-points.
+
+   2. `!important` is not decoration. The pages carry hundreds of inline
+      border-radius and box-shadow declarations, and an inline style beats a
+      stylesheet at any specificity. Flattening them needs the flag.
+
+   3. Some rules are prefixed `html` purely to outrank the per-page <style>
+      blocks, which sit after this link in the document and use !important of
+      their own. Dropping the prefix silently loses those rules.
+
+   Typography is one substitution away from the system as written. The system
+   asks for Google Sans Flex and Google Sans Code from the Google Fonts CDN;
+   every page's CSP allows 'self' and file: only, so the faces have to be on
+   disk. Google Sans — already in fonts/ — is the system's own declared
+   fallback for the first, and stands in exactly. There is no local monospace,
+   so the labels fall to the platform's: SF Mono on a Mac. Dropping
+   GoogleSansCode-*.woff2 into fonts/ and declaring it in fonts/fonts.css the
+   way the faces there are declared is all it would take to land the real one.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. The palette, straight from the system's tokens.json
+   -------------------------------------------------------------------------- */
+
+:root {
+  --cs-sans: 'Google Sans Flex', 'Google Sans', Arial, sans-serif;
+  --cs-mono: 'Google Sans Code', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Courier New', monospace;
+
+  --cs-surface: #e6e3dc;
+  --cs-surface-raised: #f6f4ef;
+  --cs-ink: #14161b;
+  --cs-ink-soft: #2b2d33;
+  --cs-rule: #14161b;
+  --cs-rule-faint: rgb(20 22 27 / .22);
+
+  /* Fixed in both themes, by the system's own rule. */
+  --cs-signal: #ff5a1f;
+  --cs-cobalt: #2b4bff;
+  --cs-lime: #cfff3f;
+  --cs-on-signal: #14161b;
+  --cs-night: #14161b;
+  --cs-paper: #f6f4ef;
+
+  /* Cobalt is the only accent that may be text on the light ground; lime is
+     the only one that may be text on the dark. Hence one token, two values. */
+  --cs-accent-text: #2b4bff;
+
+  --cs-hair: 2px;
+}
+
+:root[data-theme="dark"] {
+  --cs-surface: #14161b;
+  --cs-surface-raised: #1f232b;
+  --cs-ink: #f6f4ef;
+  --cs-ink-soft: #c9ccd3;
+  --cs-rule: #f6f4ef;
+  --cs-rule-faint: rgb(246 244 239 / .26);
+  --cs-accent-text: #cfff3f;
+}
+
+/* --------------------------------------------------------------------------
+   2. Re-point soft-clay's tokens
+   --------------------------------------------------------------------------
+   Everything downstream — stylesheet rules and the pages' own inline styles —
+   reads these names, so re-pointing them here recolours the whole app without
+   touching a single call site.
+   -------------------------------------------------------------------------- */
+
+:root,
+:root[data-theme="dark"] {
+  --color-bg: var(--cs-surface);
+  --color-background: var(--cs-surface);
+  --color-text: var(--cs-ink);
+
+  /* Cards stop being objects: a surface the same colour as the ground is a
+     region, and the hairlines below do the separating instead. */
+  --color-surface: var(--cs-surface);
+  --color-surface-sunken: var(--cs-surface-raised);
+
+  --color-text-primary: var(--cs-on-signal);   /* text on a signal fill */
+  --color-text-secondary: var(--cs-ink-soft);
+  --color-text-muted: var(--cs-ink-soft);
+
+  --color-border: var(--cs-rule-faint);
+  --color-border-strong: var(--cs-rule);
+  --color-focus-ring: var(--cs-accent-text);
+
+  --color-primary: var(--cs-signal);
+  --color-primary-hover: var(--cs-signal);
+  --color-primary-soft: transparent;
+
+  --color-accent-100: transparent;
+  --color-accent-200: transparent;
+  --color-accent-300: var(--cs-rule-faint);
+  --color-accent-400: var(--cs-rule-faint);
+  --color-accent-500: var(--cs-signal);
+  --color-accent-600: var(--cs-rule);
+  /* Icons and incidental marks go monochrome; only real links take the accent,
+     which the `a` rule below sets. Pointing these at the accent turned every
+     icon lime on the dark ground. */
+  --color-accent-700: var(--cs-ink);
+  --color-accent-800: var(--cs-ink);
+  --color-accent-900: var(--cs-ink);
+  --color-accent-2: var(--cs-accent-text);
+  --color-accent-2-300: var(--cs-rule-faint);
+
+  --color-neutral-100: var(--cs-surface-raised);
+  --color-neutral-200: var(--cs-surface-raised);
+  --color-neutral-300: var(--cs-rule-faint);
+  --color-neutral-400: var(--cs-rule-faint);
+  --color-neutral-500: var(--cs-ink-soft);
+  --color-neutral-600: var(--cs-ink-soft);
+  --color-neutral-700: var(--cs-ink-soft);
+  --color-neutral-800: var(--cs-ink);
+  --color-neutral-900: var(--cs-ink);
+
+  --font-body: var(--cs-sans);
+  --font-heading: var(--cs-sans);
+  --font-notes: var(--cs-sans);
+  --font-heading-weight: 700;
+
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-full: 0px;
+
+  --elevation-1: none;
+  --elevation-2: none;
+  --elevation-3: none;
+  --elevation-4: none;
+  --elevation-5: none;
+}
+
+/* The wordmark keeps Unbounded: it is the brand, not the theme. Swap
+   --font-logo to var(--cs-sans) to set it in the system's own face. */
+
+/* --------------------------------------------------------------------------
+   3. Flatten
+   --------------------------------------------------------------------------
+   Everything is square, nothing is raised, nothing moves. The system allows a
+   circle only for its lettered annotation markers, which the app has none of.
+   -------------------------------------------------------------------------- */
+
+html *,
+html *::before,
+html *::after {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* No motion. Transform is left alone — modals and the mobile tab are centred
+   with it, and zeroing it would drop them in the corner. */
+html *,
+html *::before,
+html *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* The clay look survives in four moulded calculator keys. */
+html .nb-key,
+html .nb-key-op,
+html .nb-key-exe,
+html .nb-key-act {
+  background: transparent !important;
+  border: var(--cs-hair) solid var(--cs-rule) !important;
+  color: var(--cs-ink) !important;
+}
+
+/* Hover lift, wherever it is declared. */
+html .nb-card:hover,
+html .due-chip:hover,
+html .glass-btn-primary:hover,
+html .glass-btn-ghost:hover,
+html .glass-btn-primary:active {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   4. Structure: hairlines instead of boxes
+   -------------------------------------------------------------------------- */
+
+body {
+  font-family: var(--cs-sans);
+  background: var(--cs-surface);
+  color: var(--cs-ink);
+}
+
+a { color: var(--cs-accent-text); }
+html a:hover { color: var(--cs-accent-text); }
+
+/* The top bar runs the width of the page and is held by one rule. */
+html .nav {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 18px max(20px, env(safe-area-inset-left, 0px)) 18px max(20px, env(safe-area-inset-right, 0px)) !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: var(--cs-hair) solid var(--cs-rule) !important;
+  position: static !important;
+}
+
+/* Cards become ruled regions: no fill, no outline, one hairline on top. */
+html .nb-card {
+  background: transparent !important;
+  border: 0 !important;
+  border-top: var(--cs-hair) solid var(--cs-rule) !important;
+}
+
+/* Coming up is the exception: the next few days are the one thing on this page
+   that changes hour to hour, so they take the colour as filled blocks. */
+html .due-chip {
+  background: var(--cs-signal) !important;
+  border: 0 !important;
+  padding: 14px 16px !important;
+  min-height: 96px;
+}
+html .due-chip,
+html .due-chip * { color: var(--cs-on-signal) !important; }
+
+/* Mint left over in hardcoded rgba() borders and tints, from Settings panels
+   to the reminder strip. Matching on the inline style is the only hook some
+   of them have. */
+html [style*="rgba(108,205,177"], html [style*="rgba(108, 205, 177"] { border-color: var(--cs-rule-faint) !important; background-color: transparent !important; }
+
+html .hr { background: var(--cs-rule); height: var(--cs-hair); }
+
+/* The big panels — this week's plan, the two below it — are written inline
+   with a 26px radius, which is the only reliable hook they have: no class, no
+   id. They lose the outline and keep a single rule, like every other region. */
+html [style*="border-radius:26px"],
+html [style*="border-radius: 26px"] {
+  background: transparent !important;
+  border: 0 !important;
+  border-top: var(--cs-hair) solid var(--cs-rule) !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* --------------------------------------------------------------------------
+   5. Controls
+   -------------------------------------------------------------------------- */
+
+html .btn {
+  font-family: var(--cs-mono);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+html .btn-primary {
+  background: var(--cs-signal) !important;
+  border: var(--cs-hair) solid var(--cs-signal) !important;
+  color: var(--cs-on-signal) !important;
+  font-weight: 700;
+}
+
+html .btn-ghost {
+  background: transparent !important;
+  border: var(--cs-hair) solid var(--cs-rule) !important;
+  color: var(--cs-ink) !important;
+}
+
+html .btn-ghost:hover:not(:disabled) { background: transparent !important; }
+
+/* An input is a line to write on, not a pill. */
+html .input {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: var(--cs-hair) solid var(--cs-rule-faint) !important;
+  font-family: var(--cs-mono);
+  font-size: 12px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+html .input:focus {
+  border-bottom-color: var(--cs-rule) !important;
+  outline: none;
+}
+
+html select.input { padding-right: 18px; }
+
+/* Labels and chips are monospaced and unfilled; the word carries the meaning,
+   which is the system's rule for status. */
+html .tag,
+html .tag-accent,
+html .tag-neutral,
+html .tag-outline {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--cs-ink-soft) !important;
+  font-family: var(--cs-mono);
+  padding-left: 0;
+  padding-right: 0;
+}
+
+html .card-kicker {
+  font-family: var(--cs-mono);
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--cs-ink);
+}
+
+/* --------------------------------------------------------------------------
+   6. The agenda grid
+   --------------------------------------------------------------------------
+   Drawn on both Home and Planner by agenda-timegrid.js. Hour lines go faint,
+   the blocks take the one colour, and today is marked by a solid rule rather
+   than a tint.
+   -------------------------------------------------------------------------- */
+
+html .tg-line { background: var(--cs-rule-faint) !important; }
+html .tg-col,
+html .tg-head-col { border-left: var(--cs-hair) solid var(--cs-rule-faint) !important; background: transparent !important; }
+html .tg-col.tg-today,
+html .tg-head-col.tg-today { border-left-color: var(--cs-rule) !important; background: transparent !important; }
+
+html .tg-block {
+  background: var(--cs-signal) !important;
+  border: 0 !important;
+  color: var(--cs-on-signal) !important;
+}
+html .tg-block-time,
+html .tg-block-title,
+html .tg-block-arrow { color: var(--cs-on-signal) !important; }
+
+html .tg-chip {
+  background: transparent !important;
+  border: var(--cs-hair) solid var(--cs-rule) !important;
+  color: var(--cs-ink) !important;
+  font-family: var(--cs-mono);
+}
+
+html .tg-hour,
+html .tg-head-day,
+html .tg-head-date,
+html .tg-gap-label,
+html .tg-col-empty { font-family: var(--cs-mono); color: var(--cs-ink-soft) !important; }
+
+html .tg-check { border: var(--cs-hair) solid var(--cs-rule) !important; }
+
+/* --------------------------------------------------------------------------
+   7. The notebook rail
+   -------------------------------------------------------------------------- */
+
+/* soft-clay gives these a sunken fill so they read as clay tiles. On concrete
+   they sit flat on the ground and a hairline separates them instead. */
+html .nb-notes > div > div,
+html .pl-item,
+html .set-card [style*="border-radius:16px"],
+html .set-card [style*="border-radius: 16px"],
+html .home-plan-item,
+html .nb-chapters .chap-row[style*="transparent"] {
+  background: transparent !important;
+  border-color: var(--cs-rule-faint) !important;
+}
+
+html .nb-chapters {
+  background: transparent !important;
+  border: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+html .nb-editor-card {
+  background: transparent !important;
+  border: 0 !important;
+  border-top: var(--cs-hair) solid var(--cs-rule) !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+html .chap-row { border-left: 0 !important; }
+
+/* The open chapter is the one place colour is spent on this page. The rail
+   marks it with a mint tint written inline from the script, which is the only
+   thing telling the open row from the rest. */
+html .chap-row[style*="rgba(108,205,177"],
+html .chap-row[style*="rgba(108, 205, 177"] {
+  background: var(--cs-signal) !important;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+}
+html .chap-row[style*="rgba(108,205,177"],
+html .chap-row[style*="rgba(108, 205, 177"],
+html .chap-row[style*="rgba(108,205,177"] *,
+html .chap-row[style*="rgba(108, 205, 177"] * { color: var(--cs-on-signal) !important; }
+
+html .nb-chapter-title,
+html .editor { font-family: var(--cs-sans) !important; }
+
+html .unit-head { font-family: var(--cs-mono); letter-spacing: 0; text-transform: none; }
+
+/* --------------------------------------------------------------------------
+   8. Focus
+   --------------------------------------------------------------------------
+   Square, and in the accent that is legible on the ground of each theme.
+   -------------------------------------------------------------------------- */
+
+html :focus-visible {
+  outline: var(--cs-hair) solid var(--cs-accent-text) !important;
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   9. The ground
+   --------------------------------------------------------------------------
+   Every page still carries clay's drifting blobs: blurred radial gradients in
+   a fixed layer behind the content. With the accent tokens re-pointed they
+   render as grey smudges on what is meant to be a flat ground.
+   -------------------------------------------------------------------------- */
+
+html [style*="radial-gradient(circle at"] { display: none !important; }
+
+/* theme.js paints <html> itself so a dark page never flashes white. The body
+   only covers its own box, so on a short page or at the rubber-band edge the
+   root colour showed through as a second, different dark. One ground. */
+html { background-color: var(--cs-surface) !important; }
+
+/* Scrims are ink at a fixed strength, not clay's warm brown, which turned
+   muddy over the dark ground. Matched on the colour because each page names
+   its backdrop differently. */
+html .nn-backdrop,
+html .rc-backdrop,
+html .nb-mobile-backdrop,
+html [class*="backdrop"] {
+  background: rgb(20 22 27 / .55) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+:root[data-theme="dark"] .nn-backdrop,
+:root[data-theme="dark"] .rc-backdrop,
+:root[data-theme="dark"] .nb-mobile-backdrop,
+:root[data-theme="dark"] [class*="backdrop"] { background: rgb(0 0 0 / .62) !important; }
+
+/* A dialog is the one thing that sits above the ground, so it takes the
+   raised surface and a full ink outline; with both the same colour as the
+   page it read as a hole rather than a sheet. */
+html .nn-modal,
+html [role="dialog"] {
+  background: var(--cs-surface-raised) !important;
+  border: var(--cs-hair) solid var(--cs-rule) !important;
+}
+html .ctx-menu {
+  background: var(--cs-surface-raised) !important;
+  border: var(--cs-hair) solid var(--cs-rule) !important;
+}
+html .ctx-item:hover { background: var(--cs-ink) !important; color: var(--cs-surface) !important; }
+
+/* --------------------------------------------------------------------------
+   10. Text in fields
+   --------------------------------------------------------------------------
+   soft-clay colours .input with --color-text-primary, which section 2 turns
+   into "text on a signal fill": ink in both themes. On the dark ground that
+   made everything typed, and every dropdown's value, invisible.
+   -------------------------------------------------------------------------- */
+
+html .input,
+html select.input,
+html textarea.input { color: var(--cs-ink) !important; -webkit-text-fill-color: var(--cs-ink); }
+html .input::placeholder { color: var(--cs-ink-soft); -webkit-text-fill-color: var(--cs-ink-soft); opacity: .7; }
+html select.input option { color: var(--cs-ink); background: var(--cs-surface-raised); }
+html .legal-tab-active { color: var(--cs-ink) !important; }
+
+/* --------------------------------------------------------------------------
+   11. Hover and press
+   --------------------------------------------------------------------------
+   Section 3 removes lift and motion, which left nothing at all to say "this
+   is clickable". The flat answer is inversion: no movement, just ink.
+   -------------------------------------------------------------------------- */
+
+@media (hover: hover) {
+  html .btn-ghost:hover:not(:disabled) {
+    background: var(--cs-ink) !important;
+    color: var(--cs-surface) !important;
+  }
+  html .btn-primary:hover:not(:disabled) {
+    background: var(--cs-ink) !important;
+    border-color: var(--cs-ink) !important;
+    color: var(--cs-surface) !important;
+  }
+  html .nb-card:hover { border-top-color: var(--cs-signal) !important; background: var(--cs-surface-raised) !important; }
+  html .due-chip:hover { background: var(--cs-ink) !important; }
+  html .due-chip:hover,
+  html .due-chip:hover * { color: var(--cs-surface) !important; }
+  html .chap-row:hover { background: var(--cs-surface-raised) !important; }
+  html .chap-row[style*="rgba(108,205,177"]:hover,
+  html .chap-row[style*="rgba(108, 205, 177"]:hover { background: var(--cs-signal) !important; }
+  html .tg-block:hover { outline: var(--cs-hair) solid var(--cs-rule); }
+}
+html .btn:active:not(:disabled) { opacity: .75; }
+
+/* --------------------------------------------------------------------------
+   12. The notebook's format bar
+   --------------------------------------------------------------------------
+   It is sticky, and section 4's "no fills" left it transparent, so the
+   chapter scrolled visibly through it. Opaque, and flush with the top rather
+   than floating 14px below it with text passing through the gap.
+   -------------------------------------------------------------------------- */
+
+html .nb-toolbar {
+  background: var(--cs-surface) !important;
+  border: 0 !important;
+  border-bottom: var(--cs-hair) solid var(--cs-rule-faint) !important;
+  top: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* The editor's justified paragraphs ran under the chapters tab on a phone. */
+@media (max-width: 760px) {
+  html .editor { text-align: left !important; overflow-wrap: anywhere; }
+  html .editor * { text-align: inherit; max-width: 100%; }
+  html .nb-editor-card { padding-right: 34px !important; }
+}

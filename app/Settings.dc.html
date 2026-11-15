@@ -20,6 +20,7 @@
 <script src="./legal-licenses.js"></script>
 <script src="./auth.js"></script>
 <script src="./support.js"></script>
+<script src="./quick.js" defer></script>
 <!-- The backend. Inert while supabase-config.js holds no project: with it
      empty every page below falls back to localStorage, which is how the app
      worked before there was a server. Order matters — each file depends on
@@ -37,6 +38,8 @@
 <helmet data-dc-atomics>
 <link rel="stylesheet" href="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/styles.css">
 <link rel="stylesheet" href="soft-clay.css">
+<!-- Flat theme over the clay one. See the file head; remove this line to go back. -->
+<link rel="stylesheet" href="concrete-signal.css">
 <script src="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/_ds_bundle.js"></script>
 <style>
   body{margin:0;background:var(--color-bg);color:var(--color-text)}

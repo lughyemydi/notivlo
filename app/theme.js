@@ -20,7 +20,7 @@
   // soft-clay.css's dark --color-background. Painted onto <html> directly
   // because the stylesheet only arrives with the page body, and until then the
   // window would otherwise be plain white.
-  var DARK_GROUND = '#0B0A09';
+  var DARK_GROUND = '#14161b';
 
   var media = null;
   try { media = window.matchMedia('(prefers-color-scheme: dark)'); } catch (e) { /* no matchMedia */ }

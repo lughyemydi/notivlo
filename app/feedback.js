@@ -27,7 +27,7 @@
   // Bump with each release. It is what ties a report to the build it came
   // from, which is the difference between "this is broken" and "this broke
   // between beta 1 and beta 2".
-  var APP_VERSION = '1.0.0-beta.2';
+  var APP_VERSION = '1.0.0-beta.3';
 
   var MESSAGE_MAX = 4000;   // matches feedback_message_len
   var EMAIL_MAX = 254;      // matches feedback_email_len

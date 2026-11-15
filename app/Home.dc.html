@@ -19,6 +19,7 @@
 <script src="./text-size.js"></script>
 <script src="./agenda-timegrid.js"></script>
 <script src="./support.js"></script>
+<script src="./quick.js" defer></script>
 <!-- The backend. Inert while supabase-config.js holds no project: with it
      empty every page below falls back to localStorage, which is how the app
      worked before there was a server. Order matters — each file depends on
@@ -42,6 +43,8 @@
 <helmet data-dc-atomics>
 <link rel="stylesheet" href="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/styles.css">
 <link rel="stylesheet" href="soft-clay.css">
+<!-- Flat theme over the clay one. See the file head; remove this line to go back. -->
+<link rel="stylesheet" href="concrete-signal.css">
 <!-- The setup guide's getting-started card. Styles only; the card itself is
      not rendered unless the guide says so. -->
 <link rel="stylesheet" href="setup/setup.css">
@@ -69,16 +72,16 @@
   .nn-backdrop{position:fixed;inset:0;z-index:300;background:rgba(60,45,20,.28);animation:fadeIn .2s ease}
   .nn-modal{
     position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:310;
-    width:75vw;height:75vh;display:flex;flex-direction:column;
+    width:min(480px,94vw);max-height:88vh;display:flex;flex-direction:column;
     background:var(--color-surface);
     border:1px solid var(--color-border);border-radius:28px;
     box-shadow:0 30px 70px rgba(72,62,50,.22),inset 0 1px 0 rgb(var(--clay-edge) / .8);
     animation:modalIn .24s cubic-bezier(.32,.72,0,1);overflow:hidden;
   }
   .nn-cat{cursor:pointer;transition:background .15s ease, border-color .15s ease, color .15s ease}
-  .nn-cat:hover{background:var(--color-primary-soft)}
+  .nn-cat:hover{outline:2px solid var(--cs-rule)}
   @media (max-width: 760px){
-    .nn-modal{width:94vw;height:88vh;border-radius:22px}
+    .nn-modal{width:94vw;border-radius:22px}
     /* The bar holds a 240px search box and two labelled buttons, which do not
        fit a phone: at 375px it ran 123px past the screen and widened the whole
        page. The search drops to a row of its own and the buttons keep their
@@ -160,19 +163,6 @@
     </a>
   </nav>
 
-  <sc-if value="{{ showReminder }}" hint-placeholder-val="{{ true }}">
-    <div style="max-width:1180px;margin:var(--space-4) auto 0;padding:0 var(--space-6)">
-      <div style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);background:var(--color-surface);border:1px solid rgba(108,205,177,.35);border-radius:20px;box-shadow:0 10px 26px rgba(72,62,50,.08),inset 0 1px 0 rgb(var(--clay-edge) / .6)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
-        <span style="font-size:14px;color:var(--color-accent-700);flex:1">{{ reminderText }}</span>
-        <a href="Planner.dc.html" style="font-size:13px;color:var(--color-accent-700);text-decoration:underline;flex:none">Review</a>
-        <button type="button" class="btn btn-ghost btn-icon" onClick="{{ dismissReminder }}" aria-label="Dismiss" style="flex:none;width:26px;height:26px;border-radius:50%;background:var(--color-surface)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </button>
-      </div>
-    </div>
-  </sc-if>
-
   <!-- The setup guide's getting-started card. Absent with the guide off, for
        anyone who has never met it, once every item is ticked, and once it is
        dismissed. Each item is answered by looking at the notebooks and agenda
@@ -243,7 +233,8 @@
         <span style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:var(--color-accent-100);color:var(--color-accent-700)">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
         </span>
-        <p style="margin:0;font-size:15px;color:var(--color-neutral-600);text-align:center">No notebooks yet — start one with <strong style="color:var(--color-text)">New notebook</strong>, up in the corner.</p>
+        <p style="margin:0;font-size:15px;color:var(--color-neutral-600);text-align:center">No notebooks yet. One per subject works well.</p>
+        <button type="button" class="btn btn-primary" onClick="{{ addNotebook }}">Start your first notebook</button>
       </div>
     </sc-if>
     <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
@@ -302,22 +293,6 @@
             <sc-for list="{{ categoryChoices }}" as="cat" hint-placeholder-count="5">
               <button type="button" class="nn-cat" onClick="{{ cat.select }}" style="padding:7px 16px;border-radius:999px;font-size:13px;border:1px solid {{ cat.border }};background:{{ cat.bg }};color:{{ cat.color }}">{{ cat.name }}</button>
             </sc-for>
-          </div>
-        </div>
-
-        <div>
-          <label style="display:block;font-size:13px;margin-bottom:var(--space-2);color:color-mix(in srgb, var(--color-text) 70%, transparent)">Preview</label>
-          <div style="width:210px;display:flex;flex-direction:column;overflow:hidden;background:var(--color-surface);border:1px solid var(--color-border);border-radius:24px;box-shadow:0 12px 28px rgba(72,62,50,.08)">
-            <div style="display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-4)">
-              <span style="display:flex;align-items:center;justify-content:center;flex:none;width:34px;height:34px;border-radius:10px;background:var(--color-accent-100);color:var(--color-accent-700)">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
-              </span>
-              <div class="card-title" style="font-size:19px">{{ previewTitle }}</div>
-              <div class="card-meta" style="margin-top:0">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                <span>{{ previewUpdated }}</span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -660,7 +635,7 @@ function decorateNotebook(nb) {
 function timeGreeting(name) {
   const h = new Date().getHours();
   const part = h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
-  return part + ', ' + name;
+  return name ? part + ', ' + name : part;
 }
 
 const SESSION_KEY = 'folio_session';
@@ -701,7 +676,6 @@ class Component extends DCLogic {
   state = {
     notebooks: readStore(NOTEBOOKS_KEY, SEED_NOTEBOOKS),
     agenda: readStore(AGENDA_KEY, buildSeedAgenda()),
-    reminderDismissed: false,
     addingNotebook: false,
     newNotebookTitle: '',
     newNotebookCategory: CATEGORIES[0],
@@ -717,6 +691,18 @@ class Component extends DCLogic {
   };
 
   componentDidMount() {
+    try {
+      if (new URLSearchParams(window.location.search).get('new') === '1') {
+        this.addNotebook();
+        history.replaceState(null, '', 'Home.dc.html');
+      }
+    } catch (e) { /* no URL API — the button still works */ }
+    this.onEscBound = (e) => {
+      if (e.key !== 'Escape') return;
+      if (this.state.addingNotebook) this.cancelAddNotebook();
+      else if (this.state.ctx) this.setState({ ctx: null });
+    };
+    document.addEventListener('keydown', this.onEscBound);
     // Not awaited: the shelf is already drawn from this device's copy, and
     // the sync is a background errand. It returns early when nothing has
     // changed since the last one, so this is cheap on every page load.
@@ -732,8 +718,6 @@ class Component extends DCLogic {
       }
     });
   }
-
-  dismissReminder() { this.setState({ reminderDismissed: true }); }
 
   addNotebook(e) {
     if (e && e.preventDefault) e.preventDefault();
@@ -854,7 +838,7 @@ class Component extends DCLogic {
 
   renderVals() {
     const session = readSession();
-    const fullName = (session && session.name) ? session.name : 'there';
+    const fullName = (session && session.name) ? String(session.name) : '';
     const firstName = fullName.trim().split(/\s+/)[0] || fullName;
 
     const today = todayDate();
@@ -1009,12 +993,6 @@ class Component extends DCLogic {
     const pending = upcoming.length;
     const todayDay = days.find(d => d.isToday);
     const dueTodayCount = todayDay ? todayDay.items.filter(it => it.checkable && !it.done).length : 0;
-    const reminderText = pending === 0
-      ? "You're all caught up — nothing outstanding this week."
-      : dueTodayCount > 0
-        ? `You still have ${pending} task${pending === 1 ? '' : 's'} to do this week, including ${dueTodayCount} due today.`
-        : `You still have ${pending} task${pending === 1 ? '' : 's'} to do this week.`;
-
     const todayCount = todayDay ? todayDay.items.length : 0;
     const tagline = pending === 0
       ? 'All caught up — enjoy the free time.'
@@ -1023,9 +1001,6 @@ class Component extends DCLogic {
         : `Nothing due today — ${pending} open task${pending === 1 ? '' : 's'} left this week.`;
 
     return {
-      showReminder: !this.state.reminderDismissed && pending > 0,
-      reminderText,
-      dismissReminder: () => this.dismissReminder(),
       addNotebook: (e) => this.addNotebook(e),
       ...(() => {
         const menu = this.ctxMenuFor(this.state.ctx);
@@ -1041,7 +1016,6 @@ class Component extends DCLogic {
       nbModalKicker: this.state.editingSlug ? 'Edit notebook' : 'New notebook',
       nbModalHeading: this.state.editingSlug ? 'Update your notebook' : 'Set up your notebook',
       nbModalAction: this.state.editingSlug ? 'Save changes' : 'Create notebook',
-      previewUpdated: this.state.editingSlug ? 'Updated recently' : 'Updated just now',
 
       notAddingNotebook: !this.state.addingNotebook,
       addingNotebook: this.state.addingNotebook,
@@ -1057,12 +1031,11 @@ class Component extends DCLogic {
         return {
           name,
           select: () => this.setState({ newNotebookCategory: name }),
-          border: on ? 'var(--color-accent-500)' : 'var(--color-divider)',
-          bg: on ? 'var(--color-accent-100)' : 'rgb(var(--clay-white) / .5)',
-          color: on ? 'var(--color-accent-800)' : 'var(--color-neutral-700)',
+          border: on ? 'var(--cs-rule)' : 'var(--cs-rule-faint)',
+          bg: on ? 'var(--cs-ink)' : 'transparent',
+          color: on ? 'var(--cs-surface)' : 'var(--cs-ink)',
         };
       }),
-      previewTitle: this.state.newNotebookTitle.trim() || 'Untitled notebook',
       greeting: timeGreeting(firstName),
       tagline,
       notebooks,
