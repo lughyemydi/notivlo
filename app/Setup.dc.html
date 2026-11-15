@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file: blob: 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob:; font-src 'self' file: data:; connect-src 'self' file: data: blob: https://tftwbhkypzsrhwaxkgbr.supabase.co; worker-src 'none'; child-src 'none'; media-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="no-referrer">
+<title>notivlo — Setting up</title>
+<script>
+  // Reached straight after signing up, or from the guide button in the top
+  // bar, so there is always an account by now.
+  try {
+    if (!localStorage.getItem('folio_session')) {
+      location.replace('SignIn.dc.html');
+    }
+  } catch (e) {}
+</script>
+<script src="./theme.js"></script>
+<script src="./text-size.js"></script>
+<script src="./support.js"></script>
+<!-- The backend. Inert while supabase-config.js holds no project: with it
+     empty every page below falls back to localStorage, which is how the app
+     worked before there was a server. Order matters — each file depends on
+     the one above it, and they are in <head> rather than <helmet> for the
+     reason written at the top of auth.js. -->
+<script src="./supabase-config.js"></script>
+<script src="./supabase-client.js"></script>
+<script src="./supabase-auth.js"></script>
+<script src="./supabase-sync.js"></script>
+<!-- The guide. The flag comes first and is asked immediately: with it off
+     this page is not part of the app, and leaves before it paints. -->
+<script src="./setup/setup-flag.js"></script>
+<script>
+  try { if (window.notivloSetupFlag) window.notivloSetupFlag.guardPage(); } catch (e) {}
+</script>
+<script src="./setup/setup-store.js"></script>
+<script src="./setup/setup-content.js"></script>
+<script src="./setup/setup-service.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="stylesheet" href="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/styles.css">
+<link rel="stylesheet" href="soft-clay.css">
+<link rel="stylesheet" href="setup/setup.css">
+<script src="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/_ds_bundle.js"></script>
+<style>
+  body{margin:0;background:var(--color-bg);color:var(--color-text)}
+  .glass-btn-primary{transition:background .18s ease, transform .12s ease}
+  .glass-btn-primary:hover{background:var(--color-primary-hover) !important;transform:translateY(-1px)}
+  .glass-btn-primary:active{transform:translateY(0px) scale(.98)}
+  @keyframes floatA{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,50px) scale(1.08)}}
+  @keyframes floatB{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-50px,30px) scale(.94)}}
+  @media (prefers-reduced-motion: reduce){
+    .glass-btn-primary{transition:none}
+    .glass-btn-primary:hover{transform:none}
+  }
+</style>
+</helmet>
+
+<div style="position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none">
+  <div style="position:absolute;width:560px;height:560px;top:-160px;right:-120px;border-radius:50%;background:radial-gradient(circle at 30% 30%,var(--color-accent-300),transparent 70%);filter:blur(60px);opacity:.55;animation:floatA 18s ease-in-out infinite alternate"></div>
+  <div style="position:absolute;width:460px;height:460px;bottom:-160px;left:-100px;border-radius:50%;background:radial-gradient(circle at 40% 40%,var(--color-accent-2-300),transparent 70%);filter:blur(60px);opacity:.5;animation:floatB 22s ease-in-out infinite alternate"></div>
+</div>
+
+<div class="su-wrap">
+  <div class="su-card">
+
+    <div style="text-align:center">
+      <div class="nav-brand" style="font-size:22px"><span class="brand-logo brand-logo--lg">notivlo</span></div>
+    </div>
+
+    <sc-if value="{{ showRail }}" hint-placeholder-val="{{ true }}">
+      <div class="su-rail">
+        <sc-for list="{{ railPips }}" as="p" hint-placeholder-count="3">
+          <span class="su-pip {{ p.cls }}"></span>
+        </sc-for>
+        <span class="su-step-of">{{ stepOf }}</span>
+      </div>
+    </sc-if>
+
+    <!-- Step 0 — the offer -->
+    <sc-if value="{{ isStep0 }}" hint-placeholder-val="{{ false }}">
+      <div class="su-section">
+        <div class="su-head">
+          <div class="card-kicker">{{ introKicker }}</div>
+          <h1 class="su-h1">{{ introHeading }}</h1>
+        </div>
+        <p class="su-body">{{ introBody }}</p>
+        <div class="su-foot" style="border-top:0;padding-top:var(--space-2)">
+          <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ introGo }}" style="border-radius:999px;padding-inline:var(--space-6);background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .35)">{{ introGoLabel }}</button>
+          <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ introSkip }}" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">{{ introSkipLabel }}</button>
+          <div class="su-foot-spacer"></div>
+        </div>
+        <p class="su-hint">{{ introSkipNote }}</p>
+      </div>
+    </sc-if>
+
+    <!-- Step 1 — notebooks -->
+    <sc-if value="{{ isStep1 }}" hint-placeholder-val="{{ false }}">
+      <div class="su-section">
+        <div class="su-head">
+          <div class="card-kicker">{{ s1Kicker }}</div>
+          <h1 class="su-h1">{{ s1Heading }}</h1>
+          <p class="su-body">{{ s1Body }}</p>
+        </div>
+
+        <sc-if value="{{ hasPicked }}" hint-placeholder-val="{{ true }}">
+          <div class="su-picked">
+            <sc-for list="{{ picked }}" as="pk" hint-placeholder-count="3">
+              <span class="su-pick">
+                <span>{{ pk.label }}</span>
+                <button type="button" class="su-pick-x" onClick="{{ pk.remove }}" aria-label="{{ pk.removeLabel }}" title="{{ pk.removeLabel }}">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+              </span>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noPicked }}" hint-placeholder-val="{{ false }}">
+          <p class="su-empty">{{ s1Empty }}</p>
+        </sc-if>
+
+        <div class="su-row">
+          <div class="field su-grow">
+            <label for="su-own">Add your own</label>
+            <input id="su-own" class="input" placeholder="e.g. Classical Civilisation" maxlength="80" value="{{ typed }}" onChange="{{ onTyped }}" onKeyDown="{{ onTypedKey }}" style="border-radius:14px;background:var(--color-surface)"/>
+          </div>
+          <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ addTyped }}" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">Add</button>
+        </div>
+
+        <div class="su-section">
+          <div class="su-col-head">Or tap a subject</div>
+          <div class="su-chips">
+            <sc-for list="{{ subjectChips }}" as="sc" hint-placeholder-count="12">
+              <button type="button" class="su-chip {{ sc.cls }}" onClick="{{ sc.toggle }}" aria-pressed="{{ sc.pressed }}">{{ sc.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div class="su-foot">
+          <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ s1Back }}" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">Back</button>
+          <div class="su-foot-spacer"></div>
+          <span class="su-foot-note">{{ s1Note }}</span>
+          <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ s1Next }}" style="border-radius:999px;padding-inline:var(--space-6);background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .35)">{{ s1NextLabel }}</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- Step 2 — the week -->
+    <sc-if value="{{ isStep2 }}" hint-placeholder-val="{{ false }}">
+      <div class="su-section">
+        <div class="su-head">
+          <div class="card-kicker">{{ s2Kicker }}</div>
+          <h1 class="su-h1">{{ s2Heading }}</h1>
+          <p class="su-body">{{ s2Body }}</p>
+        </div>
+
+        <div class="su-section">
+          <div class="su-col-head">Days you can study</div>
+          <div class="su-chips">
+            <sc-for list="{{ dayChips }}" as="dc" hint-placeholder-count="7">
+              <button type="button" class="su-chip su-chip-day {{ dc.cls }}" onClick="{{ dc.toggle }}" aria-pressed="{{ dc.pressed }}" aria-label="{{ dc.aria }}">{{ dc.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div class="su-section">
+          <div class="su-col-head">Roughly when</div>
+          <div class="su-chips">
+            <sc-for list="{{ slotChips }}" as="sl" hint-placeholder-count="4">
+              <button type="button" class="su-chip {{ sl.cls }}" onClick="{{ sl.pick }}" aria-pressed="{{ sl.pressed }}" aria-label="{{ sl.aria }}">{{ sl.label }} · {{ sl.note }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <hr class="su-rule"/>
+
+        <div class="su-section">
+          <h2 class="su-h2">{{ fixedHeading }}</h2>
+          <p class="su-hint">{{ fixedBody }}</p>
+          <div class="su-row">
+            <div class="field su-grow">
+              <label for="su-fx-title">What is it</label>
+              <input id="su-fx-title" class="input" placeholder="e.g. Chemistry lesson" maxlength="120" value="{{ fixedTitle }}" onChange="{{ onFixedTitle }}" onKeyDown="{{ onFixedKey }}" style="border-radius:14px;background:var(--color-surface)"/>
+            </div>
+            <div class="field su-narrow">
+              <label for="su-fx-day">Day</label>
+              <select id="su-fx-day" class="input" value="{{ fixedDay }}" onChange="{{ onFixedDay }}" style="border-radius:14px;background:var(--color-surface)">
+                <sc-for list="{{ dayOptions }}" as="dopt" hint-placeholder-count="7">
+                  <option value="{{ dopt.value }}">{{ dopt.label }}</option>
+                </sc-for>
+              </select>
+            </div>
+            <div class="field su-narrow">
+              <label for="su-fx-time">Time</label>
+              <input id="su-fx-time" class="input" placeholder="e.g. 9:00 AM" maxlength="20" value="{{ fixedTime }}" onChange="{{ onFixedTime }}" onKeyDown="{{ onFixedKey }}" style="border-radius:14px;background:var(--color-surface)"/>
+            </div>
+            <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ addFixed }}" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">Add</button>
+          </div>
+
+          <sc-if value="{{ hasFixed }}" hint-placeholder-val="{{ false }}">
+            <ul class="su-list">
+              <sc-for list="{{ fixedList }}" as="fx" hint-placeholder-count="2">
+                <li class="su-item">
+                  <span class="tag tag-outline" style="font-size:11px;flex:none">Class</span>
+                  <span class="su-item-main">
+                    <span class="su-item-title">{{ fx.title }}</span>
+                    <span class="su-item-sub">{{ fx.sub }}</span>
+                  </span>
+                  <button type="button" class="su-pick-x" onClick="{{ fx.remove }}" aria-label="{{ fx.removeLabel }}" title="{{ fx.removeLabel }}">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  </button>
+                </li>
+              </sc-for>
+            </ul>
+          </sc-if>
+        </div>
+
+        <hr class="su-rule"/>
+
+        <div class="su-section">
+          <h2 class="su-h2">{{ dueHeading }}</h2>
+          <p class="su-hint">{{ dueBody }}</p>
+          <div class="su-row">
+            <div class="field su-grow">
+              <label for="su-due-title">What is due</label>
+              <input id="su-due-title" class="input" placeholder="e.g. History essay draft" maxlength="120" value="{{ dueTitle }}" onChange="{{ onDueTitle }}" style="border-radius:14px;background:var(--color-surface)"/>
+            </div>
+            <div class="field su-narrow">
+              <label for="su-due-date">When</label>
+              <input id="su-due-date" class="input" type="date" min="{{ minDate }}" value="{{ dueDate }}" onChange="{{ onDueDate }}" style="border-radius:14px;background:var(--color-surface)"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="su-tally">
+          <sc-for list="{{ tally }}" as="tl" hint-placeholder-count="3">
+            <span class="su-tally-cell">
+              <span class="su-tally-n">{{ tl.n }}</span>
+              <span class="su-tally-label">{{ tl.label }}</span>
+            </span>
+          </sc-for>
+        </div>
+
+        <div class="su-foot">
+          <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ s2Back }}" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">Back</button>
+          <div class="su-foot-spacer"></div>
+          <span class="su-foot-note">{{ s2Note }}</span>
+          <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ s2Next }}" style="border-radius:999px;padding-inline:var(--space-6);background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .35)">{{ s2NextLabel }}</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- Step 3 — how it works, and what to do with it -->
+    <sc-if value="{{ isStep3 }}" hint-placeholder-val="{{ false }}">
+      <div class="su-section">
+        <div class="su-head">
+          <div class="card-kicker">{{ s3Kicker }}</div>
+          <h1 class="su-h1">{{ s3Heading }}</h1>
+          <p class="su-body">{{ s3Body }}</p>
+        </div>
+
+        <div class="su-cols">
+          <div class="su-col">
+            <div class="su-col-head">The app</div>
+            <sc-for list="{{ tour }}" as="tr" hint-placeholder-count="5">
+              <div class="su-tile">
+                <h2 class="su-tile-title">{{ tr.title }}</h2>
+                <p class="su-tile-body">{{ tr.body }}</p>
+                <sc-if value="{{ tr.hasLink }}" hint-placeholder-val="{{ false }}">
+                  <a class="su-tile-link" href="{{ tr.href }}">{{ tr.cta }}</a>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+          <div class="su-col">
+            <div class="su-col-head">Studying</div>
+            <sc-for list="{{ techniques }}" as="tq" hint-placeholder-count="5">
+              <div class="su-tile">
+                <h2 class="su-tile-title">{{ tq.title }}</h2>
+                <p class="su-tile-body">{{ tq.body }}</p>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div class="su-foot">
+          <sc-if value="{{ s3ShowBack }}" hint-placeholder-val="{{ true }}">
+            <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ s3Back }}" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">Back</button>
+          </sc-if>
+          <div class="su-foot-spacer"></div>
+          <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ s3Next }}" style="border-radius:999px;padding-inline:var(--space-6);background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .35)">{{ s3NextLabel }}</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- Step 4 — what just happened -->
+    <sc-if value="{{ isStep4 }}" hint-placeholder-val="{{ false }}">
+      <div class="su-section">
+        <div class="su-head">
+          <div class="card-kicker">{{ doneKicker }}</div>
+          <h1 class="su-h1">{{ doneHeading }}</h1>
+          <p class="su-body">{{ doneBody }}</p>
+        </div>
+
+        <div class="su-tally">
+          <sc-for list="{{ madeTally }}" as="mt" hint-placeholder-count="3">
+            <span class="su-tally-cell">
+              <span class="su-tally-n">{{ mt.n }}</span>
+              <span class="su-tally-label">{{ mt.label }}</span>
+            </span>
+          </sc-for>
+        </div>
+
+        <p class="su-hint">{{ doneNote }}</p>
+
+        <div class="su-foot">
+          <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ doneBack }}" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">Back</button>
+          <div class="su-foot-spacer"></div>
+          <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ finish }}" style="border-radius:999px;padding-inline:var(--space-6);background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .35)">{{ doneGo }}</button>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const SETUP = window.notivloSetup;
+const COPY = SETUP.content.COPY;
+const STORE = SETUP.store;
+
+// ?step=3 is how the guide button in the top bar reopens this at the part
+// worth re-reading. Clamped, so a hand-typed number cannot land the page on
+// a step that does not exist.
+function urlStep() {
+  try {
+    const raw = new URLSearchParams(window.location.search).get('step');
+    if (raw == null) return null;
+    const n = parseInt(raw, 10);
+    if (isNaN(n)) return null;
+    return Math.max(0, Math.min(SETUP.LAST_STEP, n));
+  } catch (e) { return null; }
+}
+
+function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+
+class Component extends DCLogic {
+  state = (() => {
+    const saved = SETUP.state();
+    const asked = urlStep();
+    // Someone who has already finished and come back for the tour lands on
+    // step 3 and is shown the way out rather than being walked through
+    // creation a second time.
+    const reviewing = saved.status !== 'new';
+    const step = asked != null ? asked : (reviewing ? 3 : saved.step);
+    return {
+      step,
+      reviewing,
+      subjects: saved.subjects,
+      days: saved.days,
+      slot: saved.slot,
+      fixed: saved.fixed,
+      due: saved.due,
+      created: saved.created,
+      applied: saved.applied,
+      typed: '',
+      fixedTitle: '',
+      fixedDay: String(saved.days.length ? saved.days[0] : 1),
+      fixedTime: '',
+      dueTitle: saved.due ? saved.due.title : '',
+      dueDate: saved.due ? saved.due.date : '',
+    };
+  })();
+
+  componentDidMount() {
+    // Theme and text size were chosen on the page before this one, on a brand
+    // new account, so there is usually something waiting to go up.
+    if (window.notivloSync && window.notivloSync.enabled()) window.notivloSync.sync();
+  }
+
+  // --- navigation -------------------------------------------------------
+  go(step) {
+    SETUP.goTo(step);
+    this.setState({ step });
+    try { window.scrollTo(0, 0); } catch (e) {}
+  }
+
+  begin() {
+    SETUP.begin();
+    this.setState({ step: 1 });
+  }
+
+  skipAll() {
+    SETUP.skip();
+    window.location.href = 'Home.dc.html';
+  }
+
+  finish() {
+    SETUP.complete();
+    window.location.href = 'Home.dc.html';
+  }
+
+  // --- step 1 -----------------------------------------------------------
+  commitSubjects(subjects) {
+    SETUP.setSubjects(subjects);
+    // Read back rather than trusting the argument: the service is what
+    // decides what counts as a subject (trimmed, clamped, de-duplicated).
+    this.setState({ subjects: SETUP.state().subjects });
+  }
+
+  toggleSubject(name) {
+    const has = this.state.subjects.some(s => s.toLowerCase() === name.toLowerCase());
+    this.commitSubjects(has
+      ? this.state.subjects.filter(s => s.toLowerCase() !== name.toLowerCase())
+      : this.state.subjects.concat([name]));
+  }
+
+  addTyped() {
+    const t = this.state.typed.trim();
+    if (!t) return;
+    this.commitSubjects(this.state.subjects.concat([t]));
+    this.setState({ typed: '' });
+  }
+
+  // --- step 2 -----------------------------------------------------------
+  toggleDay(n) {
+    const has = this.state.days.indexOf(n) !== -1;
+    SETUP.setDays(has ? this.state.days.filter(d => d !== n) : this.state.days.concat([n]));
+    this.setState({ days: SETUP.state().days });
+  }
+
+  pickSlot(id) {
+    SETUP.setSlot(id);
+    this.setState({ slot: SETUP.state().slot });
+  }
+
+  addFixed() {
+    const title = this.state.fixedTitle.trim();
+    if (!title) return;
+    SETUP.addFixed({ title, day: Number(this.state.fixedDay), time: this.state.fixedTime.trim() });
+    this.setState({ fixed: SETUP.state().fixed, fixedTitle: '', fixedTime: '' });
+  }
+
+  removeFixed(i) {
+    SETUP.removeFixed(i);
+    this.setState({ fixed: SETUP.state().fixed });
+  }
+
+  // Both halves of the deadline are needed before it is worth recording, and
+  // clearing either one takes it back out again.
+  commitDue(title, date) {
+    SETUP.setDue(title && date ? { title, date } : null);
+    this.setState({ dueTitle: title, dueDate: date, due: SETUP.state().due });
+  }
+
+  createIt() {
+    const created = SETUP.apply();
+    this.setState({ created, applied: true, step: 3 });
+    SETUP.goTo(3);
+    try { window.scrollTo(0, 0); } catch (e) {}
+  }
+
+  renderVals() {
+    const s = this.state;
+    const C = SETUP.content;
+    const pv = SETUP.preview();
+    const lower = s.subjects.map(x => x.toLowerCase());
+
+    const railPips = [1, 2, 3].map(n => ({
+      cls: n < s.step ? 'su-pip-on' : n === s.step ? 'su-pip-now' : '',
+    }));
+
+    const dayName = (n) => {
+      let out = '';
+      C.WEEKDAYS.forEach(d => { if (d.index === n) out = d.label; });
+      return out;
+    };
+
+    return {
+      // --- frame
+      showRail: !s.reviewing && s.step >= 1 && s.step <= 3,
+      railPips,
+      stepOf: 'Step ' + Math.min(3, Math.max(1, s.step)) + ' of 3',
+      isStep0: s.step === 0,
+      isStep1: s.step === 1,
+      isStep2: s.step === 2,
+      isStep3: s.step === 3,
+      isStep4: s.step === 4,
+
+      // --- step 0
+      introKicker: COPY.introKicker,
+      introHeading: COPY.introHeading,
+      introBody: COPY.introBody,
+      introGoLabel: COPY.introGo,
+      introSkipLabel: COPY.introSkip,
+      introSkipNote: COPY.introSkipNote,
+      introGo: () => this.begin(),
+      introSkip: () => this.skipAll(),
+
+      // --- step 1
+      s1Kicker: COPY.step1Kicker,
+      s1Heading: COPY.step1Heading,
+      s1Body: COPY.step1Body,
+      s1Empty: COPY.step1Empty,
+      hasPicked: s.subjects.length > 0,
+      noPicked: s.subjects.length === 0,
+      picked: s.subjects.map(name => ({
+        label: name,
+        removeLabel: 'Remove ' + name,
+        remove: () => this.toggleSubject(name),
+      })),
+      typed: s.typed,
+      onTyped: (e) => this.setState({ typed: e.target.value }),
+      onTypedKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addTyped(); } },
+      addTyped: () => this.addTyped(),
+      subjectChips: C.SUBJECTS.map(name => {
+        const on = lower.indexOf(name.toLowerCase()) !== -1;
+        return {
+          label: name,
+          cls: on ? 'su-chip-on' : '',
+          pressed: on,
+          toggle: () => this.toggleSubject(name),
+        };
+      }),
+      s1Note: s.subjects.length
+        ? plural(s.subjects.length, 'notebook', 'notebooks') + ' to make'
+        : 'You can add them any time',
+      s1NextLabel: s.subjects.length ? 'Next' : 'Skip for now',
+      s1Back: () => this.go(0),
+      s1Next: () => this.go(2),
+
+      // --- step 2
+      s2Kicker: COPY.step2Kicker,
+      s2Heading: COPY.step2Heading,
+      s2Body: COPY.step2Body,
+      dayChips: C.WEEKDAYS.map(d => {
+        const on = s.days.indexOf(d.index) !== -1;
+        return {
+          label: d.short,
+          aria: d.label,
+          cls: on ? 'su-chip-on' : '',
+          pressed: on,
+          toggle: () => this.toggleDay(d.index),
+        };
+      }),
+      slotChips: C.SLOTS.map(sl => ({
+        label: sl.label,
+        note: sl.note,
+        // The visible label is two text nodes with a separator between them,
+        // which does not read as one name; spell it out instead.
+        aria: sl.label + ', ' + sl.note,
+        cls: s.slot === sl.id ? 'su-chip-on' : '',
+        pressed: s.slot === sl.id,
+        pick: () => this.pickSlot(sl.id),
+      })),
+
+      fixedHeading: COPY.step2FixedHeading,
+      fixedBody: COPY.step2FixedBody,
+      fixedTitle: s.fixedTitle,
+      onFixedTitle: (e) => this.setState({ fixedTitle: e.target.value }),
+      fixedDay: s.fixedDay,
+      onFixedDay: (e) => this.setState({ fixedDay: e.target.value }),
+      fixedTime: s.fixedTime,
+      onFixedTime: (e) => this.setState({ fixedTime: e.target.value }),
+      onFixedKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addFixed(); } },
+      addFixed: () => this.addFixed(),
+      dayOptions: C.WEEKDAYS.map(d => ({ value: String(d.index), label: d.label })),
+      hasFixed: s.fixed.length > 0,
+      fixedList: s.fixed.map((f, i) => ({
+        title: f.title,
+        sub: dayName(Number(f.day)) + 's' + (f.time ? ' · ' + f.time : ' · any time'),
+        removeLabel: 'Remove ' + f.title,
+        remove: () => this.removeFixed(i),
+      })),
+
+      dueHeading: COPY.step2DueHeading,
+      dueBody: COPY.step2DueBody,
+      dueTitle: s.dueTitle,
+      onDueTitle: (e) => this.commitDue(e.target.value, s.dueDate),
+      dueDate: s.dueDate,
+      onDueDate: (e) => this.commitDue(s.dueTitle, e.target.value),
+      minDate: STORE.toIso(STORE.today()),
+
+      tally: [
+        { n: pv.notebooks, label: pv.notebooks === 1 ? 'notebook' : 'notebooks' },
+        { n: pv.blocks, label: 'study blocks' },
+        { n: pv.classes + pv.deadlines, label: 'other entries' },
+      ],
+      s2Note: pv.total
+        ? 'Written into the next ' + pv.weeks + ' weeks'
+        : 'Nothing to write yet',
+      s2NextLabel: (pv.notebooks + pv.total) ? 'Create it' : 'Skip for now',
+      s2Back: () => this.go(1),
+      s2Next: () => this.createIt(),
+
+      // --- step 3
+      s3Kicker: s.reviewing ? 'The guide' : COPY.step3Kicker,
+      s3Heading: COPY.step3Heading,
+      s3Body: COPY.step3Body,
+      tour: C.TOUR.map(t => ({
+        title: t.title,
+        body: t.body,
+        hasLink: !!t.href,
+        href: t.href || 'Home.dc.html',
+        cta: t.cta || '',
+      })),
+      techniques: C.TECHNIQUES.map(t => ({ title: t.title, body: t.body })),
+      s3ShowBack: !s.reviewing,
+      s3Back: () => this.go(2),
+      s3NextLabel: s.reviewing ? 'Back to home' : 'Nearly done',
+      s3Next: () => (s.reviewing ? (window.location.href = 'Home.dc.html') : this.go(4)),
+
+      // --- step 4
+      doneKicker: COPY.doneKicker,
+      doneHeading: COPY.doneHeading,
+      doneBody: COPY.doneBody,
+      madeTally: [
+        { n: s.created.notebooks, label: s.created.notebooks === 1 ? 'notebook made' : 'notebooks made' },
+        { n: s.created.blocks, label: 'study blocks' },
+        { n: s.created.classes + s.created.deadlines, label: 'other entries' },
+      ],
+      doneNote: s.created.notebooks || s.created.blocks
+        ? 'Everything here is an ordinary notebook and ordinary agenda entry. Rename, move or delete any of it.'
+        : 'Nothing was created, which is fine — the home page has a New notebook button and the agenda has an Add button.',
+      doneBack: () => this.go(3),
+      doneGo: COPY.doneGo,
+      finish: () => this.finish(),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

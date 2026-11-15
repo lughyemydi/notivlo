@@ -1,0 +1,1037 @@
+/* ==========================================================================
+   notivlo — Soft Clay theme
+   --------------------------------------------------------------------------
+   Loaded after the Classical design-system stylesheet, before each page's own
+   <style> block.
+
+   The app's markup already refers to the design system by variable
+   (--color-accent-N, --color-neutral-N, --space-N, --radius-*), so remapping
+   those ramps re-themes most of the app without touching the pages. What this
+   file adds on top is the clay surface treatment: opaque white tiles, warm
+   diffuse shadows, and a light top edge in place of the old glass blur.
+
+   It also carries the dark theme, at the end of the file: the same tokens
+   re-pointed under :root[data-theme="dark"], which theme.js sets.
+
+   Canonical token definitions and rationale live in design-system/.
+   ========================================================================== */
+
+/* Google Sans (UI) and Unbounded (wordmark), self-hosted from fonts/ so the
+   native apps render correctly offline. See fonts/fonts.css for the faces and
+   their licences. */
+@import url('fonts/fonts.css');
+
+:root {
+  /* The wordmark only — everything else is Google Sans. */
+  --font-logo: 'Unbounded', 'Google Sans', ui-sans-serif, system-ui, sans-serif;
+
+  /* ---------- Accent ramp: amber -> mint -------------------------------- */
+  /* 500 is the Soft Clay primary. 700 and darker are the text/icon steps and
+     are deliberately much darker than the pastel: the app uses accent-700 as
+     a foreground colour in a hundred places, and a mint at the primary's
+     lightness would sit near 3:1 on white. */
+  --color-accent-100: #EFFAF6;
+  --color-accent-200: #DCF4EC;
+  --color-accent-300: #BFEBDD;
+  --color-accent-400: #A6E5D2;
+  --color-accent-500: #8FE0C9;   /* primary fill */
+  --color-accent-600: #6CCDB1;   /* borders, decorative */
+  --color-accent-700: #1D7A62;   /* 5.2:1 on white — foreground */
+  --color-accent-800: #145A48;   /* 7.9:1 on white */
+  --color-accent-900: #0D3E31;
+  --color-accent-2: #2E9377;
+  --color-accent-2-300: #BFEBDD;
+
+  /* ---------- Neutral ramp: warm clay greys ----------------------------- */
+  --color-neutral-100: #F7F6F4;
+  --color-neutral-200: #EFEDE9;
+  --color-neutral-300: #E4E2DD;  /* = border */
+  --color-neutral-400: #C9C6C0;
+  --color-neutral-500: #8A8A8A;  /* micro-labels */
+  --color-neutral-600: #6B6B6B;  /* muted prose, 5.3:1 */
+  --color-neutral-700: #55534F;
+  --color-neutral-800: #3A3835;
+  --color-neutral-900: #1E1E1E;
+
+  --color-bg: #F3F2EF;
+  --color-text: #1E1E1E;
+
+  /* ---------- Soft Clay semantic tokens --------------------------------- */
+  --color-primary: #8FE0C9;
+  --color-primary-hover: #74D4B8;
+  --color-primary-soft: #E4F7F0;
+  --color-surface: #FFFFFF;
+  --color-surface-sunken: #F7F6F4;
+  --color-background: #F3F2EF;
+  --color-border: #E4E2DD;
+  --color-border-strong: #D4D1CA;
+  --color-focus-ring: #1D9E79;
+  --color-text-primary: #1E1E1E;
+  --color-text-secondary: #8A8A8A;
+  --color-text-muted: #6B6B6B;
+  --color-success: #8FE0C9;
+  --color-warning: #F2D98A;
+  --color-error: #F0A9A0;
+  --color-disabled-bg: #E6E6E6;
+  --color-disabled-border: #DCDCDC;
+  --color-disabled-text: #B0B0B0;
+
+  /* ---------- Status text ----------------------------------------------- */
+  /* Colours the pages used to write out literally, tokenised so the dark
+     theme can lighten them. */
+  --color-danger: #A8322A;          /* destructive actions */
+  --color-danger-strong: #8A2F28;   /* error messages */
+  --color-ok-text: #3F6B3F;
+  --color-warning-text: #5E4A10;
+  --color-calc-second: #2F7FBF;     /* calculator second functions */
+  --color-calc-second-strong: #1C6AA8;
+
+  /* ---------- Clay whites ----------------------------------------------- */
+  /* RGB channels rather than colours, for the pages' translucent whites —
+     rgb(var(--clay-white) / .55) — and the lit 1px top edge on raised tiles —
+     inset 0 1px 0 rgb(var(--clay-edge) / .7). Both are white here, so light
+     mode renders exactly as it did with the literal values; the dark theme
+     swaps in warm greys. */
+  --clay-white: 255 255 255;
+  --clay-edge: 255 255 255;
+
+  color-scheme: light;
+
+  /* ---------- Type: geometric sans throughout --------------------------- */
+  /* Soft Clay specifies one clean sans for everything, which retires the
+     Classical serif headings. */
+  --font-body: 'Google Sans', 'Google Sans Text', Inter, Manrope, ui-sans-serif,
+    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: var(--font-body);
+  --font-heading-weight: 700;
+
+  /* What the reader writes in a notebook, as opposed to the app around it.
+     One of these four, chosen in Settings: note-font.js points --font-notes
+     at whichever was picked and leaves it alone at the default, so a notebook
+     reads correctly from this file alone before any script has run. Every
+     stack ends in a family that exists everywhere, so no choice can leave a
+     chapter unreadable. */
+  /* Comic Sans ships with macOS and Windows; Chalkboard SE covers iOS, where
+     it doesn't. */
+  --font-notes-comic: 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE',
+    'Comic Neue', var(--font-body);
+  --font-notes-sans: var(--font-body);
+  --font-notes-serif: 'Iowan Old Style', Georgia, 'Times New Roman', Times,
+    serif;
+  --font-notes-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+    'Liberation Mono', monospace;
+  --font-notes: var(--font-notes-comic);
+
+  /* ---------- Radius ---------------------------------------------------- */
+  /* The design system documents six steps and the app had names for only
+     four of them, so a page wanting a 4px or a 24px corner wrote the number
+     instead — and anyone reading design-system/ and writing --radius-1 or
+     --radius-5 here got a voided declaration, the same silent failure the
+     spacing scale used to hand out. Both ends now carry the same six names
+     for the same six values. Unlike the spacing scale, this file is written
+     by hand rather than generated, so the fix belongs here rather than in a
+     shrunk-down set of docs. */
+  --radius-xs: 4px;     /* chips, small controls */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;    /* cards */
+  --radius-xl: 24px;    /* large cards, panels */
+  --radius-full: 999px; /* buttons, inputs, tabs */
+
+  /* ---------- Elevation ------------------------------------------------- */
+  --shadow-color: 72 62 50;
+  --elevation-1: 0 1px 2px rgb(var(--shadow-color) / .05), 0 1px 3px rgb(var(--shadow-color) / .04);
+  --elevation-2: 0 2px 4px rgb(var(--shadow-color) / .05), 0 4px 8px rgb(var(--shadow-color) / .05);
+  --elevation-3: 0 4px 8px rgb(var(--shadow-color) / .05), 0 8px 16px rgb(var(--shadow-color) / .06);
+  --elevation-4: 0 6px 12px rgb(var(--shadow-color) / .05), 0 12px 24px rgb(var(--shadow-color) / .07);
+  --elevation-5: 0 10px 20px rgb(var(--shadow-color) / .06), 0 20px 40px rgb(var(--shadow-color) / .08);
+  --highlight-top: inset 0 1px 0 rgb(255 255 255 / .9);
+  --highlight-inset: inset 0 1px 2px rgb(var(--shadow-color) / .06);
+
+  --ease-out: cubic-bezier(.22,.61,.36,1);
+}
+
+/* ==========================================================================
+   Retire the glass
+   ========================================================================== */
+
+/* Clay tiles are opaque. Any blur left behind would fight the flat ground. */
+* { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+
+/* The floating animated gradient blobs were the signature of the old glass
+   treatment. Soft Clay sits on one flat warm-grey ground instead. They are
+   inline-styled divs with no class, so the animation name is the handle. */
+[style*="floatA"], [style*="floatB"] { display: none !important; }
+
+body {
+  background: var(--color-background) !important;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   Focus — one visible treatment on every interactive element
+   ========================================================================== */
+
+:where(a, button, input, select, textarea, [tabindex], [contenteditable="true"]):focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 3px;
+}
+
+/* ==========================================================================
+   Design-system components, restyled as clay
+   ========================================================================== */
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-2), var(--highlight-top);
+}
+
+.nav {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--elevation-2), var(--highlight-top);
+}
+
+.btn {
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-weight: 600;
+  transition: background-color .18s var(--ease-out), box-shadow .18s var(--ease-out),
+              transform .12s var(--ease-out), border-color .18s var(--ease-out);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  color: var(--color-text-primary);
+  box-shadow: var(--elevation-2), var(--highlight-top);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  box-shadow: var(--elevation-3), var(--highlight-top);
+  transform: translateY(-1px);
+}
+.btn-primary:active:not(:disabled) { transform: translateY(0); box-shadow: var(--elevation-1); }
+
+.btn-ghost {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  box-shadow: var(--elevation-1);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+
+.btn:disabled {
+  background: var(--color-disabled-bg);
+  border-color: var(--color-disabled-border, #DCDCDC);
+  color: var(--color-disabled-text);
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.input {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  box-shadow: var(--elevation-1), var(--highlight-inset);
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  transition: border-color .18s var(--ease-out), box-shadow .18s var(--ease-out);
+}
+.input:hover:not(:disabled) { border-color: var(--color-border-strong); }
+.input:focus { border-color: var(--color-primary); }
+.input::placeholder { color: var(--color-text-secondary); }
+
+/* Multi-line and dropdown controls keep a rounded-rect, not a pill — a pill
+   reads wrong on a box several lines tall. */
+textarea.input, select.input { border-radius: var(--radius-md); }
+
+/* iOS zooms the whole page in when a focused field's text is smaller than
+   16px, and it never zooms back out on blur -- the page just stays magnified,
+   wider than the screen, with whatever was at the top pushed up under the
+   dynamic island. The design system's .input is 14px, so every field in the
+   app did this on a tap. 16px is the exact threshold, so meeting it is the
+   whole fix; it is not a design choice and there is no reason to go higher.
+   Selects and textareas zoom on the same rule, hence all three selectors.
+
+   !important is load-bearing, not laziness: eight fields across Home,
+   Notebook and Settings set font-size inline (13px, 14px, 15px) on compact
+   controls, and an inline style beats any selector without it. Those eight
+   were the ones still zooming. The media query keeps all of this off desktop,
+   where (pointer: coarse) is false and every field stays as it was. */
+@media (pointer: coarse) {
+  input.input, select.input, textarea.input { font-size: 16px !important; }
+}
+
+.tag {
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+.tag-accent { background: var(--color-primary); color: var(--color-text-primary); border-color: var(--color-primary); }
+.tag-neutral { background: var(--color-surface-sunken); color: var(--color-text-muted); border-color: var(--color-border); }
+.tag-outline { background: var(--color-surface); color: var(--color-accent-700); border-color: var(--color-accent-600); }
+
+.hr { background: var(--color-border); }
+
+.card-kicker {
+  color: var(--color-accent-700);
+  font-family: var(--font-body);
+  letter-spacing: .06em;
+}
+
+/* Headings pick up the sans and its tighter tracking. */
+h1, h2, h3, .card-title {
+  font-family: var(--font-body);
+  letter-spacing: -.015em;
+}
+
+/* The wordmark is live text set in Unbounded, not artwork — it stays crisp at
+   any size, recolours with the theme, and is selectable and searchable.
+   Unbounded runs wide, so it is tracked in slightly and sized down a step from
+   what a normal sans would take at the same optical weight. */
+.brand-logo {
+  font-family: var(--font-logo);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -.03em;
+  line-height: 1;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+.brand-logo--lg { font-size: 26px; display: block; margin: 0 auto var(--space-2); text-align: center; }
+.brand-logo--sm { font-size: 14px; }
+
+.nav a.nav-brand { display: inline-flex; align-items: center; }
+
+@media (max-width: 760px) {
+  .brand-logo { font-size: 15px; }
+}
+
+/* ==========================================================================
+   App surfaces
+   ========================================================================== */
+
+/* Sticky bars and popovers were translucent because a blur sat behind them.
+   With the blur gone they have to be opaque or the page shows through. */
+.nb-toolbar, .ctx-menu, .nb-modal, .nn-modal, .set-card {
+  background: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+}
+.nb-toolbar { box-shadow: var(--elevation-2), var(--highlight-top) !important; }
+.ctx-menu   { box-shadow: var(--elevation-4) !important; }
+.nb-modal, .nn-modal { box-shadow: var(--elevation-5) !important; }
+
+/* The old backdrops leaned on a blur to separate the dialog from the page.
+   Without it a 28% dim leaves the page behind fully legible, so the modal
+   stops reading as modal. */
+.nb-modal-backdrop, .nn-backdrop { background: rgb(30 30 30 / .46) !important; }
+
+/* Tiles nested inside an already-white panel — notes, agenda rows, the
+   Settings notebook list — were translucent white over a blurred parent.
+   Made opaque they match their container exactly and disappear, so they step
+   down to the sunken surface instead. */
+.nb-notes > div > div,
+.pl-item,
+.set-card [style*="border-radius:16px"],
+.home-plan-item,
+.nb-chapters .chap-row[style*="transparent"] {
+  background: var(--color-surface-sunken) !important;
+}
+.nb-notes > div > div,
+.pl-item,
+.set-card [style*="border-radius:16px"] {
+  border-color: var(--color-border) !important;
+}
+/* Hover on those rows still needs to move somewhere visible. */
+.pl-item:hover { background: var(--color-primary-soft) !important; }
+
+.nb-editor-card, .nb-card, .nb-chapters {
+  background: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* Calculator keys keep their moulded look — this is where clay earns its
+   name — so they are left with their own gradient and highlight. */
+.nb-key { background: linear-gradient(180deg, #fff, #F7F6F4) !important; }
+.nb-key-op  { background: linear-gradient(180deg, #F4FCF9, var(--color-accent-200)) !important; }
+.nb-key-exe { background: linear-gradient(180deg, #EAF9F3, var(--color-accent-300)) !important; }
+.nb-key-act { background: linear-gradient(180deg, #fff, #EFEDE9) !important; }
+
+/* Notebook covers are a fixed palette of amber gradients set in JS; nothing
+   here overrides them, and they still read fine against a clay page. */
+
+/* ==========================================================================
+   Appearance and text-size pickers
+   --------------------------------------------------------------------------
+   Shared by Settings → Preferences and the first-run Welcome page, which
+   offer the same two choices and should look identical doing it.
+   ========================================================================== */
+
+.ts-options{display:flex;gap:var(--space-3);flex-wrap:wrap}
+.ts-option{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:118px;padding:var(--space-4) var(--space-3);border-radius:18px;border:1.5px solid var(--color-border);background:var(--color-surface);color:var(--color-neutral-700);font-family:var(--font-body);cursor:pointer;transition:border-color .15s ease, background .15s ease, color .15s ease}
+.ts-option:hover{border-color:var(--color-accent-500);background:var(--color-primary-soft);color:var(--color-accent-800)}
+.ts-option-active{border-color:var(--color-accent-600);background:var(--color-primary-soft);color:var(--color-accent-800)}
+/* The sample renders at each option's own scale, so the choice is legible
+   from the control itself rather than only after applying it. */
+.ts-swatch{font-weight:700;line-height:1.1}
+.ts-label{font-size:13px;font-weight:600}
+.ts-pct{font-size:12px;color:var(--color-neutral-500)}
+.ts-option-active .ts-pct{color:var(--color-accent-700)}
+/* Appearance choices share the text-size tiles. Each preview is a tiny page
+   drawn in that option's own colours — fixed values, so it looks the same
+   whichever theme is showing. Match system is split: light half, dark half. */
+.theme-option{width:132px}
+.theme-preview{display:flex;width:96px;height:60px;margin-bottom:4px;border-radius:11px;overflow:hidden;box-shadow:0 0 0 1px var(--color-border-strong)}
+.tp-half{flex:1;display:flex;flex-direction:column;gap:6px;padding:9px 0}
+.tp-half:first-child{padding-left:9px}
+.tp-half:last-child{padding-right:9px}
+.tp-bar{height:10px;margin-bottom:2px}
+.tp-line{height:5px}
+.tp-half:first-child .tp-bar,.tp-half:first-child .tp-line{border-radius:999px 0 0 999px}
+.tp-half:last-child .tp-bar,.tp-half:last-child .tp-line{border-radius:0 999px 999px 0}
+.tp-half:last-child .tp-line{width:62%}
+.tp-half .tp-line-short{width:78%;border-radius:999px !important}
+.tp-half:last-child .tp-line-short{visibility:hidden}
+.tp-light{background:#F3F2EF}
+.tp-light .tp-bar{background:#FFFFFF}
+.tp-light .tp-line{background:#D4D1CA}
+.tp-light .tp-line-short{background:#8FE0C9}
+.tp-dark{background:#0B0A09}
+.tp-dark .tp-bar{background:#1F1E1B}
+.tp-dark .tp-line{background:#3D3B37}
+.tp-dark .tp-line-short{background:#1B6651}
+
+/* ==========================================================================
+   The agenda's time grid (agenda-timegrid.js)
+   --------------------------------------------------------------------------
+   Seven day columns over one shared clock running 06:00 to 23:00, so a row
+   means the same hour in every column and the week can be read across.
+
+   Every vertical measurement — the hour lines, the labels beside them, the
+   blocks, the gap markers — is set inline from the same `yFor` in the module.
+   Nothing here decides where anything sits; this file only says what it looks
+   like once it is there. An hour with nothing in it is drawn shorter, so the
+   heights below are what a full hour gets, not what every hour gets.
+   ========================================================================== */
+
+.tg-scroll {
+  overflow-x: auto;
+  padding: 2px 16px 10px;
+  margin: -2px -16px -10px;
+  scrollbar-width: thin;
+}
+.tg {
+  --tg-gutter: 52px;
+  --tg-gap: var(--space-2);
+  min-width: 820px;
+  /* Room for the 23:00 label, which straddles the closing line. */
+  padding-bottom: 10px;
+}
+
+/* ---------- the day names, and the tray above the clock ---------- */
+
+.tg-head {
+  display: grid;
+  grid-template-columns: var(--tg-gutter) repeat(7, minmax(0, 1fr));
+  gap: var(--tg-gap);
+  align-items: start;
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+.tg-head-col { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.tg-head-line { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.tg-head-day { font-family: var(--font-heading); font-weight: 700; font-size: 14px; line-height: 1.2; }
+.tg-head-date { font-size: 11.5px; color: var(--color-neutral-500); font-variant-numeric: tabular-nums; }
+.tg-head-col.tg-today .tg-head-day { color: var(--color-accent-800); }
+.tg-head-col.tg-today .tg-head-date { color: var(--color-accent-700); }
+
+/* Entries with no time of day can't go on the clock, so they sit above it
+   rather than being given a slot they never asked for. */
+.tg-tray { display: flex; flex-direction: column; gap: 3px; }
+.tg-chip {
+  display: flex; align-items: center; gap: 5px;
+  padding: 3px 7px;
+  border-radius: 8px;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  font-size: 11px; line-height: 1.3;
+  min-width: 0;
+}
+.tg-chip-dot {
+  flex: none; width: 4px; height: 4px; border-radius: 50%;
+  background: var(--color-neutral-400);
+}
+.tg-chip-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tg-chip.tg-done .tg-chip-text { text-decoration: line-through; color: var(--color-neutral-500); }
+
+/* ---------- the clock itself ---------- */
+
+.tg-body {
+  display: grid;
+  grid-template-columns: var(--tg-gutter) repeat(7, minmax(0, 1fr));
+  gap: var(--tg-gap);
+  position: relative;
+  transition: height .38s cubic-bezier(.4, 0, .2, 1);
+}
+.tg-gutter { position: relative; }
+.tg-hour {
+  position: absolute;
+  left: 0; right: 6px;
+  text-align: right;
+  font-size: 10.5px;
+  line-height: 1;
+  color: var(--color-neutral-500);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  /* The page sets `opacity` on each label from the row's density: a shrunken
+     hour is still labelled, just quieter, so the clock stays readable where
+     it closes up. This is the value for a row at full height. */
+  opacity: 1;
+  transition: top .38s cubic-bezier(.4, 0, .2, 1),
+              height .38s cubic-bezier(.4, 0, .2, 1),
+              opacity .38s ease;
+}
+.tg-hour-quiet { font-size: 10px; }
+/* The 23:00 edge is a boundary, not an hour slot, so its label straddles the
+   closing line instead of sitting under it — which also keeps it clear of the
+   22:00 label when the last hours are shrunk right down. */
+.tg-hour-end { transform: translateY(-50%); }
+
+.tg-canvas {
+  grid-column: 2 / -1;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--tg-gap);
+}
+
+/* One rule across all seven columns per hour, so the eye can carry a time
+   sideways. They are out of flow, so they are not grid items. */
+.tg-lines { position: absolute; inset: 0; pointer-events: none; }
+.tg-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 1px;
+  background: var(--color-border);
+  transition: top .38s cubic-bezier(.4, 0, .2, 1), opacity .38s ease;
+}
+.tg-line-quiet { opacity: .45; }
+.tg-line-end { opacity: .8; }
+
+.tg-col {
+  position: relative;
+  min-width: 0;
+  border-radius: 14px;
+}
+.tg-col.tg-today::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: var(--color-primary-soft);
+  opacity: .5;
+  pointer-events: none;
+}
+.tg-col-empty {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0; padding: 0 6px;
+  font-size: 11.5px; font-style: italic; text-align: center;
+  color: var(--color-neutral-400);
+}
+
+/* ---------- what is booked ---------- */
+
+.tg-block {
+  position: absolute;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 3px 7px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-neutral-400);
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px rgb(var(--shadow-color, 72 62 50) / .06);
+  text-align: left;
+  color: var(--color-text);
+  cursor: default;
+  transition: top .38s cubic-bezier(.4, 0, .2, 1),
+              height .38s cubic-bezier(.4, 0, .2, 1),
+              left .38s cubic-bezier(.4, 0, .2, 1),
+              width .38s cubic-bezier(.4, 0, .2, 1),
+              background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+.tg-block:hover {
+  background: var(--color-primary-soft);
+  box-shadow: 0 6px 16px rgb(var(--shadow-color, 72 62 50) / .14);
+  z-index: 3;
+}
+/* The row above the title: the done toggle where there is one, the time, and
+   on the dashboard the arrow into the notebook. */
+.tg-block-head { display: flex; align-items: center; gap: 4px; min-height: 12px; }
+.tg-check {
+  flex: none;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-neutral-400);
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.tg-chip .tg-check { width: 11px; height: 11px; }
+
+.tg-block-time {
+  font-size: 10px;
+  line-height: 1.15;
+  color: var(--color-neutral-600);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tg-block-title {
+  font-size: 11.5px;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+/* How many lines actually fit is a function of the block's height, which only
+   the layout knows — it puts the answer on the element and this reads it.
+   Clamping to one line too many is what leaves half a line of text showing. */
+.tg-block[data-lines="2"] .tg-block-title { -webkit-line-clamp: 2; }
+.tg-block[data-lines="3"] .tg-block-title { -webkit-line-clamp: 3; }
+
+/* Three abreast in one column leaves no room for a time that would truncate
+   to "9:0…" — the title is what has to survive. The full time is in the
+   block's tooltip either way. */
+.tg-block:not([data-lanes="1"]):not([data-lanes="2"]) .tg-block-time { display: none; }
+
+/* A deadline is a moment, not a stretch: it gets the smallest height the
+   module will give a block, and reads as a marker rather than a span. */
+.tg-point { border-left-width: 3px; border-style: dashed; }
+
+/* Its real time fell outside 06:00–23:00 and the block has been pulled to the
+   edge of the window. The label still says what it says. */
+.tg-pinned::after {
+  content: '';
+  position: absolute; right: 4px; top: 4px;
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--color-accent-500);
+}
+.tg-block.tg-done { opacity: .62; }
+.tg-block.tg-done .tg-block-title { text-decoration: line-through; }
+
+.tg-block-class    { border-left-color: var(--color-accent-2);     background: var(--color-surface); }
+.tg-block-study    { border-left-color: var(--color-accent-600);   background: var(--color-accent-100); }
+.tg-block-event    { border-left-color: var(--color-accent-2-300); background: var(--color-surface); }
+.tg-block-deadline { border-left-color: var(--color-danger);       background: var(--color-surface); }
+.tg-block-task     { border-left-color: var(--color-neutral-400);  background: var(--color-surface-sunken); }
+
+/* ---------- what is not ---------- */
+
+/* The hole between two things, measured so you don't have to. Short gaps are
+   left unlabelled by the module; the ones that get here are worth naming. */
+.tg-gap {
+  position: absolute;
+  left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition: top .38s cubic-bezier(.4, 0, .2, 1),
+              height .38s cubic-bezier(.4, 0, .2, 1);
+}
+.tg-gap-label {
+  font-size: 10px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 999px;
+  color: var(--color-neutral-500);
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  white-space: nowrap;
+  opacity: .9;
+}
+/* Too short to hold the pill without crowding the blocks either side. */
+.tg-gap[style*="height: 2"] .tg-gap-label,
+.tg-gap[style*="height: 1"] .tg-gap-label { display: none; }
+
+:root[data-theme="dark"] .tg-block-deadline { background: var(--color-surface-sunken); }
+:root[data-theme="dark"] .tg-gap-label { background: var(--color-surface); }
+
+/* ---------- the same clock on a dashboard card ----------
+   The home page shows the week as a preview beside everything else, so it
+   draws the grid at a smaller scale (see HOME_GRID_SCALE there) and the type
+   has to come down with it. Nothing about the layout changes — only its
+   size. */
+
+.tg-compact { --tg-gutter: 42px; }
+.tg-compact .tg-head-day { font-size: 13px; }
+.tg-compact .tg-head-date { font-size: 11px; }
+.tg-compact .tg-hour { font-size: 10px; }
+.tg-compact .tg-block { padding: 2px 6px; border-radius: 9px; gap: 0; }
+.tg-compact .tg-block-time { font-size: 9.5px; }
+.tg-compact .tg-block-title { font-size: 11px; line-height: 1.2; }
+.tg-compact .tg-block-head { min-height: 11px; }
+.tg-compact .tg-gap-label { font-size: 9.5px; padding: 1px 5px; }
+.tg-compact .tg-chip { font-size: 10.5px; padding: 2px 6px; }
+.tg-compact .tg-col-empty { font-size: 11px; }
+
+/* On the dashboard a block has no menu behind it, so the whole thing is the
+   way into the notebook it belongs to. */
+.tg-block-link { cursor: pointer; }
+.tg-block-arrow {
+  margin-left: auto;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--color-accent-700);
+  opacity: 0;
+  transition: opacity .16s ease;
+}
+.tg-block-link:hover .tg-block-arrow,
+.tg-block-link:focus-visible .tg-block-arrow { opacity: 1; }
+
+/* Seven columns over a clock will not fit a phone, and squeezing them until
+   they do helps nobody — it scrolls sideways instead, as the week strip
+   always has. The gutter and gaps give back what they can. */
+@media (max-width: 760px) {
+  .tg { --tg-gutter: 38px; --tg-gap: 6px; min-width: 680px; }
+  .tg-compact { --tg-gutter: 34px; }
+  .tg-head-day { font-size: 13px; }
+  .tg-hour { font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tg-body, .tg-hour, .tg-line, .tg-block, .tg-gap { transition: none; }
+}
+
+@media print {
+  .tg-scroll { overflow: visible; }
+  .tg { min-width: 0; }
+}
+
+/* ==========================================================================
+   Dark theme
+   --------------------------------------------------------------------------
+   theme.js sets data-theme="dark" on <html> when the reader picks Dark in
+   Settings → Preferences, or picks Match system on a device in dark mode.
+   The pages take their colours from the tokens above, so re-pointing those
+   re-themes the app; the rules after the token block cover the few surfaces
+   that are deliberately fixed colours.
+
+   Warm charcoal rather than neutral black, so it is recognisably the same
+   clay. Both ramps run the other way round: the pages use the low steps as
+   fills and the high steps as text, so 100 is the darkest tint and 900 the
+   lightest ink. Contrast figures are against --color-surface.
+   ========================================================================== */
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-accent-100: #0E241E;
+  --color-accent-200: #122E27;
+  --color-accent-300: #1A4539;
+  --color-accent-400: #3FA78B;
+  --color-accent-500: #6ED8B9;
+  --color-accent-600: #5CCBAA;
+  --color-accent-700: #9BE9D2;   /* 12.7:1 — foreground */
+  --color-accent-800: #C2F3E5;
+  --color-accent-900: #E0FAF1;
+  --color-accent-2: #6ED8B9;
+  --color-accent-2-300: #1A4539;
+
+  --color-neutral-100: #141311;
+  --color-neutral-200: #1F1E1B;
+  --color-neutral-300: #2C2A27;
+  --color-neutral-400: #7A766F;  /* 3.9:1 — placeholders */
+  --color-neutral-500: #A29E97;  /* 6.7:1 — micro-labels */
+  --color-neutral-600: #BAB6AF;  /* 8.8:1 — muted prose */
+  --color-neutral-700: #D2CFC9;
+  --color-neutral-800: #E6E3DE;
+  --color-neutral-900: #F9F7F4;
+
+  --color-bg: #0B0A09;
+  --color-text: #F7F5F1;         /* 16.3:1 */
+  --color-divider: rgb(247 245 241 / .16);
+
+  /* The pastel mint can't carry light text, so dark mode's primary is a
+     deep mint that holds 6.3:1 under it. */
+  --color-primary: #1B6651;
+  --color-primary-hover: #165745;
+  --color-primary-soft: #112C25;
+  --color-surface: #191816;
+  --color-surface-sunken: #121110;
+  --color-background: #0B0A09;
+  /* Surface and ground sit close together this dark, so borders do more of
+     the work of separating a card from the page. */
+  --color-border: #2C2A27;
+  --color-border-strong: #3D3B37;
+  --color-focus-ring: #74E3C3;
+  --color-text-primary: #F7F5F1;
+  --color-text-secondary: #A29E97;
+  --color-text-muted: #BAB6AF;
+  --color-success: #1B6651;
+  --color-warning: #7A6630;
+  --color-error: #7E3F38;
+  --color-disabled-bg: #1F1E1B;
+  --color-disabled-border: #2C2A27;
+  --color-disabled-text: #6E6A64;
+
+  --color-danger: #F9A69B;
+  --color-danger-strong: #FBC0B8;
+  --color-ok-text: #ABE3B3;
+  --color-warning-text: #F5E4AA;
+  --color-calc-second: #8FC7F2;
+  --color-calc-second-strong: #AED7F7;
+
+  /* A lit edge and a translucent white would glow on near-black. These warm
+     greys give the same lift without it. */
+  --clay-white: 36 34 31;
+  --clay-edge: 50 48 44;
+
+  /* Shadows barely register on a dark ground at light-mode strength. */
+  --shadow-color: 0 0 0;
+  --elevation-1: 0 1px 2px rgb(0 0 0 / .40);
+  --elevation-2: 0 2px 4px rgb(0 0 0 / .36), 0 4px 10px rgb(0 0 0 / .30);
+  --elevation-3: 0 4px 8px rgb(0 0 0 / .36), 0 8px 18px rgb(0 0 0 / .34);
+  --elevation-4: 0 6px 12px rgb(0 0 0 / .38), 0 12px 26px rgb(0 0 0 / .40);
+  --elevation-5: 0 10px 20px rgb(0 0 0 / .42), 0 20px 44px rgb(0 0 0 / .46);
+  --highlight-top: inset 0 1px 0 rgb(255 255 255 / .04);
+  --highlight-inset: inset 0 1px 2px rgb(0 0 0 / .35);
+}
+
+:root[data-theme="dark"] .nb-modal-backdrop,
+:root[data-theme="dark"] .nn-backdrop { background: rgb(0 0 0 / .7) !important; }
+
+/* Calculator keys keep their moulded gradient, in charcoal. Every key kind is
+   restated here: at this specificity the plain .nb-key rule would otherwise
+   outrank light mode's per-kind gradients. */
+:root[data-theme="dark"] .nb-key     { background: linear-gradient(180deg, #24221F, #1B1A17) !important; }
+:root[data-theme="dark"] .nb-key-op  { background: linear-gradient(180deg, #183A31, var(--color-accent-200)) !important; }
+:root[data-theme="dark"] .nb-key-exe { background: linear-gradient(180deg, #1D4A3E, var(--color-accent-300)) !important; }
+:root[data-theme="dark"] .nb-key-act { background: linear-gradient(180deg, #24221F, #1E1D1A) !important; }
+
+/* Drawings stay on paper. The pen colours are dark inks and a drawing is saved
+   with a transparent ground, so on charcoal the strokes would disappear — both
+   where a drawing is made and where it sits in a chapter. */
+:root[data-theme="dark"] .nb-canvas-wrap {
+  background:
+    linear-gradient(rgb(72 62 50 / .07) 1px, transparent 1px) 0 0/22px 22px,
+    linear-gradient(90deg, rgb(72 62 50 / .07) 1px, transparent 1px) 0 0/22px 22px,
+    #FAF9F6;
+}
+:root[data-theme="dark"] .nb-drawing { background: #FAF9F6; border-color: transparent; }
+/* The ink swatches are those same dark inks; a faint ring keeps Ink itself
+   findable on the charcoal toolbar. */
+:root[data-theme="dark"] .nb-swatch { box-shadow: 0 0 0 1px rgb(255 255 255 / .28); }
+
+/* Chapter text. Pasted text carries its source's colours — nearly always a
+   dark ink that would vanish here — so it takes the theme's text colour
+   instead. A highlight is saved into the note as a pastel fill that has to
+   work in both themes, so highlighted text gets dark ink on top of it. */
+:root[data-theme="dark"] .editor [style*="color"] { color: inherit !important; }
+:root[data-theme="dark"] .editor [style*="background-color"]:not([style*="transparent"]):not([style*="rgba(0, 0, 0, 0)"]) {
+  color: #1E1E1E !important;
+}
+
+/* Set by theme.js for the frame a theme switch paints in — see saveTheme. */
+.notivlo-theme-switching,
+.notivlo-theme-switching * { transition: none !important; }
+
+/* ==========================================================================
+   The account panel — Sign up and Sign in
+   --------------------------------------------------------------------------
+   Both doors into the app show the same thing beside their form: a miniature
+   of Home, built from these tokens, that fills in as the form does. On Sign
+   up it is what the account is for; on Sign in it is what is still waiting.
+   The mechanic is the same either way — a name lands in the greeting, a
+   recognised email lights the shelf, and a complete form turns the whole
+   panel on.
+
+   Shared here rather than copied into both pages because it is now one
+   component on two screens. Each page keeps only what differs: Sign up's
+   password-rule chips, Sign in's safe-area shell and its reset forms.
+
+   Nothing in here is specific to either page's grid beyond the three areas
+   below, so a third screen could use it as it stands.
+   ========================================================================== */
+
+.su-wrap {
+  position: relative; z-index: 1; min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--space-6); font-family: var(--font-body);
+}
+.su-card {
+  width: 100%; max-width: 1040px;
+  display: grid; grid-template-columns: 1.02fr .98fr;
+  grid-template-areas: "intro form" "mini form";
+  column-gap: var(--space-8); row-gap: var(--space-4); align-items: start;
+  padding: var(--space-8); background: var(--color-surface);
+  border: 1px solid var(--color-border); border-radius: 28px;
+  box-shadow: 0 18px 40px rgba(72,62,50,.10), inset 0 1px 0 rgb(var(--clay-edge) / .7);
+}
+
+/* The same card with no panel: Sign in's reset forms, which are one task
+   each and have nothing to show beside them. Hidden rather than branched in
+   the markup, so the page has one card and not two. */
+.su-card--solo { max-width: 400px; grid-template-columns: 1fr; grid-template-areas: "form"; }
+.su-card--solo .su-intro,
+.su-card--solo .su-mini-wrap { display: none; }
+.su-card--solo .su-form { padding-left: 0; border-left: 0; }
+
+/* ---- the claim ---- */
+.su-intro { grid-area: intro; display: flex; flex-direction: column; gap: var(--space-2); }
+.su-claim {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 30px; line-height: 1.18; letter-spacing: -.015em; margin: var(--space-2) 0 0;
+}
+.su-sub { margin: 0; font-size: 14px; line-height: 1.55; color: var(--color-neutral-600); max-width: 46ch; }
+.su-proof { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: var(--space-2) 0 0; padding: 0; }
+.su-proof li {
+  font-size: 12px; line-height: 1; padding: 7px 11px; border-radius: var(--radius-full);
+  background: var(--color-surface-sunken); border: 1px solid var(--color-border);
+  color: var(--color-neutral-700);
+}
+
+/* ---- the miniature ---- */
+.su-mini-wrap { grid-area: mini; align-self: end; display: flex; flex-direction: column; gap: var(--space-2); }
+.su-mini {
+  border-radius: var(--radius-lg); background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border); padding: var(--space-3);
+  display: flex; flex-direction: column; gap: var(--space-2);
+  box-shadow: 0 14px 30px rgba(72,62,50,.10), inset 0 1px 0 rgb(var(--clay-edge) / .6);
+  opacity: .74; filter: saturate(.5);
+  transition: opacity .45s ease, filter .45s ease, transform .45s ease, box-shadow .45s ease;
+}
+.su-mini.is-named  { opacity: .88; filter: saturate(.76); }
+.su-mini.is-synced { opacity: .96; filter: saturate(.92); }
+.su-mini.is-locked {
+  opacity: 1; filter: none; transform: translateY(-3px);
+  box-shadow: 0 20px 40px rgba(72,62,50,.16), inset 0 1px 0 rgb(var(--clay-edge) / .8);
+}
+
+.su-bar { display: flex; align-items: center; gap: 8px; }
+.su-bar-logo { font-family: var(--font-logo); font-size: 11px; letter-spacing: -.02em; color: var(--color-text); }
+.su-bar-pill { flex: 1; height: 16px; border-radius: var(--radius-full); background: var(--color-surface); border: 1px solid var(--color-border); }
+.su-avatar {
+  flex: none; width: 18px; height: 18px; border-radius: var(--radius-full);
+  display: grid; place-items: center; font-size: 9px; font-weight: 700;
+  background: var(--color-neutral-200); color: var(--color-neutral-600);
+  border: 1px solid var(--color-border);
+  transition: background .35s ease, color .35s ease, border-color .35s ease;
+}
+.su-avatar.on { background: var(--color-primary); color: var(--color-text-primary); border-color: var(--color-accent-600); }
+
+.su-greet { font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-size: 19px; line-height: 1.2; margin: 2px 0 0; }
+.su-name { color: var(--color-accent-800); }
+.su-name-slot {
+  display: inline-block; width: 84px; height: .72em; vertical-align: baseline;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--color-neutral-200), var(--color-neutral-300), var(--color-neutral-200));
+  background-size: 220% 100%; animation: suShimmer 1.8s linear infinite;
+}
+.su-note { margin: 0; font-size: 11.5px; color: var(--color-neutral-600); }
+
+.su-kick { font-size: 9.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--color-neutral-500); margin-top: 2px; }
+.su-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.su-chip { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 7px 9px; display: flex; flex-direction: column; gap: 2px; }
+.su-chip-top { display: flex; gap: 5px; align-items: center; font-size: 9px; color: var(--color-neutral-500); }
+.su-chip-tag { padding: 1px 5px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-accent-800); border: 1px solid var(--color-accent-300); }
+.su-chip-title { font-size: 11.5px; color: var(--color-text); line-height: 1.25; }
+
+.su-books { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.su-book {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); padding: 8px;
+  display: flex; flex-direction: column; gap: 6px;
+  animation: suRise .55s ease both;
+}
+.su-book:nth-child(2) { animation-delay: .09s; }
+.su-book:nth-child(3) { animation-delay: .18s; }
+.su-book-ic {
+  width: 17px; height: 17px; border-radius: 7px;
+  background: var(--color-primary-soft); border: 1px solid var(--color-accent-300);
+  display: grid; place-items: center; font-size: 9px; color: var(--color-accent-800);
+}
+.su-book-t { font-size: 11px; line-height: 1.25; color: var(--color-text); }
+
+.su-status {
+  display: flex; align-items: center; gap: 8px;
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-full);
+  background: var(--color-surface-sunken); border: 1px solid var(--color-border);
+  font-size: 12.5px; line-height: 1.35; color: var(--color-neutral-700);
+  transition: background .35s ease, border-color .35s ease, color .35s ease;
+}
+.su-status.is-done { background: var(--color-primary-soft); border-color: var(--color-accent-600); color: var(--color-accent-800); }
+.su-status-mark { flex: none; width: 13px; text-align: center; }
+
+/* ---- the form beside it ---- */
+.su-form {
+  grid-area: form; display: flex; flex-direction: column; justify-content: center;
+  gap: var(--space-3); align-self: stretch;
+  padding-left: var(--space-8); border-left: 1px solid var(--color-border);
+}
+.su-form-head { display: flex; flex-direction: column; gap: 2px; }
+.su-h1 { font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-size: 26px; margin: 0; }
+.su-rail { display: flex; gap: 5px; margin-bottom: var(--space-2); }
+.su-dot { width: 24px; height: 4px; border-radius: var(--radius-full); background: var(--color-neutral-400); transition: background .3s ease, width .3s ease; }
+.su-dot.on { background: var(--color-accent-600); width: 34px; }
+
+.su-pw { position: relative; display: flex; flex-direction: column; }
+.su-reveal {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  border: 0; background: transparent; padding: 4px 6px;
+  font: inherit; font-size: 12px; color: var(--color-accent-700);
+  cursor: pointer; border-radius: var(--radius-sm);
+}
+.su-reveal:hover { background: var(--color-primary-soft); }
+
+@keyframes suShimmer { 0% { background-position: 220% 0; } 100% { background-position: -220% 0; } }
+/* Transform only, never opacity: with fill-mode "both" a paused or throttled
+   page would otherwise hold the shelf at opacity 0, and an empty shelf is the
+   one thing this panel must never show. */
+@keyframes suRise { from { transform: translateY(8px); } to { transform: none; } }
+
+/* One column below the split: the claim, then the form, then the miniature
+   underneath as reassurance rather than above as a wall. */
+@media (max-width: 900px) {
+  .su-wrap { padding: var(--space-4); align-items: flex-start; }
+  .su-card {
+    max-width: 460px; grid-template-columns: 1fr;
+    grid-template-areas: "intro" "form" "mini";
+    row-gap: var(--space-3); padding: var(--space-4);
+  }
+  .su-form { padding-left: 0; border-left: 0; border-top: 1px solid var(--color-border); padding-top: var(--space-3); justify-content: flex-start; }
+  .su-card--solo .su-form { border-top: 0; padding-top: 0; }
+  .su-br { display: none; }
+  .su-claim { font-size: 21px; margin-top: 4px; }
+  .su-sub { font-size: 13px; }
+  .su-h1 { font-size: 21px; }
+  .su-proof li { font-size: 11px; padding: 6px 9px; }
+  .su-mini-wrap { padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+}
+@media (max-width: 380px) {
+  .su-books { grid-template-columns: repeat(2, 1fr); }
+  .su-book:nth-child(3) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .su-mini, .su-book, .su-name-slot, .su-dot, .su-avatar, .su-status { animation: none !important; transition: none !important; }
+}

@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file: blob: 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob:; font-src 'self' file: data:; connect-src 'self' file: data: blob: https://tftwbhkypzsrhwaxkgbr.supabase.co; worker-src 'none'; child-src 'none'; media-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="no-referrer">
+<title>notivlo — Home</title>
+<script>
+  // Require a signed-in session before the app boots — no flash of app
+  // content for a logged-out visitor.
+  try {
+    if (!localStorage.getItem('folio_session')) {
+      location.replace('SignIn.dc.html');
+    }
+  } catch (e) {}
+</script>
+<script src="./theme.js"></script>
+<script src="./text-size.js"></script>
+<script src="./agenda-timegrid.js"></script>
+<script src="./support.js"></script>
+<!-- The backend. Inert while supabase-config.js holds no project: with it
+     empty every page below falls back to localStorage, which is how the app
+     worked before there was a server. Order matters — each file depends on
+     the one above it, and they are in <head> rather than <helmet> for the
+     reason written at the top of auth.js. -->
+<script src="./supabase-config.js"></script>
+<script src="./supabase-client.js"></script>
+<script src="./supabase-auth.js"></script>
+<script src="./supabase-sync.js"></script>
+<!-- The setup guide. This page shows two things from it, both of which
+     disappear with the guide off (setup/setup-flag.js): the button that
+     reopens it, and the getting-started card. Neither reads storage itself —
+     setup-service.js answers both questions. -->
+<script src="./setup/setup-flag.js"></script>
+<script src="./setup/setup-store.js"></script>
+<script src="./setup/setup-content.js"></script>
+<script src="./setup/setup-service.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="stylesheet" href="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/styles.css">
+<link rel="stylesheet" href="soft-clay.css">
+<!-- The setup guide's getting-started card. Styles only; the card itself is
+     not rendered unless the guide says so. -->
+<link rel="stylesheet" href="setup/setup.css">
+<script src="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/_ds_bundle.js"></script>
+<style>
+  body{margin:0;background:var(--color-bg);color:var(--color-text)}
+  a{color:var(--color-accent-700);text-decoration:none}
+  a:hover{color:var(--color-accent-900);text-decoration:underline}
+  .nb-card{transition:box-shadow .22s ease, transform .22s ease, border-color .22s ease, background .22s ease}
+  .nb-card:hover{background:var(--color-primary-soft) !important;box-shadow:0 20px 44px rgba(72,62,50,.16),inset 0 1px 0 rgb(var(--clay-edge) / .8) !important;transform:translateY(-4px)}
+  /* Keeps the "Coming up" strip swipeable without showing a scrollbar track. */
+  .no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}
+  .no-scrollbar::-webkit-scrollbar{display:none}
+  /* Setting overflow-x makes overflow-y compute to auto rather than visible
+     (CSS overflow spec), so a horizontal scroller silently clips its children
+     vertically — which cut the cards' drop shadows off flush with the card.
+     The padding gives the shadow room inside the scroll box; the matching
+     negative margins take that room back out of the layout, so the strip
+     occupies exactly what it did before. */
+  .shadow-safe{padding:6px 0 30px;margin:-6px 0 -28px}
+
+  /* — New-notebook modal — */
+  @keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .nn-backdrop{position:fixed;inset:0;z-index:300;background:rgba(60,45,20,.28);animation:fadeIn .2s ease}
+  .nn-modal{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:310;
+    width:75vw;height:75vh;display:flex;flex-direction:column;
+    background:var(--color-surface);
+    border:1px solid var(--color-border);border-radius:28px;
+    box-shadow:0 30px 70px rgba(72,62,50,.22),inset 0 1px 0 rgb(var(--clay-edge) / .8);
+    animation:modalIn .24s cubic-bezier(.32,.72,0,1);overflow:hidden;
+  }
+  .nn-cat{cursor:pointer;transition:background .15s ease, border-color .15s ease, color .15s ease}
+  .nn-cat:hover{background:var(--color-primary-soft)}
+  @media (max-width: 760px){
+    .nn-modal{width:94vw;height:88vh;border-radius:22px}
+    /* The bar holds a 240px search box and two labelled buttons, which do not
+       fit a phone: at 375px it ran 123px past the screen and widened the whole
+       page. The search drops to a row of its own and the buttons keep their
+       icons, named by the aria-label each one carries. Same breakpoint and
+       same !important-over-inline shape as Settings' own nav rule. */
+    .nav{flex-wrap:wrap;padding:8px 14px !important;gap:8px !important}
+    /* All four become the same 36px circle: the ghost buttons' padding-inline
+       is a quarter of the primary's, so without this the icons sit in pills of
+       three different widths. */
+    .nav .btn{flex:none;width:36px;height:36px;padding:0 !important;justify-content:center}
+    .nav-search{order:10;flex:1 1 100%;width:auto !important;margin-left:0 !important}
+    .nav-btn-label{display:none}
+  }
+  .ag-toggle{transition:background .15s ease, border-color .15s ease}
+  .due-chip{transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease, background .18s ease}
+  .due-chip:hover{border-color:var(--color-accent-500) !important;box-shadow:0 12px 26px rgba(72,62,50,.14) !important;transform:translateY(-2px);background:var(--color-surface) !important}
+  .glass-btn-primary{transition:background .18s ease, box-shadow .18s ease, transform .12s ease}
+  .glass-btn-primary:hover{background:var(--color-primary-hover) !important;transform:translateY(-1px)}
+  .glass-btn-primary:active{transform:translateY(0px) scale(.98)}
+  /* Right-click menu for notebooks the reader made. */
+  .ctx-menu{position:fixed;z-index:1000;min-width:198px;padding:6px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:16px;box-shadow:0 20px 44px rgba(72,62,50,.20)}
+  .ctx-label{padding:6px 10px 5px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-500);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ctx-item{display:flex;align-items:center;gap:9px;width:100%;padding:7px 10px;border:none;background:transparent;border-radius:10px;font-family:var(--font-body);font-size:13px;color:var(--color-text);text-align:left;cursor:pointer;transition:background .12s ease}
+  .ctx-item:hover{background:rgba(108,205,177,.16)}
+  .ctx-item svg{flex:none;opacity:.7}
+  .ctx-danger{color:var(--color-danger-strong)}
+  .ctx-danger:hover{background:rgba(182,60,53,.14)}
+  .glass-btn-ghost{transition:background .18s ease, transform .12s ease}
+  .glass-btn-ghost:hover{background:var(--color-primary-soft) !important}
+  /* Logo links home. Needs to outrank `.nav a`'s font-size:14px, which would
+     otherwise shrink the brand from its 18px. */
+  .nav a.nav-brand{font-size:18px;color:var(--color-text);cursor:pointer;transition:color .15s ease, opacity .15s ease}
+  .nav a.nav-brand:hover{color:var(--color-accent-700);text-decoration:none;opacity:.85}
+  @keyframes floatA{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,50px) scale(1.08)}}
+  @keyframes floatB{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-50px,30px) scale(.94)}}
+  @keyframes floatC{0%{transform:translate(0,0) scale(1)}100%{transform:translate(30px,-40px) scale(1.05)}}
+  @media (max-width: 880px){
+    .home-row{grid-template-columns:1fr !important}
+  }
+</style>
+</helmet>
+
+<div style="position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none">
+  <div style="position:absolute;width:560px;height:560px;top:-160px;left:-120px;border-radius:50%;background:radial-gradient(circle at 30% 30%,var(--color-accent-300),transparent 70%);filter:blur(60px);opacity:.55;animation:floatA 18s ease-in-out infinite alternate"></div>
+  <div style="position:absolute;width:460px;height:460px;top:120px;right:-140px;border-radius:50%;background:radial-gradient(circle at 40% 40%,var(--color-accent-2-300),transparent 70%);filter:blur(60px);opacity:.5;animation:floatB 22s ease-in-out infinite alternate"></div>
+  <div style="position:absolute;width:520px;height:520px;bottom:-180px;left:20%;border-radius:50%;background:radial-gradient(circle at 50% 50%,var(--color-neutral-300),transparent 70%);filter:blur(70px);opacity:.5;animation:floatC 20s ease-in-out infinite alternate"></div>
+</div>
+
+<div style="position:relative;z-index:1;min-height:100vh;font-family:var(--font-body)">
+
+  <nav class="nav" style="display:flex;align-items:center;gap:var(--space-4);position:sticky;top:14px;z-index:40;max-width:1180px;margin:14px auto 0;background:var(--color-surface);border:1px solid var(--color-border);border-radius:28px;box-shadow:0 14px 30px rgba(72,62,50,.10),inset 0 1px 0 rgb(var(--clay-edge) / .7);padding:10px 28px">
+    <a href="Home.dc.html" class="nav-brand" aria-label="notivlo — go to home"><span class="brand-logo">notivlo</span></a>
+    <div class="nav-search" style="position:relative;display:flex;align-items:center;margin-left:var(--space-4);width:240px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:12px;opacity:.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input class="input" placeholder="Search notebooks" value="{{ searchQuery }}" onChange="{{ onSearchChange }}" style="padding-left:32px;height:36px;width:100%;border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)"/>
+    </div>
+    <div style="flex:1"></div>
+    <a href="Planner.dc.html" class="btn btn-ghost glass-btn-ghost" aria-label="Agenda" title="Agenda" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg>
+      <span class="nav-btn-label">Agenda</span>
+    </a>
+    <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ addNotebook }}" aria-label="New notebook" title="New notebook" style="border-radius:999px;background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .35)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      <span class="nav-btn-label">New notebook</span>
+    </button>
+    <sc-if value="{{ guideVisible }}" hint-placeholder-val="{{ false }}">
+      <a href="Setup.dc.html?step=3" class="btn btn-ghost btn-icon glass-btn-ghost" aria-label="Setup guide" title="Setup guide" style="border-radius:50%;width:36px;height:36px;background:var(--color-surface)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+      </a>
+    </sc-if>
+    <a href="Settings.dc.html" class="btn btn-ghost btn-icon glass-btn-ghost" aria-label="Settings" title="Settings" style="border-radius:50%;width:36px;height:36px;background:var(--color-surface)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </a>
+  </nav>
+
+  <sc-if value="{{ showReminder }}" hint-placeholder-val="{{ true }}">
+    <div style="max-width:1180px;margin:var(--space-4) auto 0;padding:0 var(--space-6)">
+      <div style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);background:var(--color-surface);border:1px solid rgba(108,205,177,.35);border-radius:20px;box-shadow:0 10px 26px rgba(72,62,50,.08),inset 0 1px 0 rgb(var(--clay-edge) / .6)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+        <span style="font-size:14px;color:var(--color-accent-700);flex:1">{{ reminderText }}</span>
+        <a href="Planner.dc.html" style="font-size:13px;color:var(--color-accent-700);text-decoration:underline;flex:none">Review</a>
+        <button type="button" class="btn btn-ghost btn-icon" onClick="{{ dismissReminder }}" aria-label="Dismiss" style="flex:none;width:26px;height:26px;border-radius:50%;background:var(--color-surface)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- The setup guide's getting-started card. Absent with the guide off, for
+       anyone who has never met it, once every item is ticked, and once it is
+       dismissed. Each item is answered by looking at the notebooks and agenda
+       themselves, so it cannot claim something that has not been done. -->
+  <sc-if value="{{ showGettingStarted }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1180px;margin:var(--space-4) auto 0;padding:0 var(--space-6)">
+      <div class="su-gs">
+        <div class="su-gs-top">
+          <h2 class="su-gs-title">Getting started</h2>
+          <span class="su-gs-count">{{ gsCount }}</span>
+          <a href="Setup.dc.html?step=3" class="su-gs-link">Open the guide →</a>
+          <button type="button" class="btn btn-ghost btn-icon" onClick="{{ dismissGs }}" aria-label="Hide getting started" title="Hide getting started" style="flex:none;width:26px;height:26px;border-radius:50%;background:var(--color-surface)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="su-gs-items">
+          <sc-for list="{{ gsItems }}" as="gs" hint-placeholder-count="4">
+            <a href="{{ gs.href }}" class="su-gs-item {{ gs.cls }}">
+              <span class="su-gs-mark" aria-hidden="true">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              </span>
+              <span class="su-gs-label">{{ gs.label }}</span>
+              <span class="su-sr">{{ gs.state }}</span>
+            </a>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="max-width:1180px;margin:0 auto;padding:var(--space-8) var(--space-6) var(--space-2)">
+    <h1 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:42px;margin:0 0 var(--space-2)">{{ greeting }}</h1>
+    <p style="margin:0;color:var(--color-neutral-700);font-size:16px">{{ tagline }}</p>
+  </div>
+
+  <sc-if value="{{ hasUpcoming }}" hint-placeholder-val="{{ false }}">
+    <section style="max-width:1180px;margin:0 auto;padding:var(--space-4) var(--space-6) 0">
+      <div style="font-size:13px;color:var(--color-neutral-500);letter-spacing:.04em;text-transform:uppercase;margin-bottom:var(--space-3)">Coming up</div>
+      <div class="no-scrollbar shadow-safe" style="display:flex;gap:var(--space-3);overflow-x:auto">
+        <sc-for list="{{ upcoming }}" as="u" hint-placeholder-count="4">
+          <a href="{{ u.href }}" class="due-chip" style="flex:none;min-width:200px;padding:var(--space-3) var(--space-4);text-decoration:none;color:inherit;background:var(--color-surface);border:1px solid var(--color-border);border-radius:18px;box-shadow:0 8px 20px rgba(72,62,50,.08),inset 0 1px 0 rgb(var(--clay-edge) / .6)">
+            <div style="display:flex;align-items:baseline;gap:var(--space-2);margin-bottom:4px">
+              <span class="tag {{ u.tagClass }}" style="font-size:11px">{{ u.tagLabel }}</span>
+              <span style="font-size:12px;color:var(--color-neutral-500)">{{ u.day }}</span>
+            </div>
+            <div style="font-size:14px;color:var(--color-text)">{{ u.title }}</div>
+            <div style="font-size:13px;color:var(--color-neutral-600);margin-top:2px;font-variant-numeric:tabular-nums">{{ u.time }}</div>
+          </a>
+        </sc-for>
+      </div>
+    </section>
+  </sc-if>
+
+  <section style="max-width:1180px;margin:0 auto;padding:var(--space-6) var(--space-6) var(--space-4)">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:var(--space-4);gap:var(--space-3);flex-wrap:wrap">
+      <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:24px;margin:0">Your notebooks</h2>
+      <div style="display:flex;align-items:center;gap:var(--space-3)">
+        <span style="font-size:13px;color:var(--color-neutral-600);font-variant-numeric:tabular-nums">{{ notebookCount }} shown</span>
+        <select class="input" value="{{ sortBy }}" onChange="{{ onSortChange }}" style="height:34px;font-size:13px;width:180px;border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">
+          <option value="recent">Sort: Recently updated</option>
+          <option value="name">Sort: Name</option>
+          <option value="progress">Sort: Progress</option>
+        </select>
+      </div>
+    </div>
+    <sc-if value="{{ noNotebooksYet }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:var(--space-3);padding:var(--space-8);background:var(--color-surface);border:1px dashed var(--color-border-strong);border-radius:24px">
+        <span style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:var(--color-accent-100);color:var(--color-accent-700)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+        </span>
+        <p style="margin:0;font-size:15px;color:var(--color-neutral-600);text-align:center">No notebooks yet — start one with <strong style="color:var(--color-text)">New notebook</strong>, up in the corner.</p>
+      </div>
+    </sc-if>
+    <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:var(--space-3);padding:var(--space-8);background:var(--color-surface);border:1px dashed rgba(180,150,110,.5);border-radius:24px">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-neutral-400)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <p style="margin:0;font-size:15px;color:var(--color-neutral-600)">No notebooks match "{{ searchQuery }}"</p>
+        <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ clearSearch }}" style="border-radius:999px;background:var(--color-surface)">Clear search</button>
+      </div>
+    </sc-if>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:var(--space-4)">
+      <sc-for list="{{ notebooks }}" as="nb" hint-placeholder-count="7">
+        <a href="{{ nb.href }}" class="nb-card" onContextMenu="{{ nb.contextMenu }}" style="display:flex;flex-direction:column;text-decoration:none;color:inherit;cursor:pointer;overflow:hidden;background:var(--color-surface);border:1px solid var(--color-border);border-radius:24px;box-shadow:0 12px 28px rgba(72,62,50,.08),inset 0 1px 0 rgb(var(--clay-edge) / .6)">
+          <div style="display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-4);flex:1">
+            <span style="display:flex;align-items:center;justify-content:center;flex:none;width:34px;height:34px;border-radius:10px;background:var(--color-accent-100);color:var(--color-accent-700)">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+            </span>
+            <div class="card-title" style="font-size:19px;flex:1">{{ nb.title }}</div>
+            <div class="card-meta" style="margin-top:0">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span>{{ nb.updated }}</span>
+            </div>
+          </div>
+        </a>
+      </sc-for>
+    </div>
+  </section>
+
+  <sc-if value="{{ addingNotebook }}" hint-placeholder-val="{{ false }}">
+    <div class="nn-backdrop" onClick="{{ cancelAddNotebook }}"></div>
+    <div class="nn-modal" role="dialog" aria-modal="{{ true }}" aria-label="{{ nbModalHeading }}">
+
+      <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);padding:var(--space-4) var(--space-6);border-bottom:1px solid var(--color-border)">
+        <div>
+          <div class="card-kicker">{{ nbModalKicker }}</div>
+          <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:24px;margin:2px 0 0">{{ nbModalHeading }}</h2>
+        </div>
+        <button type="button" class="btn btn-ghost btn-icon glass-btn-ghost" onClick="{{ cancelAddNotebook }}" aria-label="Close" style="flex:none;width:34px;height:34px;border-radius:50%;background:var(--color-surface)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+
+      <div style="flex:1;overflow-y:auto;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-6)">
+
+        <sc-if value="{{ newNotebookError }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:var(--space-2) var(--space-3);background:rgba(182,60,53,.1);border:1px solid rgba(182,60,53,.3);border-radius:12px;color:var(--color-danger-strong);font-size:13px">{{ newNotebookError }}</div>
+        </sc-if>
+
+        <div class="field">
+          <label>Name</label>
+          <input class="input" placeholder="e.g. Chemistry" maxlength="80" value="{{ newNotebookTitle }}" onChange="{{ onNewNotebookTitleChange }}" onKeyDown="{{ onNewNotebookKeyDown }}" autoFocus="{{ true }}" style="border-radius:14px;background:var(--color-surface);font-size:15px;height:44px"/>
+        </div>
+
+        <div>
+          <label style="display:block;font-size:13px;margin-bottom:var(--space-2);color:color-mix(in srgb, var(--color-text) 70%, transparent)">Category</label>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--space-2)">
+            <sc-for list="{{ categoryChoices }}" as="cat" hint-placeholder-count="5">
+              <button type="button" class="nn-cat" onClick="{{ cat.select }}" style="padding:7px 16px;border-radius:999px;font-size:13px;border:1px solid {{ cat.border }};background:{{ cat.bg }};color:{{ cat.color }}">{{ cat.name }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div>
+          <label style="display:block;font-size:13px;margin-bottom:var(--space-2);color:color-mix(in srgb, var(--color-text) 70%, transparent)">Preview</label>
+          <div style="width:210px;display:flex;flex-direction:column;overflow:hidden;background:var(--color-surface);border:1px solid var(--color-border);border-radius:24px;box-shadow:0 12px 28px rgba(72,62,50,.08)">
+            <div style="display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-4)">
+              <span style="display:flex;align-items:center;justify-content:center;flex:none;width:34px;height:34px;border-radius:10px;background:var(--color-accent-100);color:var(--color-accent-700)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+              </span>
+              <div class="card-title" style="font-size:19px">{{ previewTitle }}</div>
+              <div class="card-meta" style="margin-top:0">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <span>{{ previewUpdated }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="flex:none;display:flex;align-items:center;justify-content:flex-end;gap:var(--space-2);padding:var(--space-4) var(--space-6);border-top:1px solid var(--color-border)">
+        <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ cancelAddNotebook }}" style="border-radius:999px;background:var(--color-surface)">Cancel</button>
+        <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ confirmAddNotebook }}" style="border-radius:999px;padding-inline:var(--space-6);background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .35)">{{ nbModalAction }}</button>
+      </div>
+
+    </div>
+  </sc-if>
+
+  <section class="home-row" style="max-width:1180px;margin:0 auto;padding:var(--space-4) var(--space-6) var(--space-8);display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6);align-items:start">
+
+    <!-- Spans the whole row: seven day columns need the full width. The other
+         two cards sit side by side beneath it. min-width:0 because a grid item
+         otherwise refuses to shrink below its content — on a narrow window the
+         card stretched past the screen instead of letting the week scroll. -->
+    <div style="grid-column:1 / -1;min-width:0;padding:var(--space-6);background:var(--color-surface);border:1px solid var(--color-border);border-radius:26px;box-shadow:0 14px 32px rgba(72,62,50,.09),inset 0 1px 0 rgb(var(--clay-edge) / .65)">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-4)">
+        <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:0">This week's plan</h2>
+        <div style="display:flex;align-items:center;gap:var(--space-3)">
+          <span style="font-size:13px;color:var(--color-neutral-600)">{{ weekRange }}</span>
+          <a href="Planner.dc.html" style="font-size:13px">Manage agenda →</a>
+        </div>
+      </div>
+      <!-- The same clock the agenda draws, at a smaller scale: see
+           agenda-timegrid.js. A preview, so a block opens its notebook on
+           click rather than carrying a menu of its own. -->
+      <div class="tg-scroll">
+        <div class="tg tg-compact">
+
+          <div class="tg-head">
+            <div class="tg-head-gutter"></div>
+            <sc-for list="{{ days }}" as="day" hint-placeholder-count="7">
+              <div class="tg-head-col {{ day.todayClass }}">
+                <div class="tg-head-line">
+                  <span class="tg-head-day">{{ day.day }}</span>
+                  <span class="tg-head-date">{{ day.date }}</span>
+                  <sc-if value="{{ day.isToday }}" hint-placeholder-val="{{ false }}">
+                    <span class="tag tag-accent" style="font-size:10px;padding:1px 7px">Today</span>
+                  </sc-if>
+                </div>
+                <sc-if value="{{ day.hasUntimed }}" hint-placeholder-val="{{ false }}">
+                  <div class="tg-tray">
+                    <sc-for list="{{ day.untimed }}" as="u" hint-placeholder-count="1">
+                      <div class="tg-chip {{ u.doneClass }}" title="{{ u.tooltip }}">
+                        <sc-if value="{{ u.checkable }}" hint-placeholder-val="{{ false }}">
+                          <button type="button" class="tg-check" onClick="{{ u.toggle }}" aria-label="Toggle done" style="border-color:{{ u.dotColor }};background:{{ u.dotBg }}">
+                            <sc-if value="{{ u.done }}" hint-placeholder-val="{{ false }}">
+                              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="var(--color-bg)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                            </sc-if>
+                          </button>
+                        </sc-if>
+                        <span class="tg-chip-text">{{ u.title }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+
+          <div class="tg-body" style="{{ gridStyle }}">
+            <div class="tg-gutter">
+              <sc-for list="{{ gridHours }}" as="hr" hint-placeholder-count="17">
+                <div class="tg-hour {{ hr.quietClass }}" style="{{ hr.style }}">{{ hr.label }}</div>
+              </sc-for>
+              <div class="tg-hour tg-hour-end" style="{{ gridEnd.style }}">{{ gridEnd.label }}</div>
+            </div>
+
+            <div class="tg-canvas">
+              <div class="tg-lines">
+                <sc-for list="{{ gridLines }}" as="ln" hint-placeholder-count="18">
+                  <div class="tg-line {{ ln.lineClass }}" style="{{ ln.style }}"></div>
+                </sc-for>
+              </div>
+
+              <sc-for list="{{ days }}" as="day" hint-placeholder-count="7">
+                <div class="tg-col {{ day.todayClass }}">
+                  <sc-for list="{{ day.gaps }}" as="gap" hint-placeholder-count="1">
+                    <div class="tg-gap" style="{{ gap.style }}"><span class="tg-gap-label">{{ gap.label }}</span></div>
+                  </sc-for>
+
+                  <sc-for list="{{ day.timed }}" as="b" hint-placeholder-count="1">
+                    <div class="tg-block {{ b.blockClass }}" data-lanes="{{ b.lanes }}" data-lines="{{ b.lines }}" style="{{ b.style }}" onClick="{{ b.open }}" title="{{ b.tooltip }}">
+                      <div class="tg-block-head">
+                        <sc-if value="{{ b.checkable }}" hint-placeholder-val="{{ false }}">
+                          <button type="button" class="tg-check" onClick="{{ b.toggle }}" aria-label="Toggle done" style="border-color:{{ b.dotColor }};background:{{ b.dotBg }}">
+                            <sc-if value="{{ b.done }}" hint-placeholder-val="{{ false }}">
+                              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="var(--color-bg)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                            </sc-if>
+                          </button>
+                        </sc-if>
+                        <span class="tg-block-time">{{ b.time }}</span>
+                        <sc-if value="{{ b.hasLink }}" hint-placeholder-val="{{ false }}">
+                          <span class="tg-block-arrow" aria-hidden="true">→</span>
+                        </sc-if>
+                      </div>
+                      <span class="tg-block-title">{{ b.title }}</span>
+                    </div>
+                  </sc-for>
+
+                  <sc-if value="{{ day.emptyDay }}" hint-placeholder-val="{{ false }}">
+                    <p class="tg-col-empty">Nothing planned</p>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4);background:var(--color-surface);border:1px solid var(--color-border);border-radius:26px;box-shadow:0 14px 32px rgba(72,62,50,.09),inset 0 1px 0 rgb(var(--clay-edge) / .65)">
+      <div class="card-kicker">This week</div>
+      <div>
+        <div style="font-family:var(--font-heading);font-weight:400;font-size:52px;line-height:1;font-variant-numeric:tabular-nums">{{ progressPercent }}%</div>
+        <p style="margin:var(--space-1) 0 0;color:var(--color-neutral-700);font-size:14px">of your weekly plan complete</p>
+      </div>
+      <div style="height:6px;border-radius:999px;background:rgba(72,62,50,.10);overflow:hidden;border:1px solid rgba(72,62,50,.14)">
+        <div style="height:100%;border-radius:999px;background:linear-gradient(90deg,var(--color-accent-400),var(--color-accent-600));width:{{ progressPercentStr }}"></div>
+      </div>
+      <div class="hr" style="opacity:.5"></div>
+      <div style="display:flex;align-items:center;gap:var(--space-2)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+        <span style="font-size:14px;color:var(--color-text)">{{ streakLabel }}</span>
+      </div>
+      <div style="display:flex;gap:var(--space-2);justify-content:space-between">
+        <sc-for list="{{ weekDots }}" as="dot" hint-placeholder-count="7">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px" title="{{ dot.tooltip }}">
+            <span style="font-size:11px;color:var(--color-neutral-500)">{{ dot.label }}</span>
+            <div style="width:16px;height:16px;border-radius:50%;border:1.5px solid {{ dot.border }};background:{{ dot.bg }}"></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-3);background:var(--color-surface);border:1px solid var(--color-border);border-radius:26px;box-shadow:0 14px 32px rgba(72,62,50,.09),inset 0 1px 0 rgb(var(--clay-edge) / .65)">
+      <div class="card-kicker">Recent activity</div>
+      <sc-for list="{{ recentActivity }}" as="r" hint-placeholder-count="4">
+        <a href="{{ r.href }}" style="display:flex;flex-direction:column;gap:2px;padding:var(--space-2) 0;border-bottom:1px solid var(--color-border);color:inherit;text-decoration:none">
+          <span style="font-size:13px;color:var(--color-text)">{{ r.title }}</span>
+          <span style="font-size:12px;color:var(--color-neutral-500)">{{ r.updated }}</span>
+        </a>
+      </sc-for>
+    </div>
+
+  </section>
+
+  <sc-if value="{{ ctxOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeCtx }}" onContextMenu="{{ closeCtx }}" style="position:fixed;inset:0;z-index:999"></div>
+    <div class="ctx-menu" role="menu" style="{{ ctxStyle }}">
+      <div class="ctx-label">{{ ctxTitle }}</div>
+      <sc-for list="{{ ctxItems }}" as="mi" hint-placeholder-count="3">
+        <button type="button" role="menuitem" class="ctx-item {{ mi.danger }}" onClick="{{ mi.run }}">
+          <span style="display:inline-flex" dangerouslySetInnerHTML="{{ mi.iconHtml }}"></span>
+          <span>{{ mi.label }}</span>
+        </button>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+// Shared localStorage stores — Planner.dc.html reads and writes the same keys,
+// so agenda items and notebooks stay in sync across pages.
+const STUDY_KEY = 'folio_study_minutes';
+const AGENDA_KEY = 'folio_agenda_v2';
+const NOTEBOOKS_KEY = 'folio_notebooks_v1';
+
+// --- Real-date helpers -------------------------------------------------
+// Agenda items are keyed by an actual ISO date ('YYYY-MM-DD'), and "this
+// week" always means the real calendar week containing today — matching
+// Planner.dc.html, which shares these same localStorage stores.
+function pad2(n) { return String(n).padStart(2, '0'); }
+function toISODate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+function startOfWeekMonday(d) { const day = d.getDay(); return addDays(d, day === 0 ? -6 : 1 - day); }
+function todayDate() { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+function sameDate(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+function shortLabel(d) { return MONTH_ABBR[d.getMonth()] + ' ' + d.getDate(); }
+function weekdayName(d) { return WEEKDAY_NAMES[d.getDay()]; }
+function formatWeekRange(start, end) {
+  if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
+    return MONTH_ABBR[start.getMonth()] + ' ' + start.getDate() + ' – ' + end.getDate();
+  }
+  return shortLabel(start) + ' – ' + shortLabel(end);
+}
+
+// Seed content is defined relative to today (offset in days) so it always
+// lands on "this week" no matter when the app is first opened.
+function buildSeedAgenda() {
+  const today = todayDate();
+  const raw = [
+    { id: 'seed-1', offset: -2, type: 'class', title: 'Chemistry — titration practical', time: '9:00 AM' },
+    { id: 'seed-2', offset: -2, type: 'assignment', title: 'Stoichiometry problem set due', time: '11:59 PM', done: true, notebookSlug: 'chemistry', nbCh: 0 },
+    { id: 'seed-3', offset: -1, type: 'study', title: 'Study block — 9709 Paper 1 past paper', time: '4:00–5:30 PM' },
+    { id: 'seed-4', offset: -1, type: 'task', title: 'Read the enzymes chapter', time: 'Any time', done: true, notebookSlug: 'biology', nbCh: 2 },
+    { id: 'seed-5', offset: 0, type: 'class', title: 'Physics — kinematics problem class', time: '10:00 AM' },
+    { id: 'seed-6', offset: 0, type: 'assignment', title: 'Unseen poetry essay due', time: '5:00 PM', done: false, notebookSlug: 'english-literature', nbCh: 0 },
+    { id: 'seed-7', offset: 0, type: 'study', title: 'Study block — elasticity notes', time: '7:00–8:00 PM' },
+    { id: 'seed-8', offset: 1, type: 'class', title: 'Economics — data response workshop', time: '1:00 PM' },
+    { id: 'seed-9', offset: 1, type: 'task', title: 'Two\u2019s complement exercises', time: 'Any time', done: false, notebookSlug: 'computer-science', nbCh: 0 },
+    { id: 'seed-10', offset: 2, type: 'assignment', title: 'Projectiles question sheet due', time: '11:59 PM', done: false, notebookSlug: 'physics', nbCh: 1 },
+    { id: 'seed-11', offset: 3, type: 'study', title: 'Study block — 9702 Paper 2 timed practice', time: '2:00–4:00 PM' },
+    { id: 'seed-12', offset: 4, type: 'event', title: 'Mock exam — 9701 Paper 2', time: '9:00–11:00 AM' },
+  ];
+  return raw.map(({ offset, ...rest }) => ({ ...rest, date: toISODate(addDays(today, offset)) }));
+}
+
+// Pre-made notebook covers. `css` is any valid CSS background value, so a
+// cover renders identically on the card, in the picker, and in the preview.
+const CATEGORIES = ['School', 'Work', 'Personal', 'Research', 'Other'];
+
+// Seeded against international A level: the subject line carries the Cambridge
+// syllabus number, which is what a student sees on a past paper. The slugs are
+// what Notebook.dc.html keys its example chapters on, and what lessons.js
+// matches its lesson bank to, so the three stay in step.
+const SEED_NOTEBOOKS = [
+  ['Mathematics', 'Cambridge 9709', 12, 18, 120, 'tag-accent', 'mathematics'],
+  ['Physics', 'Cambridge 9702', 8, 14, 1500, 'tag-outline', 'physics'],
+  ['Chemistry', 'Cambridge 9701', 15, 20, 4320, 'tag-neutral', 'chemistry'],
+  ['Biology', 'Cambridge 9700', 5, 12, 7200, 'tag-accent', 'biology'],
+  ['Economics', 'Cambridge 9708', 20, 24, 15, 'tag-outline', 'economics'],
+  ['English Literature', 'Cambridge 9695', 3, 10, 10080, 'tag-neutral', 'english-literature'],
+  ['Computer Science', 'Cambridge 9618', 9, 9, 2880, 'tag-accent', 'computer-science'],
+].map(([title, subject, done, total, minutesAgo, tagClass, slug]) => ({
+  title, subject, done, total, minutesAgo, tagClass, slug,
+}));
+
+// What's in localStorage is only as trustworthy as whatever last wrote it — a
+// hand edit, an older build, another tab — so its shape is checked before the
+// page builds on it: anything that isn't a list of records is ignored rather
+// than crashing the render. Existing data is never overwritten here; the seed
+// is written only when the key is genuinely absent, so an unreadable value
+// isn't destroyed on sight.
+function readStore(key, seed) {
+  let raw = null;
+  try { raw = localStorage.getItem(key); } catch (e) { return seed; }
+  if (raw == null) {
+    try { localStorage.setItem(key, JSON.stringify(seed)); } catch (e) {}
+    return seed;
+  }
+  try {
+    const value = JSON.parse(raw);
+    if (Array.isArray(seed)) {
+      return Array.isArray(value)
+        ? value.filter(x => x && typeof x === 'object' && !Array.isArray(x))
+        : seed;
+    }
+    return value && typeof value === 'object' ? value : seed;
+  } catch (e) { return seed; }
+}
+// Returns false when the write fails (e.g. localStorage quota exceeded, which
+// is reachable now that covers can hold uploaded image data).
+function writeStore(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
+}
+
+function readStudyMinutes() {
+  const today = todayDate();
+  const seed = {
+    [toISODate(addDays(today, -2))]: 35,
+    [toISODate(addDays(today, -1))]: 50,
+    [toISODate(today)]: 20,
+  };
+  return readStore(STUDY_KEY, seed);
+}
+
+const CHECKABLE_TYPES = { assignment: true, task: true };
+
+// Which stripe a block wears on the grid; the stylesheet holds the colours.
+const BLOCK_CLASS = {
+  class: 'tg-block-class',
+  study: 'tg-block-study',
+  assignment: 'tg-block-deadline',
+  task: 'tg-block-task',
+  event: 'tg-block-event',
+};
+
+// This is a card on a dashboard, not the agenda itself: the same clock, drawn
+// at about two thirds the height so a week still fits at a glance.
+// rowFull/rowFloor set the clock's height; blockOverhead and blockLine
+// describe this card's smaller type, so the layout can work out how many
+// lines of title actually fit in a block before it clips one in half.
+const HOME_GRID_SCALE = { rowFull: 44, rowFloor: 11, blockOverhead: 15, blockLine: 13.5 };
+
+const TYPE_META = {
+  class: { tagClass: 'tag-outline', tagLabel: 'Class' },
+  study: { tagClass: 'tag-accent', tagLabel: 'Study' },
+  assignment: { tagClass: 'tag-neutral', tagLabel: 'Due' },
+  task: { tagClass: 'tag-neutral', tagLabel: 'Task' },
+  event: { tagClass: 'tag-accent', tagLabel: 'Event' },
+};
+
+function pct(done, total) { return total ? Math.round((done / total) * 100) : 0; }
+
+function relLabel(mins) {
+  if (mins < 60) return 'Updated just now';
+  if (mins < 120) return 'Updated 1 hour ago';
+  if (mins < 1440) return 'Updated ' + Math.round(mins / 60) + ' hours ago';
+  const days = Math.round(mins / 1440);
+  return 'Updated ' + days + ' day' + (days === 1 ? '' : 's') + ' ago';
+}
+
+const CTX_ICONS = {
+  edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  open: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>',
+  trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>',
+  back: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>',
+};
+
+// Keep the popover on screen: a menu opened near the right or bottom edge
+// shifts back rather than spilling out of the viewport.
+function ctxPosition(x, y, count) {
+  const w = 212, h = count * 34 + 38;
+  return {
+    left: Math.max(8, Math.min(x, window.innerWidth - w - 8)) + 'px',
+    top: Math.max(8, Math.min(y, window.innerHeight - h - 8)) + 'px',
+  };
+}
+
+function decorateNotebook(nb) {
+  return {
+    ...nb,
+    percent: pct(nb.done, nb.total),
+    updated: relLabel(nb.minutesAgo),
+    percentStr: pct(nb.done, nb.total) + '%',
+    category: nb.category || 'Uncategorized',
+    href: 'Notebook.dc.html?nb=' + nb.slug + (nb.userCreated ? '&title=' + encodeURIComponent(nb.title) : ''),
+  };
+}
+
+function timeGreeting(name) {
+  const h = new Date().getHours();
+  const part = h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  return part + ', ' + name;
+}
+
+const SESSION_KEY = 'folio_session';
+const PREFS_KEY = 'folio_prefs';
+function readSession() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch (e) { return null; }
+}
+// Default notebook sort is chosen on Settings.dc.html.
+function readPrefs() {
+  try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || {}; } catch (e) { return {}; }
+}
+// The setup guide's getting-started card, gathered here so renderVals stays a
+// list of values. Everything comes from setup/setup-service.js — this page
+// asks no questions of storage itself — and with those files absent, or the
+// guide switched off, the card is simply never shown.
+function setupVals(hidden, onDismiss) {
+  const setup = window.notivloSetup;
+  if (!setup || hidden || !setup.showChecklist()) {
+    return { showGettingStarted: false, gsCount: '', gsItems: [], dismissGs: () => {} };
+  }
+  const list = setup.checklist();
+  return {
+    showGettingStarted: true,
+    gsCount: list.done + ' of ' + list.total + ' done',
+    gsItems: list.items.map(item => ({
+      label: item.label,
+      href: item.href,
+      cls: item.done ? 'su-gs-done' : '',
+      // The tick is a background image as far as a screen reader is
+      // concerned, so each item says where it stands in words.
+      state: item.done ? 'Done' : 'Not done yet',
+    })),
+    dismissGs: () => { setup.dismissChecklist(); onDismiss(); },
+  };
+}
+
+class Component extends DCLogic {
+  state = {
+    notebooks: readStore(NOTEBOOKS_KEY, SEED_NOTEBOOKS),
+    agenda: readStore(AGENDA_KEY, buildSeedAgenda()),
+    reminderDismissed: false,
+    addingNotebook: false,
+    newNotebookTitle: '',
+    newNotebookCategory: CATEGORIES[0],
+    newNotebookError: '',
+    editingSlug: null,
+    ctx: null,
+    searchQuery: '',
+    sortBy: readPrefs().defaultSort || 'recent',
+    // The setup guide's card, hidden for the rest of this page's life once
+    // the × is pressed. The guide records the dismissal itself; this is only
+    // what makes the card go away without a reload.
+    gsHidden: false,
+  };
+
+  componentDidMount() {
+    // Not awaited: the shelf is already drawn from this device's copy, and
+    // the sync is a background errand. It returns early when nothing has
+    // changed since the last one, so this is cheap on every page load.
+    if (!window.notivloSync || !window.notivloSync.enabled()) return;
+    window.notivloSync.sync().then((res) => {
+      // Only when it actually brought something down: the stores have moved
+      // under the state this component read at construction.
+      if (res && res.pulled) {
+        this.setState({
+          notebooks: readStore(NOTEBOOKS_KEY, SEED_NOTEBOOKS),
+          agenda: readStore(AGENDA_KEY, buildSeedAgenda()),
+        });
+      }
+    });
+  }
+
+  dismissReminder() { this.setState({ reminderDismissed: true }); }
+
+  addNotebook(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    this.setState({
+      addingNotebook: true,
+      editingSlug: null,
+      newNotebookTitle: '',
+      newNotebookCategory: CATEGORIES[0],
+      newNotebookError: '',
+    });
+  }
+
+  openCtx(e, kind, id) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.setState({ ctx: { x: e.clientX, y: e.clientY, kind, id, confirming: false } });
+  }
+
+  // Reopens the create modal with this notebook's current details loaded.
+  startEditNotebook(slug) {
+    const nb = this.state.notebooks.find(n => n.slug === slug);
+    if (!nb) return this.setState({ ctx: null });
+    this.setState({
+      ctx: null,
+      addingNotebook: true,
+      editingSlug: slug,
+      newNotebookTitle: nb.title,
+      newNotebookCategory: nb.category || CATEGORIES[0],
+      newNotebookError: '',
+    });
+  }
+
+  deleteNotebook(slug) {
+    this.setState(s => {
+      const notebooks = s.notebooks.filter(n => n.slug !== slug);
+      writeStore(NOTEBOOKS_KEY, notebooks);
+      return { notebooks, ctx: null };
+    });
+    // The chapters and body text live under their own key; leaving them behind
+    // would silently resurrect the old content if the name were ever reused.
+    try { localStorage.removeItem('folio_nb_state:' + slug); } catch (e) {}
+  }
+
+  ctxMenuFor(ctx) {
+    if (!ctx || ctx.kind !== 'notebook') return { title: '', items: [] };
+    const nb = this.state.notebooks.find(n => n.slug === ctx.id);
+    if (!nb) return { title: '', items: [] };
+    const icon = (name) => ({ __html: CTX_ICONS[name] });
+
+    // Deleting a notebook takes every chapter in it, so it asks twice.
+    if (ctx.confirming) {
+      return {
+        title: 'Delete "' + nb.title + '"?',
+        items: [
+          { label: 'Yes, delete it', iconHtml: icon('trash'), danger: 'ctx-danger', run: () => this.deleteNotebook(nb.slug) },
+          { label: 'Keep it', iconHtml: icon('back'), run: () => this.setState({ ctx: null }) },
+        ],
+      };
+    }
+    return {
+      title: nb.title,
+      items: [
+        { label: 'Edit notebook', iconHtml: icon('edit'), run: () => this.startEditNotebook(nb.slug) },
+        { label: 'Open notebook', iconHtml: icon('open'), run: () => { window.location.href = decorateNotebook(nb).href; } },
+        { label: 'Delete notebook', iconHtml: icon('trash'), danger: 'ctx-danger', run: () => this.setState(s => ({ ctx: { ...s.ctx, confirming: true } })) },
+      ],
+    };
+  }
+  cancelAddNotebook() { this.setState({ addingNotebook: false, editingSlug: null, newNotebookError: '' }); }
+
+  confirmAddNotebook() {
+    const title = this.state.newNotebookTitle.trim();
+    if (!title) return this.setState({ newNotebookError: 'Give your notebook a name.' });
+    if (title.length > 80) return this.setState({ newNotebookError: 'Keep the name under 80 characters.' });
+
+    if (this.state.editingSlug) {
+      return this.setState(s => {
+        const notebooks = s.notebooks.map(nb => nb.slug !== s.editingSlug ? nb : {
+          ...nb,
+          title,
+          category: s.newNotebookCategory,
+        });
+        if (!writeStore(NOTEBOOKS_KEY, notebooks)) {
+          return { newNotebookError: 'Could not save — storage is full. Try a smaller cover image.' };
+        }
+        // The slug deliberately stays put on a rename: the chapters and body
+        // text are stored under 'folio_nb_state:<slug>', and re-slugging here
+        // would strand all of it.
+        return { notebooks, addingNotebook: false, editingSlug: null, newNotebookError: '' };
+      });
+    }
+
+    const baseSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'notebook';
+    this.setState(s => {
+      // Two notebooks with the same name would otherwise share a slug and so
+      // open the same page — suffix duplicates instead.
+      let slug = baseSlug, n = 2;
+      while (s.notebooks.some(nb => nb.slug === slug)) slug = baseSlug + '-' + n++;
+
+      const notebooks = [...s.notebooks, {
+        title, slug, minutesAgo: 0, done: 0, total: 0, userCreated: true,
+        category: s.newNotebookCategory,
+      }];
+      if (!writeStore(NOTEBOOKS_KEY, notebooks)) {
+        return { newNotebookError: 'Could not save — storage is full. Try a smaller cover image.' };
+      }
+      return { notebooks, addingNotebook: false, newNotebookError: '' };
+    });
+  }
+
+  toggleItem(id) {
+    this.setState(s => {
+      const agenda = s.agenda.map(it => it.id !== id ? it : { ...it, done: !it.done });
+      writeStore(AGENDA_KEY, agenda);
+      return { agenda };
+    });
+  }
+
+  renderVals() {
+    const session = readSession();
+    const fullName = (session && session.name) ? session.name : 'there';
+    const firstName = fullName.trim().split(/\s+/)[0] || fullName;
+
+    const today = todayDate();
+    const weekStart = startOfWeekMonday(today);
+    // The week on a clock, the same one the agenda draws but at the smaller
+    // scale a preview card has room for. See agenda-timegrid.js.
+    const rawDays = [];
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(weekStart, i);
+      const iso = toISODate(d);
+      rawDays.push({
+        day: weekdayName(d),
+        date: shortLabel(d),
+        iso,
+        isToday: sameDate(d, today),
+        items: this.state.agenda.filter(it => it.date === iso),
+      });
+    }
+
+    const grid = notivloTimeGrid.layoutWeek(rawDays, HOME_GRID_SCALE);
+
+    const dress = (it) => {
+      const meta = TYPE_META[it.type] || TYPE_META.task;
+      const checkable = !!CHECKABLE_TYPES[it.type];
+      const done = checkable && !!it.done;
+      const href = it.notebookSlug
+        ? 'Notebook.dc.html?nb=' + it.notebookSlug + (it.nbCh != null ? '&ch=' + it.nbCh : '')
+        : '';
+      return {
+        id: it.id,
+        title: it.title,
+        time: it.time || '',
+        tooltip: meta.tagLabel + ' · ' + it.title + (it.time ? ' — ' + it.time : '') +
+          (href ? ' — click to open the notebook' : ''),
+        // The grid does not use these two, but the progress bar, the "due
+        // soon" chips and the greeting below all read the same dressed
+        // entries, and those still show a tag.
+        tagClass: meta.tagClass,
+        tagLabel: meta.tagLabel,
+        nbHref: href,
+        checkable, done,
+        doneClass: done ? 'tg-done' : '',
+        dotColor: done ? 'var(--color-accent-600)' : 'var(--color-neutral-400)',
+        dotBg: done ? 'var(--color-accent-600)' : 'transparent',
+        hasLink: !!href,
+        // The checkbox sits inside the block, so its click must not also
+        // count as a click on the block behind it.
+        toggle: (e) => {
+          if (e && e.stopPropagation) e.stopPropagation();
+          if (e && e.preventDefault) e.preventDefault();
+          this.toggleItem(it.id);
+        },
+        open: href ? () => { window.location.href = href; } : null,
+      };
+    };
+
+    const days = grid.days.map(day => ({
+      day: day.day,
+      date: day.date,
+      iso: day.iso,
+      isToday: day.isToday,
+      todayClass: day.isToday ? 'tg-today' : '',
+      timed: day.timed.map(b => {
+        const base = dress(b.item);
+        return {
+          ...base,
+          blockClass: [
+            BLOCK_CLASS[b.item.type] || BLOCK_CLASS.task,
+            b.point ? 'tg-point' : '',
+            b.pinned ? 'tg-pinned' : '',
+            base.doneClass,
+            base.hasLink ? 'tg-block-link' : '',
+          ].filter(Boolean).join(' '),
+          lanes: b.lanes,
+          lines: b.lines,
+          style: {
+            top: b.top + 'px',
+            height: b.height + 'px',
+            left: b.leftPct + '%',
+            width: b.lanes > 1 ? 'calc(' + b.widthPct + '% - 3px)' : '100%',
+          },
+        };
+      }),
+      untimed: day.untimed.map(dress),
+      hasUntimed: day.untimed.length > 0,
+      // Timed first, in time order, then the ones with no time — what the
+      // progress bar, the chips and the greeting walk over.
+      items: day.timed.map(b => dress(b.item)).concat(day.untimed.map(dress)),
+      gaps: day.gaps.map(g => ({
+        label: g.label,
+        style: { top: g.top + 'px', height: g.height + 'px' },
+      })),
+      emptyDay: day.timed.length === 0 && day.untimed.length === 0,
+    }));
+
+    const gridVals = {
+      gridStyle: { height: grid.height + 'px' },
+      gridHours: grid.rows.map(r => ({
+        label: r.label,
+        quietClass: r.quiet ? 'tg-hour-quiet' : '',
+        style: { top: r.top + 'px', height: r.height + 'px', opacity: (0.55 + 0.45 * r.density).toFixed(3) },
+      })),
+      gridEnd: {
+        label: notivloTimeGrid.hourLabel(notivloTimeGrid.END_HOUR),
+        style: { top: grid.height + 'px', opacity: '1' },
+      },
+      gridLines: grid.rows.map(r => ({
+        lineClass: r.quiet ? 'tg-line-quiet' : '',
+        style: { top: r.top + 'px' },
+      })).concat([{ lineClass: 'tg-line-end', style: { top: grid.height + 'px' } }]),
+    };
+
+    const studyMinutes = readStudyMinutes();
+    const weekDots = days.map(d => {
+      const mins = studyMinutes[d.iso] || 0;
+      const studied = mins > 0;
+      return {
+        label: d.day.slice(0, 1),
+        tooltip: d.day + ' — ' + (studied ? Math.round(mins) + ' min studied' : 'no study time yet'),
+        border: studied ? 'var(--color-accent-600)' : (d.isToday ? 'var(--color-accent-500)' : 'var(--color-divider)'),
+        bg: studied ? 'var(--color-accent-600)' : (d.isToday ? 'var(--color-accent-200)' : 'transparent'),
+      };
+    });
+    // Streak = consecutive studied days counting backward from today.
+    let streak = 0;
+    const todayIdx = days.findIndex(d => d.isToday);
+    for (let i = todayIdx; i >= 0; i--) {
+      if ((studyMinutes[days[i].iso] || 0) > 0) streak++;
+      else break;
+    }
+
+    const checkableItems = days.flatMap(d => d.items.filter(it => it.checkable));
+    const doneCheckable = checkableItems.filter(it => it.done).length;
+    const progressPercent = pct(doneCheckable, checkableItems.length);
+
+    const upcoming = [];
+    days.forEach(d => d.items.forEach(it => {
+      if (it.checkable && !it.done) upcoming.push({ ...it, day: d.day, href: it.nbHref || 'Planner.dc.html' });
+    }));
+
+    const query = this.state.searchQuery.trim().toLowerCase();
+    let notebooks = this.state.notebooks.map(decorateNotebook).filter(nb =>
+      !query || nb.title.toLowerCase().includes(query) || nb.subject.toLowerCase().includes(query));
+    if (this.state.sortBy === 'name') notebooks = [...notebooks].sort((a, b) => a.title.localeCompare(b.title));
+    else if (this.state.sortBy === 'progress') notebooks = [...notebooks].sort((a, b) => b.percent - a.percent);
+    else notebooks = [...notebooks].sort((a, b) => a.minutesAgo - b.minutesAgo);
+    notebooks = notebooks.map(nb => ({ ...nb, contextMenu: (e) => this.openCtx(e, 'notebook', nb.slug) }));
+
+    const recentActivity = this.state.notebooks.map(decorateNotebook)
+      .sort((a, b) => a.minutesAgo - b.minutesAgo).slice(0, 4);
+
+    const pending = upcoming.length;
+    const todayDay = days.find(d => d.isToday);
+    const dueTodayCount = todayDay ? todayDay.items.filter(it => it.checkable && !it.done).length : 0;
+    const reminderText = pending === 0
+      ? "You're all caught up — nothing outstanding this week."
+      : dueTodayCount > 0
+        ? `You still have ${pending} task${pending === 1 ? '' : 's'} to do this week, including ${dueTodayCount} due today.`
+        : `You still have ${pending} task${pending === 1 ? '' : 's'} to do this week.`;
+
+    const todayCount = todayDay ? todayDay.items.length : 0;
+    const tagline = pending === 0
+      ? 'All caught up — enjoy the free time.'
+      : dueTodayCount > 0
+        ? `${dueTodayCount} task${dueTodayCount === 1 ? '' : 's'} due today and ${todayCount} thing${todayCount === 1 ? '' : 's'} on the schedule — you've got this.`
+        : `Nothing due today — ${pending} open task${pending === 1 ? '' : 's'} left this week.`;
+
+    return {
+      showReminder: !this.state.reminderDismissed && pending > 0,
+      reminderText,
+      dismissReminder: () => this.dismissReminder(),
+      addNotebook: (e) => this.addNotebook(e),
+      ...(() => {
+        const menu = this.ctxMenuFor(this.state.ctx);
+        return {
+          ctxOpen: !!this.state.ctx && menu.items.length > 0,
+          ctxTitle: menu.title,
+          ctxStyle: this.state.ctx ? ctxPosition(this.state.ctx.x, this.state.ctx.y, menu.items.length) : {},
+          ctxItems: menu.items,
+          closeCtx: (e) => { if (e && e.preventDefault) e.preventDefault(); this.setState({ ctx: null }); },
+        };
+      })(),
+
+      nbModalKicker: this.state.editingSlug ? 'Edit notebook' : 'New notebook',
+      nbModalHeading: this.state.editingSlug ? 'Update your notebook' : 'Set up your notebook',
+      nbModalAction: this.state.editingSlug ? 'Save changes' : 'Create notebook',
+      previewUpdated: this.state.editingSlug ? 'Updated recently' : 'Updated just now',
+
+      notAddingNotebook: !this.state.addingNotebook,
+      addingNotebook: this.state.addingNotebook,
+      newNotebookTitle: this.state.newNotebookTitle,
+      newNotebookError: this.state.newNotebookError,
+      onNewNotebookTitleChange: (e) => this.setState({ newNotebookTitle: e.target.value }),
+      onNewNotebookKeyDown: (e) => { if (e.key === 'Enter') this.confirmAddNotebook(); if (e.key === 'Escape') this.cancelAddNotebook(); },
+      confirmAddNotebook: () => this.confirmAddNotebook(),
+      cancelAddNotebook: () => this.cancelAddNotebook(),
+
+      categoryChoices: CATEGORIES.map(name => {
+        const on = name === this.state.newNotebookCategory;
+        return {
+          name,
+          select: () => this.setState({ newNotebookCategory: name }),
+          border: on ? 'var(--color-accent-500)' : 'var(--color-divider)',
+          bg: on ? 'var(--color-accent-100)' : 'rgb(var(--clay-white) / .5)',
+          color: on ? 'var(--color-accent-800)' : 'var(--color-neutral-700)',
+        };
+      }),
+      previewTitle: this.state.newNotebookTitle.trim() || 'Untitled notebook',
+      greeting: timeGreeting(firstName),
+      tagline,
+      notebooks,
+      notebookCount: notebooks.length,
+      noResults: query.length > 0 && notebooks.length === 0,
+      noNotebooksYet: query.length === 0 && notebooks.length === 0,
+      clearSearch: () => this.setState({ searchQuery: '' }),
+      searchQuery: this.state.searchQuery,
+      onSearchChange: (e) => this.setState({ searchQuery: e.target.value }),
+      sortBy: this.state.sortBy,
+      onSortChange: (e) => this.setState({ sortBy: e.target.value }),
+      hasUpcoming: upcoming.length > 0,
+      upcoming: upcoming.slice(0, 4),
+      recentActivity,
+      days,
+      ...gridVals,
+      weekRange: formatWeekRange(weekStart, addDays(weekStart, 6)),
+      progressPercent,
+      progressPercentStr: progressPercent + '%',
+      streakLabel: streak + '-day streak',
+      weekDots,
+
+      // The setup guide. Both of these are false, and the card and the top-bar
+      // button simply absent, whenever the guide is off or its files are gone.
+      guideVisible: !!(window.notivloSetupFlag && window.notivloSetupFlag.enabled()),
+      ...setupVals(this.state.gsHidden, () => this.setState({ gsHidden: true })),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

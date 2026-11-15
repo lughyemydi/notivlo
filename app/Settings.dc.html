@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file: blob: 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob:; font-src 'self' file: data:; connect-src 'self' file: data: blob: https://tftwbhkypzsrhwaxkgbr.supabase.co; worker-src 'none'; child-src 'none'; media-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="no-referrer">
+<title>notivlo — Settings</title>
+<script>
+  try {
+    if (!localStorage.getItem('folio_session')) {
+      location.replace('SignIn.dc.html');
+    }
+  } catch (e) {}
+</script>
+<script src="./theme.js"></script>
+<script src="./text-size.js"></script>
+<script src="./note-font.js"></script>
+<script src="./legal-documents.js"></script>
+<script src="./legal-licenses.js"></script>
+<script src="./auth.js"></script>
+<script src="./support.js"></script>
+<!-- The backend. Inert while supabase-config.js holds no project: with it
+     empty every page below falls back to localStorage, which is how the app
+     worked before there was a server. Order matters — each file depends on
+     the one above it, and they are in <head> rather than <helmet> for the
+     reason written at the top of auth.js. -->
+<script src="./supabase-config.js"></script>
+<script src="./supabase-client.js"></script>
+<script src="./supabase-auth.js"></script>
+<script src="./supabase-sync.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="stylesheet" href="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/styles.css">
+<link rel="stylesheet" href="soft-clay.css">
+<script src="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/_ds_bundle.js"></script>
+<style>
+  body{margin:0;background:var(--color-bg);color:var(--color-text)}
+  a{color:var(--color-accent-700);text-decoration:none}
+  a:hover{color:var(--color-accent-900);text-decoration:underline}
+  .glass-btn-primary{transition:background .18s ease, transform .12s ease}
+  .glass-btn-primary:hover{background:var(--color-primary-hover) !important;transform:translateY(-1px)}
+  .glass-btn-primary:active{transform:translateY(0px) scale(.98)}
+  .glass-btn-ghost{transition:background .18s ease}
+  .glass-btn-ghost:hover{background:var(--color-primary-soft) !important}
+  .danger-btn{transition:background .15s ease, color .15s ease}
+  .danger-btn:hover{background:rgba(168,50,42,.12) !important}
+  .nav a.nav-brand{font-size:18px;color:var(--color-text);cursor:pointer;transition:color .15s ease, opacity .15s ease}
+  .nav a.nav-brand:hover{color:var(--color-accent-700);text-decoration:none;opacity:.85}
+  .set-card{padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4);background:var(--color-surface);border:1px solid var(--color-border);border-radius:26px;box-shadow:0 14px 32px rgba(72,62,50,.09),inset 0 1px 0 rgb(var(--clay-edge) / .65)}
+  .set-layout{display:grid;grid-template-columns:206px minmax(0,1fr);gap:var(--space-6);align-items:start}
+  /* The page fills the window, but a text input gains nothing from being
+     1000px wide — paired fields stay at a readable measure and sit left,
+     while the lists and usage bars below are free to use the full pane. */
+  .set-grid{max-width:760px}
+  .legal-draft{max-width:72ch;padding:var(--space-3) var(--space-4);border-radius:14px;background:rgba(242,217,138,.28);border:1px solid rgba(214,178,74,.55);color:var(--color-warning-text);font-size:13px;line-height:1.55}
+  .legal-tabs{display:flex;flex-wrap:wrap;gap:4px;padding:4px;border-radius:999px;background:var(--color-surface-sunken);border:1px solid var(--color-border);align-self:flex-start}
+  .legal-tab{appearance:none;border:none;background:transparent;font-family:var(--font-body);font-size:13.5px;padding:7px 16px;border-radius:999px;color:var(--color-neutral-700);cursor:pointer;transition:background .14s ease, color .14s ease}
+  .legal-tab:hover{color:var(--color-accent-800)}
+  .legal-tab-active{background:var(--color-surface);color:var(--color-text-primary);font-weight:600;box-shadow:0 1px 3px rgba(72,62,50,.14)}
+  /* A readable measure for long legal prose, even in a full-width pane. */
+  .legal-doc{max-width:72ch;display:flex;flex-direction:column;gap:10px}
+  .legal-meta{margin:0;font-size:12px;color:var(--color-neutral-500);letter-spacing:.02em}
+  .legal-h{margin:14px 0 0;font-family:var(--font-heading);font-size:16px;font-weight:700}
+  .legal-p{margin:0;font-size:14px;line-height:1.65;color:var(--color-neutral-800)}
+  .legal-li{position:relative;margin:0 0 0 18px;font-size:14px;line-height:1.65;color:var(--color-neutral-800)}
+  .legal-li::before{content:'';position:absolute;left:-13px;top:.7em;width:5px;height:5px;border-radius:50%;background:var(--color-accent-600)}
+  .legal-lics{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+  .legal-lic{display:flex;flex-direction:column;gap:8px;padding:var(--space-4);border-radius:16px;background:var(--color-surface-sunken);border:1px solid var(--color-border)}
+  .legal-lic-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3)}
+  .legal-lic-name{font-size:14.5px;font-weight:600}
+  .legal-lic-ver{margin-left:6px;font-size:12.5px;font-weight:400;color:var(--color-neutral-500)}
+  .legal-lic-sub{margin-top:2px;font-size:12.5px;color:var(--color-neutral-600)}
+  .legal-lic-badge{flex:none;font-size:12px}
+  .legal-lic-note{margin:0;font-size:13px;line-height:1.55;color:var(--color-neutral-700)}
+  .legal-lic-text summary{cursor:pointer;font-size:13px;color:var(--color-accent-700);user-select:none}
+  .legal-lic-text pre{margin:8px 0 0;max-height:320px;overflow:auto;padding:12px;border-radius:10px;background:var(--color-surface);border:1px solid var(--color-border);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .set-nav{position:sticky;top:92px;display:flex;flex-direction:column;gap:2px;padding:var(--space-2);background:var(--color-surface);border:1px solid var(--color-border);border-radius:20px;box-shadow:0 10px 24px rgba(72,62,50,.07),inset 0 1px 0 rgb(var(--clay-edge) / .65)}
+  .set-nav-item{appearance:none;text-align:left;font-family:var(--font-body);font-size:13.5px;padding:9px 12px;border:none;border-radius:12px;background:transparent;color:var(--color-neutral-700);cursor:pointer;transition:background .14s ease, color .14s ease}
+  .set-nav-item:hover{background:var(--color-primary-soft);color:var(--color-accent-800)}
+  .set-nav-item-active{background:var(--color-primary);color:var(--color-text-primary);font-weight:600}
+  .set-nav-item-active:hover{background:var(--color-primary)}
+  /* Last entry is the destructive one — kept legible but visibly set apart. */
+  .set-nav-item-danger{color:var(--color-danger)}
+  .set-nav-item-danger:hover{background:rgba(168,50,42,.1);color:var(--color-danger-strong)}
+  .set-nav-item-danger.set-nav-item-active{background:rgba(168,50,42,.14);color:var(--color-danger-strong)}
+  .set-nav-item-danger.set-nav-item-active:hover{background:rgba(168,50,42,.14)}
+  .set-pane{display:flex;flex-direction:column;gap:var(--space-6);min-width:0}
+  .pw-rules{display:flex;flex-direction:column;gap:3px;margin-top:6px}
+  .pw-rule{display:flex;align-items:center;gap:7px;font-size:13px;line-height:1.4;transition:color .15s ease}
+  .pw-mark{flex:none;width:13px;text-align:center;font-size:13px}
+  /* — Confirm-with-password gate — */
+  @keyframes gateIn{from{opacity:0;transform:translate(-50%,-47%) scale(.985)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+  @keyframes gateFade{from{opacity:0}to{opacity:1}}
+  .gate-backdrop{position:fixed;inset:0;z-index:300;background:rgba(60,45,20,.28);animation:gateFade .18s ease}
+  .gate-card{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:310;width:min(440px,92vw);max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;gap:var(--space-4);padding:var(--space-6);background:var(--color-surface);border:1px solid var(--color-border);border-radius:24px;box-shadow:0 30px 70px rgba(72,62,50,.22),inset 0 1px 0 rgb(var(--clay-edge) / .8);animation:gateIn .22s cubic-bezier(.32,.72,0,1)}
+  /* — Profile picture, description and goals — */
+  .pf-id{display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap}
+  .pf-avatar{flex:none;width:78px;height:78px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--color-surface-sunken);border:1px solid var(--color-border);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .6)}
+  .pf-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  .pf-initial{font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:30px;color:var(--color-neutral-500);user-select:none}
+  /* The input is the control; the label is what you see. Hidden this way
+     rather than display:none, which takes it out of the focus order. */
+  .pf-file{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  .pf-pick{position:relative}
+  .pf-pick:focus-within{outline:2px solid var(--color-accent-600);outline-offset:2px}
+  .pf-goal{display:inline-flex;align-items:center;gap:2px;padding:6px 6px 6px 14px;border-radius:999px;background:var(--color-surface-sunken);border:1px solid var(--color-border);font-size:13.5px}
+  .pf-goal-x{appearance:none;border:none;background:transparent;cursor:pointer;color:var(--color-neutral-500);width:20px;height:20px;border-radius:50%;font-size:15px;line-height:1;transition:background .14s ease, color .14s ease}
+  .pf-goal-x:hover{background:rgba(168,50,42,.12);color:var(--color-danger)}
+  .pf-label{display:block;font-size:12px;margin-bottom:5px;color:color-mix(in srgb, var(--color-text) 70%, transparent)}
+  @keyframes floatA{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,50px) scale(1.08)}}
+  @keyframes floatB{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-50px,30px) scale(.94)}}
+  @media (max-width: 860px){
+    .set-layout{grid-template-columns:minmax(0,1fr)}
+    /* Horizontal strip above the pane. The padding/negative-margin pair gives
+       the tiles room to cast their shadow inside the scroller — overflow-x
+       computes overflow-y to auto, not visible, so it would clip otherwise. */
+    .set-nav{position:static;flex-direction:row;overflow-x:auto;scrollbar-width:none;padding:var(--space-2)}
+    .set-nav::-webkit-scrollbar{display:none}
+    .set-nav-item{flex:none;white-space:nowrap}
+  }
+  @media (max-width: 760px){
+    .set-grid{grid-template-columns:1fr !important}
+    .nav{padding:8px 14px !important;gap:8px !important}
+    /* A ghost button with its label hidden is a 25px pill; the other bars'
+       icon buttons are 36px circles. */
+    .nav .btn{flex:none;width:36px;height:36px;padding:0 !important;justify-content:center}
+    .set-back-label{display:none}
+  }
+</style>
+</helmet>
+
+<div style="position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none">
+  <div style="position:absolute;width:520px;height:520px;top:-160px;right:-100px;border-radius:50%;background:radial-gradient(circle at 30% 30%,var(--color-accent-300),transparent 70%);filter:blur(60px);opacity:.55;animation:floatA 18s ease-in-out infinite alternate"></div>
+  <div style="position:absolute;width:460px;height:460px;bottom:-160px;left:-100px;border-radius:50%;background:radial-gradient(circle at 40% 40%,var(--color-neutral-300),transparent 70%);filter:blur(60px);opacity:.5;animation:floatB 22s ease-in-out infinite alternate"></div>
+</div>
+
+<div style="position:relative;z-index:1;min-height:100vh;font-family:var(--font-body)">
+
+  <nav class="nav" style="display:flex;align-items:center;gap:var(--space-4);position:sticky;top:14px;z-index:40;max-width:1180px;margin:14px auto 0;background:var(--color-surface);border:1px solid var(--color-border);border-radius:28px;box-shadow:0 14px 30px rgba(72,62,50,.10),inset 0 1px 0 rgb(var(--clay-edge) / .7);padding:10px 28px">
+    <a href="Home.dc.html" class="nav-brand" aria-label="notivlo — go to home"><span class="brand-logo">notivlo</span></a>
+    <div style="flex:1"></div>
+    <a href="Home.dc.html" class="btn btn-ghost glass-btn-ghost" style="border-radius:999px;background:var(--color-surface)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      <span class="set-back-label">Back to home</span>
+    </a>
+  </nav>
+
+  <div style="max-width:none;margin:0 auto;padding:var(--space-8) var(--space-6) var(--space-2)">
+    <h1 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:42px;margin:0 0 var(--space-2)">Settings</h1>
+    <p style="margin:0;color:var(--color-neutral-700);font-size:16px">Manage your account, preferences and stored data.</p>
+  </div>
+
+  <section style="max-width:none;margin:0 auto;padding:var(--space-6) var(--space-6) var(--space-8)">
+    <div class="set-layout">
+
+      <!-- Section list. Each entry is its own address (?section=slug), so a
+           section can be linked to directly and the browser's back button
+           steps between them. -->
+      <nav class="set-nav" aria-label="Settings sections">
+        <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="8">
+          <button type="button" class="set-nav-item {{ sec.activeClass }}" onClick="{{ sec.go }}" aria-current="{{ sec.current }}">{{ sec.label }}</button>
+        </sc-for>
+      </nav>
+
+      <div class="set-pane">
+
+      <sc-if value="{{ showProfile }}" hint-placeholder-val="{{ true }}">
+        <!-- Profile -->
+        <div class="set-card">
+          <div>
+            <div class="card-kicker">Profile</div>
+            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">Your account</h2>
+          </div>
+
+          <sc-if value="{{ profileMessage }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:var(--space-2) var(--space-3);border-radius:12px;font-size:13px;background:{{ profileMessageBg }};border:1px solid {{ profileMessageBorder }};color:{{ profileMessageColor }}">{{ profileMessage }}</div>
+          </sc-if>
+
+          <!-- Picture. Optional, like everything below it: an account with
+               none of this filled in shows an initial and reads fine. -->
+          <div class="pf-id">
+            <div class="pf-avatar">
+              <sc-if value="{{ hasAvatar }}" hint-placeholder-val="{{ false }}">
+                <!-- sc-camel-src rather than src, and it has to stay that way.
+                     Everything in <x-dc> sits in the page as ordinary HTML
+                     until the runtime replaces it with the rendered tree, so
+                     the browser's preload scanner reads this tag on the way
+                     past and fetches whatever src says - which at that point
+                     is still the literal "{{ profileAvatar }}", i.e. a 404 on
+                     every load of this page. The runtime strips the sc-camel-
+                     prefix and hands the rest to React as src, so the picture
+                     arrives the moment there is one and nothing is requested
+                     when there is not. -->
+                <img sc-camel-src="{{ profileAvatar }}" alt="Your profile picture"/>
+              </sc-if>
+              <sc-if value="{{ noAvatar }}" hint-placeholder-val="{{ true }}">
+                <span class="pf-initial" aria-hidden="true">{{ profileInitial }}</span>
+              </sc-if>
+            </div>
+            <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
+                <label class="btn btn-ghost glass-btn-ghost pf-pick" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-divider)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                  {{ avatarPickLabel }}
+                  <input class="pf-file" type="file" accept="image/*" onChange="{{ onAvatarPick }}" aria-label="{{ avatarPickLabel }}"/>
+                </label>
+                <sc-if value="{{ hasAvatar }}" hint-placeholder-val="{{ false }}">
+                  <button type="button" class="btn btn-ghost danger-btn" onClick="{{ removeAvatar }}" style="border-radius:999px;border:1px solid rgba(168,50,42,.45);color:var(--color-danger);background:var(--color-surface)">Remove</button>
+                </sc-if>
+              </div>
+              <p style="margin:0;font-size:13px;color:var(--color-neutral-600)">Optional. Cropped square and shrunk to 256px, then saved on this device as soon as you pick it.</p>
+            </div>
+          </div>
+
+          <div class="set-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)">
+            <div class="field">
+              <label>Display name</label>
+              <input class="input" maxlength="80" value="{{ profileName }}" onChange="{{ onProfileNameChange }}" style="border-radius:14px;background:var(--color-surface)"/>
+            </div>
+            <div class="field">
+              <label>Email</label>
+              <input class="input" type="email" maxlength="254" value="{{ profileEmail }}" onChange="{{ onProfileEmailChange }}" style="border-radius:14px;background:var(--color-surface)"/>
+            </div>
+          </div>
+
+          <div class="field set-grid">
+            <label>About you</label>
+            <textarea class="input" placeholder="A line or two about what you're studying — optional" rows="3" maxlength="280" value="{{ profileDescription }}" onChange="{{ onProfileDescriptionChange }}" style="border-radius:14px;background:var(--color-surface);resize:vertical;line-height:1.55"></textarea>
+            <p style="margin:6px 0 0;font-size:13px;color:var(--color-neutral-600)">{{ descriptionHint }}</p>
+          </div>
+
+          <div class="set-grid">
+            <span class="pf-label">Your goals</span>
+            <sc-if value="{{ hasGoals }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-3)">
+                <sc-for list="{{ profileGoals }}" as="goal" hint-placeholder-count="2">
+                  <span class="pf-goal">{{ goal.text }}<button type="button" class="pf-goal-x" onClick="{{ goal.remove }}" aria-label="{{ goal.removeLabel }}">&times;</button></span>
+                </sc-for>
+              </div>
+            </sc-if>
+            <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
+              <input class="input" placeholder="{{ goalPlaceholder }}" maxlength="80" value="{{ newGoal }}" onChange="{{ onNewGoalChange }}" onKeyDown="{{ onNewGoalKeyDown }}" aria-label="Add a goal" style="flex:1;min-width:200px;border-radius:14px;background:var(--color-surface)"/>
+              <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ addGoal }}" style="flex:none;border-radius:999px;background:var(--color-surface);border:1px solid var(--color-divider)">Add goal</button>
+            </div>
+            <p style="margin:var(--space-2) 0 0;font-size:13px;color:var(--color-neutral-600)">{{ goalsHint }}</p>
+          </div>
+
+          <div>
+            <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ saveProfile }}" style="border-radius:999px;background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary)">Save changes</button>
+          </div>
+        </div>
+
+        <!-- Changing the password is part of the account too, so it sits
+             with it rather than in a section of its own. Nothing gates it:
+             the form already asks for the current password. -->
+        <div class="set-card">
+          <div>
+            <div class="card-kicker">Security</div>
+            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">Change password</h2>
+          </div>
+
+          <sc-if value="{{ passwordMessage }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:var(--space-2) var(--space-3);border-radius:12px;font-size:13px;background:{{ passwordMessageBg }};border:1px solid {{ passwordMessageBorder }};color:{{ passwordMessageColor }}">{{ passwordMessage }}</div>
+          </sc-if>
+
+          <div class="field" style="max-width:360px">
+            <label>Current password</label>
+            <input class="input" type="password" maxlength="128" value="{{ currentPassword }}" onChange="{{ onCurrentPasswordChange }}" style="border-radius:14px;background:var(--color-surface)"/>
+          </div>
+          <div class="set-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)">
+            <div class="field">
+              <label>New password</label>
+              <input class="input" type="password" placeholder="8+ characters" maxlength="128" value="{{ newPassword }}" onChange="{{ onNewPasswordChange }}" style="border-radius:14px;background:var(--color-surface)"/>
+              <div class="pw-rules" aria-live="polite">
+                <div class="pw-rule" style="color:{{ pwLenColor }}"><span class="pw-mark">{{ pwLenMark }}</span>At least 8 characters</div>
+                <div class="pw-rule" style="color:{{ pwUpperColor }}"><span class="pw-mark">{{ pwUpperMark }}</span>One uppercase letter</div>
+                <div class="pw-rule" style="color:{{ pwSymbolColor }}"><span class="pw-mark">{{ pwSymbolMark }}</span>One symbol, like ! ? @ or #</div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Confirm new password</label>
+              <input class="input" type="password" maxlength="128" value="{{ confirmPassword }}" onChange="{{ onConfirmPasswordChange }}" style="border-radius:14px;background:var(--color-surface)"/>
+            </div>
+          </div>
+          <div>
+            <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ savePassword }}" style="border-radius:999px;background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary)">Update password</button>
+          </div>
+        </div>
+
+        <!-- Signing out used to be a section of its own. It belongs with the
+             account it ends, and it asks for the password first — so a device
+             left open can't be signed out of by whoever picks it up. -->
+        <div class="set-card">
+          <div>
+            <div class="card-kicker">Session</div>
+            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">Sign out</h2>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap">
+            <div style="flex:1;min-width:220px;font-size:13px;color:var(--color-neutral-600)">
+              Signed in as {{ sessionLabel }}. Your notebooks stay saved on this device. You'll be asked for your account password first.
+            </div>
+            <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ askSignOut }}" style="flex:none;display:flex;align-items:center;gap:6px;border-radius:999px;background:var(--color-surface);border:1px solid var(--color-divider)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+              Sign out
+            </button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showPreferences }}" hint-placeholder-val="{{ false }}">
+        <!-- Preferences -->
+        <div class="set-card">
+          <div>
+            <div class="card-kicker">Preferences</div>
+            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">Defaults</h2>
+          </div>
+          <div class="field" style="max-width:360px">
+            <label>Default notebook sort</label>
+            <select class="input" value="{{ defaultSort }}" onChange="{{ onDefaultSortChange }}" style="border-radius:14px;background:var(--color-surface)">
+              <option value="recent">Recently updated</option>
+              <option value="name">Name</option>
+              <option value="progress">Progress</option>
+            </select>
+          </div>
+          <p style="margin:0;font-size:13px;color:var(--color-neutral-600)">Applied whenever you open your notebooks. Saved automatically.</p>
+        </div>
+
+        <!-- Appearance, part of Preferences -->
+        <div class="set-card">
+          <div>
+            <div class="card-kicker">Appearance</div>
+            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">Light or dark</h2>
+          </div>
+          <p style="margin:0;font-size:13px;color:var(--color-neutral-600);max-width:60ch">Match system follows your device and switches when it does. Applies everywhere in notivlo and is remembered on this device. Drawings keep a light background in dark mode, so their ink stays visible.</p>
+
+          <div class="ts-options">
+            <sc-for list="{{ themes }}" as="th" hint-placeholder-count="3">
+              <button type="button" class="ts-option theme-option {{ th.activeClass }}" onClick="{{ th.pick }}" aria-pressed="{{ th.pressed }}">
+                <span class="theme-preview" aria-hidden="true">
+                  <span class="tp-half {{ th.leftClass }}"><span class="tp-bar"></span><span class="tp-line"></span><span class="tp-line tp-line-short"></span></span>
+                  <span class="tp-half {{ th.rightClass }}"><span class="tp-bar"></span><span class="tp-line"></span><span class="tp-line tp-line-short"></span></span>
+                </span>
+                <span class="ts-label">{{ th.label }}</span>
+                <span class="ts-pct">{{ th.note }}</span>
+              </button>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ themeMessage }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0;font-size:13px;color:{{ themeMessageColor }}">{{ themeMessage }}</p>
+          </sc-if>
+        </div>
+
+        <!-- Text size, part of Preferences -->
+        <div class="set-card">
+          <div>
+            <div class="card-kicker">Text size</div>
+            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">How big everything reads</h2>
+          </div>
+          <p style="margin:0;font-size:13px;color:var(--color-neutral-600);max-width:60ch">Applies everywhere in notivlo and is remembered on this device. Each step scales the whole interface, so spacing and buttons keep up with the text instead of the words outgrowing their boxes.</p>
+
+          <div class="ts-options">
+            <sc-for list="{{ textSizes }}" as="ts" hint-placeholder-count="4">
+              <button type="button" class="ts-option {{ ts.activeClass }}" onClick="{{ ts.pick }}" aria-pressed="{{ ts.pressed }}">
+                <span class="ts-swatch" style="font-size:{{ ts.sampleSize }}">Aa</span>
+                <span class="ts-label">{{ ts.label }}</span>
+                <span class="ts-pct">{{ ts.percent }}</span>
+              </button>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ textSizeMessage }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0;font-size:13px;color:{{ textSizeMessageColor }}">{{ textSizeMessage }}</p>
+          </sc-if>
+        </div>
+
+        <!-- Notebook font, part of Preferences -->
+        <div class="set-card">
+          <div>
+            <div class="card-kicker">Notebook font</div>
+            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">What you write in</h2>
+          </div>
+          <p style="margin:0;font-size:13px;color:var(--color-neutral-600);max-width:60ch">Applies to the writing inside a notebook: the chapter title, the chapter itself and the margin notes. Everything around it keeps the app's own type, so the interface stays recognisable whichever you pick. Chapters you have already written change with it — nothing is stored in a font.</p>
+
+          <div class="ts-options">
+            <sc-for list="{{ noteFonts }}" as="nf" hint-placeholder-count="4">
+              <button type="button" class="ts-option {{ nf.activeClass }}" onClick="{{ nf.pick }}" aria-pressed="{{ nf.pressed }}">
+                <span class="ts-swatch" style="font-family:{{ nf.stack }};font-size:21px">Aa</span>
+                <span class="ts-label">{{ nf.label }}</span>
+                <span class="ts-pct">{{ nf.note }}</span>
+              </button>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ noteFontMessage }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0;font-size:13px;color:{{ noteFontMessageColor }}">{{ noteFontMessage }}</p>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showNotebooks }}" hint-placeholder-val="{{ false }}">
+        <!-- Notebooks -->
+        <div class="set-card">
+          <div>
+            <div class="card-kicker">Notebooks</div>
+            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">Manage your notebooks</h2>
+          </div>
+
+          <sc-if value="{{ notebookMessage }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0;font-size:13px;color:var(--color-accent-700)">{{ notebookMessage }}</p>
+          </sc-if>
+
+          <sc-if value="{{ hasNotebooks }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+              <sc-for list="{{ manageNotebooks }}" as="nb" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-3) var(--space-4);background:var(--color-surface);border:1px solid var(--color-border);border-radius:16px">
+
+                  <sc-if value="{{ nb.renaming }}" hint-placeholder-val="{{ false }}">
+                    <input class="input" value="{{ renameValue }}" onChange="{{ onRenameChange }}" onKeyDown="{{ nb.renameKeyDown }}" autoFocus="{{ true }}" aria-label="Notebook name" style="flex:1;min-width:180px;height:34px;font-size:14px;border-radius:12px;background:var(--color-surface)"/>
+                    <div style="flex:none;display:flex;gap:var(--space-2)">
+                      <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ nb.saveRename }}" style="border-radius:999px;font-size:13px;padding:6px 16px;background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary)">Save</button>
+                      <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ cancelNotebookAction }}" style="border-radius:999px;font-size:13px;padding:6px 16px;background:var(--color-surface)">Cancel</button>
+                    </div>
+                  </sc-if>
+
+                  <!-- No inline "Sure?" step any more: the password prompt is
+                       the confirmation, and it carries the same detail line. -->
+                  <sc-if value="{{ nb.idle }}" hint-placeholder-val="{{ true }}">
+                    <div style="flex:1;min-width:180px">
+                      <div style="font-size:14px">{{ nb.title }}</div>
+                      <div style="font-size:13px;color:var(--color-neutral-600)">{{ nb.meta }}</div>
+                    </div>
+                    <div style="flex:none;display:flex;gap:var(--space-2)">
+                      <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ nb.startRename }}" style="border-radius:999px;font-size:13px;padding:6px 16px;background:var(--color-surface);border:1px solid rgba(180,150,110,.45)">Rename</button>
+                      <button type="button" class="btn btn-ghost danger-btn" onClick="{{ nb.askDelete }}" style="border-radius:999px;font-size:13px;padding:6px 16px;border:1px solid rgba(168,50,42,.45);color:var(--color-danger);background:var(--color-surface)">Delete</button>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ noNotebooks }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0;font-size:13px;color:var(--color-neutral-600)">You don't have any notebooks yet. <a href="Home.dc.html">Create one from the home page.</a></p>
+          </sc-if>
+
+          <p style="margin:0;font-size:13px;color:var(--color-neutral-600)">Renaming keeps everything you've written. Deleting removes the notebook and all of its chapters and can't be undone, so it asks for your account password first.</p>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showData }}" hint-placeholder-val="{{ false }}">
+        <!-- Data -->
+        <div class="set-card">
+          <div>
+            <div class="card-kicker">Data</div>
+            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">Storage &amp; backup</h2>
+          </div>
+
+          <div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+              <span style="font-size:13px;color:var(--color-neutral-700)">{{ storageLabel }}</span>
+              <span style="font-size:13px;color:var(--color-neutral-500);font-variant-numeric:tabular-nums">{{ storagePercentLabel }}</span>
+            </div>
+            <div style="height:6px;border-radius:999px;background:rgba(72,62,50,.10);overflow:hidden;border:1px solid rgba(72,62,50,.14)">
+              <div style="height:100%;border-radius:999px;background:linear-gradient(90deg,var(--color-accent-400),var(--color-accent-600));width:{{ storagePercentStr }}"></div>
+            </div>
+            <p style="margin:var(--space-2) 0 0;font-size:13px;color:var(--color-neutral-600)">{{ storageBreakdown }}</p>
+          </div>
+
+          <div class="hr" style="opacity:.5;margin:0"></div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:var(--space-2)">
+            <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ exportData }}" style="border-radius:999px;background:var(--color-surface)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              Export my data
+            </button>
+          </div>
+          <sc-if value="{{ exportMessage }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0;font-size:13px;color:var(--color-accent-700)">{{ exportMessage }}</p>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showLegal }}" hint-placeholder-val="{{ false }}">
+        <!-- Legal -->
+        <div class="set-card">
+          <div>
+            <div class="card-kicker">Legal</div>
+            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">Privacy, terms &amp; licenses</h2>
+          </div>
+
+          <sc-if value="{{ legalDraft }}" hint-placeholder-val="{{ true }}">
+            <div class="legal-draft"><strong>Draft.</strong> These documents are templates written to match how notivlo actually works. They aren't legal advice: have them reviewed, then fill in the company name, contact email, jurisdiction and effective date in legal-documents.js and mark them reviewed.</div>
+          </sc-if>
+
+          <div class="legal-tabs" role="tablist" aria-label="Legal documents">
+            <sc-for list="{{ legalTabs }}" as="tab" hint-placeholder-count="3">
+              <button type="button" role="tab" class="legal-tab {{ tab.activeClass }}" aria-selected="{{ tab.selected }}" onClick="{{ tab.go }}">{{ tab.label }}</button>
+            </sc-for>
+          </div>
+
+          <div class="legal-doc" role="tabpanel">
+            <p class="legal-meta">{{ legalMeta }}</p>
+            <sc-if value="{{ legalMissing }}" hint-placeholder-val="{{ false }}">
+              <p class="legal-p">This document couldn't be loaded.</p>
+            </sc-if>
+            <sc-for list="{{ legalBlocks }}" as="b" hint-placeholder-count="6">
+              <sc-if value="{{ b.isHeading }}" hint-placeholder-val="{{ false }}"><h3 class="legal-h">{{ b.text }}</h3></sc-if>
+              <sc-if value="{{ b.isPara }}" hint-placeholder-val="{{ true }}"><p class="legal-p">{{ b.text }}</p></sc-if>
+              <sc-if value="{{ b.isItem }}" hint-placeholder-val="{{ false }}"><p class="legal-li">{{ b.text }}</p></sc-if>
+            </sc-for>
+
+            <sc-if value="{{ legalShowLicenses }}" hint-placeholder-val="{{ false }}">
+              <div class="legal-lics">
+                <sc-for list="{{ legalLicenses }}" as="lic" hint-placeholder-count="4">
+                  <div class="legal-lic">
+                    <div class="legal-lic-head">
+                      <div>
+                        <div class="legal-lic-name">{{ lic.name }}<span class="legal-lic-ver">{{ lic.version }}</span></div>
+                        <div class="legal-lic-sub">{{ lic.copyright }}</div>
+                      </div>
+                      <span class="tag tag-outline legal-lic-badge">{{ lic.license }}</span>
+                    </div>
+                    <sc-if value="{{ lic.hasNote }}" hint-placeholder-val="{{ false }}">
+                      <p class="legal-lic-note">{{ lic.note }}</p>
+                    </sc-if>
+                    <details class="legal-lic-text">
+                      <summary>Show license text</summary>
+                      <pre>{{ lic.text }}</pre>
+                    </details>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showDanger }}" hint-placeholder-val="{{ false }}">
+        <!-- Danger zone -->
+        <div class="set-card" style="border-color:rgba(168,50,42,.28)">
+          <div>
+            <div class="card-kicker" style="color:var(--color-danger)">Danger zone</div>
+            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">Irreversible actions</h2>
+          </div>
+
+          <sc-if value="{{ dangerMessage }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:var(--space-2) var(--space-3);border-radius:12px;font-size:13px;background:{{ dangerMessageBg }};border:1px solid {{ dangerMessageBorder }};color:{{ dangerMessageColor }}">{{ dangerMessage }}</div>
+          </sc-if>
+
+          <p style="margin:0;font-size:13px;color:var(--color-neutral-600)">Both of these ask for your account password before anything is removed.</p>
+
+          <!-- Reset content -->
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap">
+            <div style="flex:1;min-width:220px">
+              <div style="font-size:14px">Erase all notebooks &amp; agenda</div>
+              <div style="font-size:13px;color:var(--color-neutral-600)">Removes every notebook, chapter, note, agenda entry and study record. Your account stays.</div>
+            </div>
+            <button type="button" class="btn btn-ghost danger-btn" onClick="{{ askResetData }}" style="flex:none;border-radius:999px;border:1px solid rgba(168,50,42,.45);color:var(--color-danger);background:var(--color-surface)">Erase content</button>
+          </div>
+
+          <div class="hr" style="opacity:.5;margin:0"></div>
+
+          <!-- Delete account -->
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap">
+            <div style="flex:1;min-width:220px">
+              <div style="font-size:14px">Delete account</div>
+              <div style="font-size:13px;color:var(--color-neutral-600)">Deletes your sign-in and everything above, then returns you to sign-up.</div>
+            </div>
+            <button type="button" class="btn btn-ghost danger-btn" onClick="{{ askDeleteAccount }}" style="flex:none;border-radius:999px;border:1px solid rgba(168,50,42,.45);color:var(--color-danger);background:var(--color-surface)">Delete account</button>
+          </div>
+        </div>
+      </sc-if>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- One dialog for every gated action — sign out, deleting a notebook,
+       erasing content, deleting the account. The action it is standing in
+       front of is held in state, and only runs once the password checks out. -->
+  <sc-if value="{{ gateOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="gate-backdrop" onClick="{{ cancelGate }}"></div>
+    <div class="gate-card" role="dialog" aria-modal="{{ true }}" aria-label="{{ gateTitle }}">
+      <div>
+        <div class="card-kicker" style="color:{{ gateKickerColor }}">{{ gateKicker }}</div>
+        <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:21px;margin:2px 0 0">{{ gateTitle }}</h2>
+      </div>
+
+      <p style="margin:0;font-size:13.5px;line-height:1.55;color:var(--color-neutral-700)">{{ gateDetail }}</p>
+
+      <sc-if value="{{ gateMessage }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:var(--space-2) var(--space-3);border-radius:12px;font-size:13px;background:rgba(182,60,53,.1);border:1px solid rgba(182,60,53,.3);color:var(--color-danger-strong)">{{ gateMessage }}</div>
+      </sc-if>
+
+      <div class="field">
+        <label>Account password</label>
+        <input class="input" type="password" maxlength="128" autoComplete="current-password" value="{{ gatePassword }}" onChange="{{ onGatePasswordChange }}" onKeyDown="{{ onGateKeyDown }}" autoFocus="{{ true }}" style="border-radius:14px;background:var(--color-surface)"/>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:var(--space-2);flex-wrap:wrap">
+        <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ cancelGate }}" disabled="{{ gateBusy }}" style="border-radius:999px;background:var(--color-surface)">Cancel</button>
+        <sc-if value="{{ gateDanger }}" hint-placeholder-val="{{ true }}">
+          <button type="button" class="btn btn-ghost danger-btn" onClick="{{ submitGate }}" disabled="{{ gateBusy }}" style="border-radius:999px;border:1px solid rgba(168,50,42,.45);color:var(--color-danger);background:var(--color-surface)">{{ gateConfirmLabel }}</button>
+        </sc-if>
+        <sc-if value="{{ gateSafe }}" hint-placeholder-val="{{ false }}">
+          <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ submitGate }}" disabled="{{ gateBusy }}" style="border-radius:999px;background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary)">{{ gateConfirmLabel }}</button>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const USERS_KEY = 'folio_users';
+const SESSION_KEY = 'folio_session';
+const PREFS_KEY = 'folio_prefs';
+// Where the account's access and refresh tokens live. They are credentials:
+// they stay out of the export for the same reason folio_users does, and they
+// survive an erase of saved content, which is not a sign-out.
+const SB_SESSION_KEY = (window.notivloSupabase && window.notivloSupabase.SESSION_KEY) || 'folio_supabase_session';
+const NOTEBOOKS_KEY = 'folio_notebooks_v1';
+const AGENDA_KEY = 'folio_agenda_v2';
+const STUDY_KEY = 'folio_study_minutes';
+// The picture, the description and the goals. Part of the account rather than
+// of what the account holds, so an erase of saved content leaves it alone —
+// see clearContentKeys(). It stays on this device: the server carries a name
+// and an email and nothing else, and a 256px photo has no business travelling
+// through user_metadata.
+const PROFILE_KEY = 'folio_profile_v1';
+const MAX_GOALS = 6;
+const GOAL_LIMIT = 80;
+const DESCRIPTION_LIMIT = 280;
+// Square and small on purpose: a phone photo is several megabytes and
+// localStorage is a handful in total.
+const AVATAR_PX = 256;
+
+function readJSON(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) { return fallback; }
+}
+function writeJSON(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
+}
+
+// Per-notebook editor content is stored under one key per notebook, so the
+// wildcard prefix has to be enumerated rather than listed.
+function appStorageKeys() {
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf('folio_') === 0) keys.push(k);
+  }
+  return keys;
+}
+function bytesFor(keys) {
+  return keys.reduce((sum, k) => sum + k.length + ((localStorage.getItem(k) || '').length), 0);
+}
+function fmtBytes(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  return (n / (1024 * 1024)).toFixed(2) + ' MB';
+}
+// Browsers don't expose the real localStorage quota; ~5MB is the common cap
+// and is only used here to give the usage bar a sense of scale.
+const ASSUMED_QUOTA = 5 * 1024 * 1024;
+
+// Everything in here is optional, so a missing or half-written record reads
+// as "nothing filled in" rather than as an error.
+function readProfileExtras() {
+  const p = readJSON(PROFILE_KEY, {}) || {};
+  const goals = Array.isArray(p.goals) ? p.goals : [];
+  return {
+    avatar: typeof p.avatar === 'string' ? p.avatar : '',
+    description: typeof p.description === 'string' ? p.description.slice(0, DESCRIPTION_LIMIT) : '',
+    goals: goals
+      .filter(g => typeof g === 'string' && g.trim())
+      .map(g => g.trim().slice(0, GOAL_LIMIT))
+      .slice(0, MAX_GOALS),
+  };
+}
+
+// Centre-crops to a square and re-encodes, so what lands in storage is a few
+// tens of kilobytes whatever came out of the camera. JPEG rather than WebP:
+// the circle masks the corners so there is no alpha to keep, and every engine
+// the app runs in can encode it. The white fill is for a transparent PNG,
+// which would otherwise come back with black corners behind the mask.
+async function avatarDataUrl(file) {
+  const bitmap = await createImageBitmap(file);
+  try {
+    const side = Math.min(bitmap.width, bitmap.height);
+    const sx = Math.round((bitmap.width - side) / 2);
+    const sy = Math.round((bitmap.height - side) / 2);
+    const canvas = document.createElement('canvas');
+    canvas.width = AVATAR_PX;
+    canvas.height = AVATAR_PX;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, AVATAR_PX, AVATAR_PX);
+    ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, AVATAR_PX, AVATAR_PX);
+    return canvas.toDataURL('image/jpeg', 0.85);
+  } finally {
+    if (bitmap.close) bitmap.close();
+  }
+}
+
+// One password check for both back ends, so every gated action below asks the
+// same question however the app is configured. Server-backed, the password is
+// proved by signing in on the side and throwing the token away; on this device
+// it is checked against the stored PBKDF2 credential. Neither path keeps the
+// password, and neither touches the session the reader is using.
+async function verifyAccountPassword(email, password) {
+  if (!password) return { ok: false, error: 'Enter your account password.' };
+  if (window.notivloAuth && window.notivloAuth.enabled()) {
+    const res = await window.notivloAuth.verifyCurrentPassword(password);
+    if (res && res.ok) return { ok: true };
+    return { ok: false, error: (res && res.error) || 'That password is incorrect.' };
+  }
+  const users = readJSON(USERS_KEY, []) || [];
+  const me = users.find(u => u.email === email);
+  if (!me) return { ok: false, error: 'Could not find your account.' };
+  const check = await verifyPassword(me, password);
+  if (!check.ok) return { ok: false, error: 'That password is incorrect.' };
+  // An account still on the old hash is re-stored under PBKDF2 while the
+  // password is in hand, which is the only moment it can be done.
+  if (check.upgrade) {
+    writeJSON(USERS_KEY, users.map(u => u.email === me.email ? { ...u, ...check.upgrade } : u));
+  }
+  return { ok: true };
+}
+
+// The settings sections, in sidebar order. `slug` is what appears in the URL.
+const SETTINGS_SECTIONS = [
+  // Sign out and Change password used to sit here as sections of their own.
+  // Both are part of the account, so both are in Profile now.
+  { slug: 'profile',     label: 'Profile' },
+  { slug: 'preferences', label: 'Preferences' },
+  { slug: 'notebooks',   label: 'Notebooks' },
+  { slug: 'data',        label: 'Data' },
+  { slug: 'legal',       label: 'Legal' },
+  { slug: 'danger',      label: 'Danger zone', danger: true },
+];
+const SETTINGS_SLUGS = SETTINGS_SECTIONS.map(s => s.slug);
+
+// Falls back to the first section for a missing or unrecognised ?section=, so
+// a stale or hand-edited link still lands somewhere useful.
+// The documents inside Settings → Legal. `doc` in the URL picks one, so each
+// can be linked to directly (Settings.dc.html?section=legal&doc=terms).
+const LEGAL_DOCS = [
+  { id: 'privacy',  label: 'Privacy' },
+  { id: 'terms',    label: 'Terms' },
+  { id: 'licenses', label: 'Licenses' },
+];
+
+function readLegalDocFromUrl() {
+  try {
+    const d = new URLSearchParams(window.location.search).get('doc');
+    return LEGAL_DOCS.some(x => x.id === d) ? d : 'privacy';
+  } catch (e) { return 'privacy'; }
+}
+
+// Fills the {app}/{company}/{email}/{jurisdiction} tokens. Unset details show
+// as bracketed placeholders, which is what the draft notice points at.
+function fillLegalTokens(text, info) {
+  return String(text)
+    .split('{app}').join('notivlo')
+    .split('{company}').join(info.company || '[company name]')
+    .split('{email}').join(info.contactEmail || '[contact email]')
+    .split('{jurisdiction}').join(info.jurisdiction || '[jurisdiction]');
+}
+
+function readSectionFromUrl() {
+  try {
+    let slug = new URLSearchParams(window.location.search).get('section');
+    // Text size used to be a section of its own; it now lives in Preferences,
+    // so an old link still lands on it. Same for sign out and the password
+    // form, both of which are in Profile.
+    if (slug === 'textsize') slug = 'preferences';
+    if (slug === 'session' || slug === 'security') slug = 'profile';
+    return SETTINGS_SLUGS.includes(slug) ? slug : SETTINGS_SLUGS[0];
+  } catch (e) { return SETTINGS_SLUGS[0]; }
+}
+
+const OK_STYLE = { bg: 'rgba(90,140,90,.12)', border: 'rgba(90,140,90,.35)', color: 'var(--color-ok-text)' };
+const ERR_STYLE = { bg: 'rgba(182,60,53,.1)', border: 'rgba(182,60,53,.3)', color: 'var(--color-danger-strong)' };
+
+class Component extends DCLogic {
+  state = (() => {
+    const session = readJSON(SESSION_KEY, {}) || {};
+    const prefs = readJSON(PREFS_KEY, {}) || {};
+    const extras = readProfileExtras();
+    return {
+      sessionEmail: session.email || '',
+      profileName: session.name || '',
+      profileEmail: session.email || '',
+      profileMessage: '', profileOk: false,
+      profileAvatar: extras.avatar,
+      profileDescription: extras.description,
+      profileGoals: extras.goals,
+      newGoal: '',
+      currentPassword: '', newPassword: '', confirmPassword: '',
+      passwordMessage: '', passwordOk: false,
+      defaultSort: prefs.defaultSort || 'recent',
+      exportMessage: '',
+      notebooks: readJSON(NOTEBOOKS_KEY, []) || [],
+      renamingSlug: null,
+      renameValue: '',
+      notebookMessage: '',
+      dangerMessage: '', dangerOk: false,
+      // The action waiting on a password, or null when nothing is. Shape:
+      // { kind, kicker, title, detail, confirmLabel, danger, slug }.
+      gate: null,
+      gatePassword: '',
+      gateMessage: '',
+      gateBusy: false,
+      storageTick: 0,
+      section: readSectionFromUrl(),
+      legalDoc: readLegalDocFromUrl(),
+      textSize: readTextSizeId(),
+      textSizeMessage: '', textSizeOk: false,
+      noteFont: readNoteFontId(),
+      noteFontMessage: '', noteFontOk: false,
+      theme: currentTheme().id,
+      themeResolved: currentTheme().resolved,
+      themeMessage: '', themeOk: false,
+    };
+  })();
+
+  componentDidMount() {
+    this.syncTitle();
+    this.scrollActiveIntoView();
+    // The Notebooks section lists what is in storage, so it has to notice
+    // anything another device added.
+    if (window.notivloSync && window.notivloSync.enabled()) {
+      window.notivloSync.sync().then((res) => {
+        if (res && res.pulled) this.setState({ notebooks: readJSON(NOTEBOOKS_KEY, []) || [] });
+      });
+    }
+    // Keeps the pane in step with the browser's own back/forward buttons,
+    // which change the URL without going through goSection.
+    this.onPopState = () => this.setState({ section: readSectionFromUrl(), legalDoc: readLegalDocFromUrl() });
+    window.addEventListener('popstate', this.onPopState);
+    // Match system can change while the page is open — the device going dark
+    // on a schedule, or the setting changed in another window — and the tiles
+    // should say so.
+    this.onThemeChange = (e) => this.setState({ theme: e.detail.id, themeResolved: e.detail.resolved });
+    window.addEventListener('notivlo:themechange', this.onThemeChange);
+  }
+
+  componentDidUpdate() {
+    this.syncTitle();
+    this.scrollActiveIntoView();
+  }
+
+  // Narrow layouts lay the section list out as a horizontal strip, where the
+  // open section can sit off the right edge with nothing to indicate it. Only
+  // acts while the strip actually overflows, so the desktop column — which
+  // never scrolls — is left alone.
+  scrollActiveIntoView() {
+    const nav = document.querySelector('.set-nav');
+    if (!nav || nav.scrollWidth <= nav.clientWidth) return;
+    const active = nav.querySelector('.set-nav-item-active');
+    if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('popstate', this.onPopState);
+    window.removeEventListener('notivlo:themechange', this.onThemeChange);
+  }
+
+  syncTitle() {
+    const active = SETTINGS_SECTIONS.find(x => x.slug === this.state.section);
+    const next = 'notivlo — Settings' + (active ? ' · ' + active.label : '');
+    if (document.title !== next) document.title = next;
+  }
+
+  // Applied immediately as well as saved, so the choice is visible in the act
+  // of making it — the page you're on resizes under the buttons.
+  pickTextSize(id) {
+    if (!saveTextSize(id)) {
+      return this.setState({ textSizeMessage: "Couldn't save that — this device's storage is full.", textSizeOk: false });
+    }
+    this.setState({ textSize: id, textSizeMessage: 'Text size saved.', textSizeOk: true });
+  }
+
+  // Same again for the notebooks. Nothing on this page is written in it, so
+  // unlike the two above there is nothing here to see change — hence the
+  // confirmation line saying where it landed.
+  pickNoteFont(id) {
+    if (!saveNoteFont(id)) {
+      return this.setState({ noteFontMessage: "Couldn't save that — this device's storage is full.", noteFontOk: false });
+    }
+    this.setState({ noteFont: id, noteFontMessage: 'Saved. Your notebooks are in it now.', noteFontOk: true });
+  }
+
+  // Like text size, applied the moment it's picked: the page repaints under
+  // the tiles.
+  pickTheme(id) {
+    if (!saveTheme(id)) {
+      return this.setState({ themeMessage: "Couldn't save that — this device's storage is full.", themeOk: false });
+    }
+    const t = currentTheme();
+    this.setState({ theme: t.id, themeResolved: t.resolved, themeMessage: 'Appearance saved.', themeOk: true });
+  }
+
+  goLegalDoc(id) {
+    if (id === this.state.legalDoc) return;
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('doc', id);
+      // replaceState, unlike sections: these are tabs within one page, and
+      // shouldn't pile up entries for the back button to step through.
+      window.history.replaceState(window.history.state, '', url);
+    } catch (e) { /* URL unavailable — the tab still switches */ }
+    this.setState({ legalDoc: id });
+  }
+
+  legalVals() {
+    const docs = window.NOTIVLO_LEGAL_DOCS || null;
+    const lic = window.NOTIVLO_LICENSES || null;
+    const info = (docs && docs.info) || {};
+    const doc = this.state.legalDoc;
+    const source = doc === 'licenses' ? lic : docs && docs[doc];
+    const blocks = ((source && source.blocks) || []).map(([kind, text]) => ({
+      isHeading: kind === 'h', isPara: kind === 'p', isItem: kind === 'li',
+      text: fillLegalTokens(text, info),
+    }));
+    return {
+      legalMissing: !source,
+      // Privacy and Terms are drafts until reviewed; the license notices are
+      // the licensors' own text and never are.
+      legalDraft: !!docs && !info.reviewed && doc !== 'licenses',
+      legalTabs: LEGAL_DOCS.map(d => ({
+        label: d.label,
+        activeClass: d.id === doc ? 'legal-tab-active' : '',
+        selected: d.id === doc,
+        go: () => this.goLegalDoc(d.id),
+      })),
+      legalMeta: doc === 'licenses'
+        ? 'Open-source software included in notivlo'
+        : (info.reviewed && info.effectiveDate ? 'Effective ' + info.effectiveDate : 'Draft — not yet in effect'),
+      legalBlocks: blocks,
+      legalShowLicenses: doc === 'licenses' && !!lic,
+      legalLicenses: lic ? lic.components.map(c => ({
+        name: c.name,
+        version: c.version || '',
+        license: c.license,
+        copyright: c.copyright || '',
+        note: c.note || '',
+        hasNote: !!c.note,
+        text: (lic.texts && lic.texts[c.textId]) || '',
+      })) : [],
+    };
+  }
+
+  goSection(slug) {
+    if (slug === this.state.section) return;
+    // pushState rather than replaceState: moving between sections is
+    // navigation, so back should return to the previous section rather than
+    // leaving the page entirely.
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('section', slug);
+      if (slug !== 'legal') url.searchParams.delete('doc');
+      window.history.pushState({ section: slug }, '', url);
+    } catch (e) { /* URL unavailable — the pane still switches */ }
+    // Messages belong to the section that produced them.
+    this.setState({
+      section: slug,
+      profileMessage: '', passwordMessage: '', notebookMessage: '',
+      exportMessage: '', textSizeMessage: '', themeMessage: '', noteFontMessage: '',
+      dangerMessage: '',
+      renamingSlug: null,
+      // A password prompt belongs to the thing it was opened from, so leaving
+      // takes it with you.
+      gate: null, gatePassword: '', gateMessage: '', gateBusy: false,
+    });
+  }
+
+  // True when supabase-config.js has a project in it; every handler below
+  // has two paths and this is what picks between them.
+  serverBacked() {
+    return !!(window.notivloAuth && window.notivloAuth.enabled());
+  }
+
+  /* ---------- confirm with the account password ------------------------- */
+
+  // Opens the prompt in front of an action. Nothing happens until
+  // submitGate() has proved the password, and the action itself is unchanged
+  // either way — the gate is the only thing that knows about the password.
+  openGate(gate) {
+    this.setState({ gate, gatePassword: '', gateMessage: '', gateBusy: false });
+  }
+
+  cancelGate() {
+    // Not while a check is in flight: the action behind it may already be on
+    // its way, and closing would suggest otherwise.
+    if (this.state.gateBusy) return;
+    this.setState({ gate: null, gatePassword: '', gateMessage: '', gateBusy: false });
+  }
+
+  async submitGate() {
+    const gate = this.state.gate;
+    if (!gate || this.state.gateBusy) return;
+    const password = this.state.gatePassword;
+    if (!password) return this.setState({ gateMessage: 'Enter your account password.' });
+
+    this.setState({ gateBusy: true, gateMessage: '' });
+    const check = await verifyAccountPassword(this.state.sessionEmail, password);
+    if (!check.ok) {
+      // The field keeps what was typed — a wrong password is usually a typo,
+      // and clearing it would mean starting the whole thing again.
+      return this.setState({ gateBusy: false, gateMessage: check.error });
+    }
+
+    // Proved: the password goes out of state before the action runs, so it is
+    // not sitting there while a sign-out or a delete navigates away.
+    this.setState({ gate: null, gatePassword: '', gateMessage: '', gateBusy: false });
+    this.runGate(gate);
+  }
+
+  runGate(gate) {
+    if (gate.kind === 'signOut') return this.signOut();
+    if (gate.kind === 'deleteNotebook') return this.deleteNotebook(gate.slug);
+    if (gate.kind === 'resetData') return this.resetData();
+    if (gate.kind === 'deleteAccount') return this.deleteAccount();
+  }
+
+  askSignOut() {
+    this.openGate({
+      kind: 'signOut',
+      kicker: 'Session',
+      title: 'Sign out of notivlo',
+      detail: 'You are signed in as ' + (this.state.profileEmail || this.state.sessionEmail || 'this device')
+        + '. Your notebooks stay saved on this device, and signing back in picks them up where you left off.',
+      confirmLabel: 'Sign out',
+      danger: false,
+    });
+  }
+
+  askDeleteNotebook(slug, title, detail) {
+    this.openGate({
+      kind: 'deleteNotebook',
+      slug,
+      kicker: 'Notebook',
+      title: 'Delete "' + title + '"',
+      detail: detail + " This can't be undone.",
+      confirmLabel: 'Delete notebook',
+      danger: true,
+    });
+  }
+
+  askResetData() {
+    this.openGate({
+      kind: 'resetData',
+      kicker: 'Danger zone',
+      title: 'Erase all notebooks & agenda',
+      detail: 'Every notebook, chapter, note, agenda entry and study record goes, on this device and on your account. '
+        + 'Your sign-in, your profile and your preferences stay. This cannot be undone.',
+      confirmLabel: 'Erase content',
+      danger: true,
+    });
+  }
+
+  askDeleteAccount() {
+    this.openGate({
+      kind: 'deleteAccount',
+      kicker: 'Danger zone',
+      title: 'Delete your account',
+      detail: 'Your sign-in goes, along with every notebook, chapter, note, agenda entry and study record. '
+        + 'This cannot be undone, and it ends with you back at sign-up.',
+      confirmLabel: 'Delete account',
+      danger: true,
+    });
+  }
+
+  async signOut() {
+    if (this.serverBacked()) {
+      // Anything written on this device and not yet sent goes now — after
+      // this there is no session to send it with.
+      if (window.notivloSync) await window.notivloSync.sync();
+      await window.notivloAuth.signOut();
+    }
+    try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+    // The notebooks stay on this device: see notivloSync.wipeLocal() and the
+    // note in supabase/README.md about what a shared device should do here.
+    window.location.href = 'SignIn.dc.html';
+  }
+
+  cancelNotebookAction() {
+    this.setState({ renamingSlug: null, renameValue: '', notebookMessage: '' });
+  }
+
+  startRenameNotebook(slug) {
+    const nb = this.state.notebooks.find(n => n.slug === slug);
+    this.setState({ renamingSlug: slug, renameValue: nb ? nb.title : '', notebookMessage: '' });
+  }
+
+  saveRenameNotebook(slug) {
+    const title = this.state.renameValue.replace(/\s+/g, ' ').trim();
+    if (!title) return this.setState({ notebookMessage: 'Give the notebook a name.' });
+    this.setState(s => {
+      const notebooks = s.notebooks.map(nb => nb.slug === slug ? { ...nb, title } : nb);
+      if (!writeJSON(NOTEBOOKS_KEY, notebooks)) {
+        return { notebookMessage: 'Could not save — storage is full.' };
+      }
+      // The slug is left alone on purpose: chapters and body text live under
+      // 'folio_nb_state:<slug>', and re-deriving it from the new name would
+      // strand everything written in the notebook.
+      return { notebooks, renamingSlug: null, renameValue: '', notebookMessage: 'Renamed to "' + title + '".' };
+    });
+  }
+
+  // Only ever reached through the password gate: see askDeleteNotebook().
+  deleteNotebook(slug) {
+    const nb = this.state.notebooks.find(n => n.slug === slug);
+    const title = nb ? nb.title : 'Notebook';
+    this.setState(s => {
+      const notebooks = s.notebooks.filter(n => n.slug !== slug);
+      writeJSON(NOTEBOOKS_KEY, notebooks);
+      return { notebooks, notebookMessage: 'Deleted "' + title + '".', storageTick: s.storageTick + 1 };
+    });
+    // Chapters and body text are stored separately, so they have to go too —
+    // otherwise a later notebook with the same name inherits the old content.
+    try { localStorage.removeItem('folio_nb_state:' + slug); } catch (e) {}
+  }
+
+  // The picture saves the moment it is picked, like the appearance and text
+  // size tiles do: picking it is the whole action, and there is nothing to
+  // review afterwards. The description and the goals wait for Save changes,
+  // because they are text you are still writing.
+  async onAvatarPick(e) {
+    const input = e.target;
+    const file = input && input.files && input.files[0];
+    // Clearing the input is what lets the same file be picked again — a
+    // second change event is only fired for a different value.
+    const reset = () => { try { input.value = ''; } catch (err) {} };
+    if (!file) return reset();
+    if (file.type && file.type.indexOf('image/') !== 0) {
+      reset();
+      return this.setState({ profileMessage: 'That file is not an image.', profileOk: false });
+    }
+    try {
+      const avatar = await avatarDataUrl(file);
+      const stored = readProfileExtras();
+      if (!writeJSON(PROFILE_KEY, { ...stored, avatar })) {
+        reset();
+        return this.setState({ profileMessage: "Couldn't save the picture — this device's storage is full.", profileOk: false });
+      }
+      reset();
+      this.setState(s => ({
+        profileAvatar: avatar,
+        profileMessage: 'Profile picture saved.',
+        profileOk: true,
+        storageTick: s.storageTick + 1,
+      }));
+    } catch (err) {
+      reset();
+      this.setState({ profileMessage: "Couldn't read that image. Try a JPEG or a PNG.", profileOk: false });
+    }
+  }
+
+  removeAvatar() {
+    const stored = readProfileExtras();
+    if (!writeJSON(PROFILE_KEY, { ...stored, avatar: '' })) {
+      return this.setState({ profileMessage: "Couldn't save that — this device's storage is full.", profileOk: false });
+    }
+    this.setState(s => ({
+      profileAvatar: '',
+      profileMessage: 'Profile picture removed.',
+      profileOk: true,
+      storageTick: s.storageTick + 1,
+    }));
+  }
+
+  addGoal() {
+    const text = this.state.newGoal.replace(/\s+/g, ' ').trim().slice(0, GOAL_LIMIT);
+    if (!text) return this.setState({ profileMessage: 'Write the goal first.', profileOk: false });
+    if (this.state.profileGoals.length >= MAX_GOALS) {
+      return this.setState({ profileMessage: MAX_GOALS + ' goals is the most that fits. Remove one first.', profileOk: false });
+    }
+    if (this.state.profileGoals.some(g => g.toLowerCase() === text.toLowerCase())) {
+      return this.setState({ newGoal: '', profileMessage: "That goal is already on the list.", profileOk: false });
+    }
+    this.setState(s => ({
+      profileGoals: s.profileGoals.concat([text]),
+      newGoal: '',
+      profileMessage: 'Added. Save changes to keep it.',
+      profileOk: true,
+    }));
+  }
+
+  removeGoal(index) {
+    this.setState(s => ({
+      profileGoals: s.profileGoals.filter((g, i) => i !== index),
+      profileMessage: 'Removed. Save changes to keep it.',
+      profileOk: true,
+    }));
+  }
+
+  // Written straight over the stored record rather than merged from state, so
+  // the picture — which is saved separately and may have changed since this
+  // page loaded — is read back rather than overwritten with a stale copy.
+  saveProfileExtras() {
+    const stored = readProfileExtras();
+    return writeJSON(PROFILE_KEY, {
+      ...stored,
+      description: this.state.profileDescription.trim().slice(0, DESCRIPTION_LIMIT),
+      goals: this.state.profileGoals.slice(0, MAX_GOALS),
+    });
+  }
+
+  async saveProfile() {
+    const name = this.state.profileName.trim();
+    const email = this.state.profileEmail.trim().toLowerCase();
+    if (!name) return this.setState({ profileMessage: 'Enter a display name.', profileOk: false });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return this.setState({ profileMessage: 'Enter a valid email address.', profileOk: false });
+    }
+
+    // The description and the goals are saved here whichever back end the name
+    // and email take, since they never leave the device.
+    if (!this.saveProfileExtras()) {
+      return this.setState({ profileMessage: "Couldn't save — this device's storage is full.", profileOk: false });
+    }
+    this.setState(s => ({
+      profileDescription: s.profileDescription.trim().slice(0, DESCRIPTION_LIMIT),
+    }));
+
+    if (this.serverBacked()) {
+      this.setState({ profileMessage: '', profileOk: false });
+      const res = await window.notivloAuth.updateProfile({ name, email });
+      if (!res.ok) return this.setState({ profileMessage: res.error, profileOk: false });
+      // A new email address is not this account's until the link in it is
+      // followed, so the field goes on showing the one that still signs in.
+      return this.setState({
+        profileName: name,
+        profileEmail: res.emailPending ? this.state.profileEmail : email,
+        profileMessage: res.message,
+        profileOk: true,
+      });
+    }
+
+    const users = readJSON(USERS_KEY, []) || [];
+    const me = users.find(u => u.email === this.state.sessionEmail);
+    if (!me) return this.setState({ profileMessage: 'Could not find your account.', profileOk: false });
+    if (email !== me.email && users.some(u => u.email === email)) {
+      return this.setState({ profileMessage: 'Another account already uses that email.', profileOk: false });
+    }
+
+    const updated = users.map(u => u.email === me.email ? { ...u, name, email } : u);
+    if (!writeJSON(USERS_KEY, updated)) {
+      return this.setState({ profileMessage: 'Could not save — storage is full.', profileOk: false });
+    }
+    // The session carries the email used to look the account up, so it has to
+    // move with the change or the next save would fail to find the user.
+    writeJSON(SESSION_KEY, { email, name });
+    this.setState({
+      sessionEmail: email, profileName: name, profileEmail: email,
+      profileMessage: 'Saved.', profileOk: true,
+    });
+  }
+
+  async savePassword() {
+    const { currentPassword, newPassword, confirmPassword } = this.state;
+    if (!currentPassword) return this.setState({ passwordMessage: 'Enter your current password.', passwordOk: false });
+    const pwProblem = passwordProblem(newPassword, 'New password');
+    if (pwProblem) return this.setState({ passwordMessage: pwProblem, passwordOk: false });
+    if (newPassword.length > FIELD_LIMITS.password) {
+      return this.setState({ passwordMessage: 'Keep the new password under ' + FIELD_LIMITS.password + ' characters.', passwordOk: false });
+    }
+    if (newPassword !== confirmPassword) return this.setState({ passwordMessage: 'New passwords do not match.', passwordOk: false });
+
+    if (this.serverBacked()) {
+      this.setState({ passwordMessage: '', passwordOk: false });
+      // The current password is proved against the server, so there is no
+      // stored credential here to check it against any more.
+      const res = await window.notivloAuth.updatePassword(newPassword, currentPassword);
+      if (!res.ok) return this.setState({ passwordMessage: res.error, passwordOk: false });
+      return this.setState({
+        currentPassword: '', newPassword: '', confirmPassword: '',
+        passwordMessage: res.message || 'Password updated.', passwordOk: true,
+      });
+    }
+
+    const users = readJSON(USERS_KEY, []) || [];
+    const me = users.find(u => u.email === this.state.sessionEmail);
+    if (!me) return this.setState({ passwordMessage: 'Could not find your account.', passwordOk: false });
+
+    const check = await verifyPassword(me, currentPassword);
+    if (!check.ok) {
+      return this.setState({ passwordMessage: 'Current password is incorrect.', passwordOk: false });
+    }
+
+    // A fresh credential — new salt and a full-strength PBKDF2 derivation — so
+    // nothing about the new password is derived from the old record.
+    const cred = await createCredential(newPassword);
+    const updated = users.map(u => u.email === me.email ? { ...u, ...cred } : u);
+    if (!writeJSON(USERS_KEY, updated)) {
+      return this.setState({ passwordMessage: 'Could not save — storage is full.', passwordOk: false });
+    }
+    this.setState({
+      currentPassword: '', newPassword: '', confirmPassword: '',
+      passwordMessage: 'Password updated.', passwordOk: true,
+    });
+  }
+
+  setDefaultSort(value) {
+    const prefs = readJSON(PREFS_KEY, {}) || {};
+    writeJSON(PREFS_KEY, { ...prefs, defaultSort: value });
+    this.setState({ defaultSort: value });
+  }
+
+  async exportData() {
+    if (this.serverBacked()) {
+      this.setState({ exportMessage: 'Building your export…' });
+      const res = await window.notivloAuth.exportData();
+      if (!res.ok) return this.setState({ exportMessage: res.error });
+      // One request instead of walking localStorage, and it covers anything
+      // written on another device. Assembled by export_my_data() under this
+      // account's own row-level policies.
+      return this.downloadExport(res.data, 'Export downloaded from your account.');
+    }
+
+    const payload = { exportedAt: new Date().toISOString(), app: 'notivlo', data: {} };
+    // Deliberately excludes folio_users — that store holds password hashes and
+    // salts, which have no business sitting in a plaintext download — and the
+    // Supabase session, which holds live access and refresh tokens.
+    appStorageKeys()
+      .filter(k => k !== USERS_KEY && k !== SESSION_KEY && k !== SB_SESSION_KEY)
+      .forEach(k => { payload.data[k] = readJSON(k, localStorage.getItem(k)); });
+
+    // The photo scanner is gone, but a Google Cloud Vision key saved for it
+    // while it existed can still be sitting in the preferences. It's a live
+    // credential — someone's cloud bill if the file is shared — so it stays out
+    // of the copy.
+    const exportedPrefs = payload.data[PREFS_KEY];
+    if (exportedPrefs && typeof exportedPrefs === 'object' && exportedPrefs.visionApiKey) {
+      payload.data[PREFS_KEY] = { ...exportedPrefs };
+      delete payload.data[PREFS_KEY].visionApiKey;
+    }
+
+    this.downloadExport(payload, 'Export downloaded (account credentials are not included).');
+  }
+
+  downloadExport(payload, message) {
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'notivlo-export-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    this.setState({ exportMessage: message });
+  }
+
+  clearContentKeys() {
+    // The session tokens are kept: erasing saved content is not signing out,
+    // and without them the erase could not be sent to the account either. So
+    // is the profile record — the picture, the description and the goals are
+    // part of the account, which this is explicitly said to leave alone.
+    appStorageKeys()
+      .filter(k => k !== USERS_KEY && k !== SESSION_KEY && k !== PREFS_KEY
+        && k !== SB_SESSION_KEY && k !== PROFILE_KEY)
+      .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+  }
+
+  // Only ever reached through the password gate: see askResetData().
+  async resetData() {
+    this.clearContentKeys();
+    this.setState(s => ({
+      // The manage list is held in state, so it has to be emptied alongside
+      // the storage it mirrors.
+      notebooks: [],
+      renamingSlug: null,
+      notebookMessage: '',
+      storageTick: s.storageTick + 1,
+      dangerMessage: 'All notebooks and agenda entries erased.',
+      dangerOk: true,
+    }));
+
+    if (!this.serverBacked() || !window.notivloSync) return;
+    // The erase has to travel, or the next sync reads it all back off the
+    // account. A push deletes the rows this device no longer has.
+    const res = await window.notivloSync.push();
+    if (res && res.ok === false) {
+      this.setState({
+        dangerMessage: 'Erased on this device. It will be removed from your account the next time you are online.',
+        dangerOk: true,
+      });
+    }
+  }
+
+  // Only ever reached through the password gate: see askDeleteAccount().
+  async deleteAccount() {
+    if (this.serverBacked()) {
+      // The server goes first. If it refuses, the account still exists and
+      // nothing here is touched — the alternative is an account that is gone
+      // from this device and still live everywhere else.
+      const res = await window.notivloAuth.deleteAccount();
+      if (!res.ok) {
+        return this.setState({ dangerMessage: res.error, dangerOk: false });
+      }
+      this.clearContentKeys();
+      try {
+        localStorage.removeItem(SESSION_KEY);
+        localStorage.removeItem(PREFS_KEY);
+        localStorage.removeItem(SB_SESSION_KEY);
+        localStorage.removeItem(PROFILE_KEY);
+      } catch (e) {}
+      window.location.href = 'SignUp.dc.html';
+      return;
+    }
+
+    const users = (readJSON(USERS_KEY, []) || []).filter(u => u.email !== this.state.sessionEmail);
+    this.clearContentKeys();
+    writeJSON(USERS_KEY, users);
+    try {
+      localStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(PREFS_KEY);
+      localStorage.removeItem(PROFILE_KEY);
+    } catch (e) {}
+    window.location.href = 'SignUp.dc.html';
+  }
+
+  // What a notebook's delete takes with it, in words. Read when the prompt
+  // opens rather than for every row on every render.
+  notebookDeleteDetail(slug) {
+    const stateKey = 'folio_nb_state:' + slug;
+    const saved = readJSON(stateKey, null);
+    const chapterCount = saved && Array.isArray(saved.chapters) ? saved.chapters.length : null;
+    if (chapterCount == null) return 'Removes the notebook and anything saved in it.';
+    return 'Removes ' + chapterCount + (chapterCount === 1 ? ' chapter' : ' chapters')
+      + ' and ' + fmtBytes(bytesFor([stateKey])) + ' of writing.';
+  }
+
+  renderVals() {
+    // storageTick is read so the usage figures recompute after an erase.
+    void this.state.storageTick;
+    const section = this.state.section;
+    const keys = appStorageKeys();
+    const total = bytesFor(keys);
+    const notebookBytes = bytesFor(keys.filter(k => k === NOTEBOOKS_KEY || k.indexOf('folio_nb_state:') === 0));
+    const percent = Math.min(100, Math.round(total / ASSUMED_QUOTA * 1000) / 10);
+
+    const pMsgStyle = this.state.profileOk ? OK_STYLE : ERR_STYLE;
+    const wMsgStyle = this.state.passwordOk ? OK_STYLE : ERR_STYLE;
+    const dMsgStyle = this.state.dangerOk ? OK_STYLE : ERR_STYLE;
+    const gate = this.state.gate;
+    const goalsLeft = MAX_GOALS - this.state.profileGoals.length;
+
+    const manageNotebooks = this.state.notebooks.map(nb => {
+      const stateKey = 'folio_nb_state:' + nb.slug;
+      const saved = readJSON(stateKey, null);
+      const chapterCount = saved && Array.isArray(saved.chapters) ? saved.chapters.length : null;
+      const parts = [nb.category || 'Uncategorized'];
+      if (chapterCount != null) parts.push(chapterCount + (chapterCount === 1 ? ' chapter' : ' chapters'));
+      return {
+        ...nb,
+        meta: parts.join(' · '),
+        renaming: this.state.renamingSlug === nb.slug,
+        idle: this.state.renamingSlug !== nb.slug,
+        startRename: () => this.startRenameNotebook(nb.slug),
+        saveRename: () => this.saveRenameNotebook(nb.slug),
+        renameKeyDown: (e) => {
+          if (e.key === 'Enter') this.saveRenameNotebook(nb.slug);
+          if (e.key === 'Escape') this.cancelNotebookAction();
+        },
+        // The detail line used to sit in the row; it is in the password
+        // prompt now, where the decision is actually made.
+        askDelete: () => this.askDeleteNotebook(nb.slug, nb.title, this.notebookDeleteDetail(nb.slug)),
+      };
+    });
+
+    return {
+      manageNotebooks,
+      hasNotebooks: manageNotebooks.length > 0,
+      noNotebooks: manageNotebooks.length === 0,
+      notebookMessage: this.state.notebookMessage,
+      renameValue: this.state.renameValue,
+      onRenameChange: (e) => this.setState({ renameValue: e.target.value }),
+      cancelNotebookAction: () => this.cancelNotebookAction(),
+
+      askSignOut: () => this.askSignOut(),
+      sessionLabel: this.state.profileEmail || this.state.sessionEmail || 'this device',
+
+      profileName: this.state.profileName,
+      onProfileNameChange: (e) => this.setState({ profileName: e.target.value }),
+      profileEmail: this.state.profileEmail,
+      onProfileEmailChange: (e) => this.setState({ profileEmail: e.target.value }),
+      saveProfile: () => this.saveProfile(),
+
+      profileAvatar: this.state.profileAvatar,
+      hasAvatar: !!this.state.profileAvatar,
+      noAvatar: !this.state.profileAvatar,
+      // Standing in for a picture: the first letter of the name, or of the
+      // email when there is no name yet.
+      profileInitial: (this.state.profileName.trim() || this.state.profileEmail.trim() || '?')
+        .charAt(0).toUpperCase(),
+      avatarPickLabel: this.state.profileAvatar ? 'Change photo' : 'Add a photo',
+      onAvatarPick: (e) => this.onAvatarPick(e),
+      removeAvatar: () => this.removeAvatar(),
+
+      profileDescription: this.state.profileDescription,
+      onProfileDescriptionChange: (e) => this.setState({ profileDescription: e.target.value }),
+      descriptionHint: this.state.profileDescription.trim()
+        ? this.state.profileDescription.trim().length + ' of ' + DESCRIPTION_LIMIT + ' characters. Just for you — it stays on this device.'
+        : 'Optional. Just for you — it stays on this device.',
+
+      profileGoals: this.state.profileGoals.map((text, i) => ({
+        text,
+        removeLabel: 'Remove goal: ' + text,
+        remove: () => this.removeGoal(i),
+      })),
+      hasGoals: this.state.profileGoals.length > 0,
+      newGoal: this.state.newGoal,
+      onNewGoalChange: (e) => this.setState({ newGoal: e.target.value }),
+      onNewGoalKeyDown: (e) => { if (e.key === 'Enter') this.addGoal(); },
+      addGoal: () => this.addGoal(),
+      goalPlaceholder: goalsLeft > 0
+        ? 'e.g. Finish the organic chemistry notebook'
+        : 'Remove one to add another',
+      goalsHint: this.state.profileGoals.length === 0
+        ? 'Optional. Add up to ' + MAX_GOALS + ' — they are saved with Save changes.'
+        : goalsLeft > 0
+          ? goalsLeft + ' more can be added. Saved with Save changes.'
+          : 'That is all ' + MAX_GOALS + '. Saved with Save changes.',
+      profileMessage: this.state.profileMessage,
+      profileMessageBg: pMsgStyle.bg,
+      profileMessageBorder: pMsgStyle.border,
+      profileMessageColor: pMsgStyle.color,
+
+      currentPassword: this.state.currentPassword,
+      onCurrentPasswordChange: (e) => this.setState({ currentPassword: e.target.value }),
+      newPassword: this.state.newPassword,
+      onNewPasswordChange: (e) => this.setState({ newPassword: e.target.value }),
+      confirmPassword: this.state.confirmPassword,
+      onConfirmPasswordChange: (e) => this.setState({ confirmPassword: e.target.value }),
+      savePassword: () => this.savePassword(),
+      passwordMessage: this.state.passwordMessage,
+      passwordMessageBg: wMsgStyle.bg,
+      passwordMessageBorder: wMsgStyle.border,
+      passwordMessageColor: wMsgStyle.color,
+
+      defaultSort: this.state.defaultSort,
+      onDefaultSortChange: (e) => this.setDefaultSort(e.target.value),
+
+      sections: SETTINGS_SECTIONS.map(sec => ({
+        label: sec.label,
+        activeClass: (sec.slug === section ? 'set-nav-item-active' : '')
+          + (sec.danger ? ' set-nav-item-danger' : ''),
+        // aria-current marks the open section for assistive tech; absent
+        // rather than "false" on the others, which is what the spec expects.
+        current: sec.slug === section ? 'page' : undefined,
+        go: () => this.goSection(sec.slug),
+      })),
+      showProfile: section === 'profile',
+      showPreferences: section === 'preferences',
+      themes: THEMES.map(th => ({
+        label: th.label,
+        // What the device is on can only be read while following it: in the
+        // native apps a forced Light or Dark also overrides what the page sees.
+        note: th.id !== 'system' ? 'Always ' + th.id
+          : this.state.theme === 'system' ? 'Now ' + this.state.themeResolved : 'Follows device',
+        leftClass: th.id === 'dark' ? 'tp-dark' : 'tp-light',
+        rightClass: th.id === 'light' ? 'tp-light' : 'tp-dark',
+        activeClass: th.id === this.state.theme ? 'ts-option-active' : '',
+        pressed: th.id === this.state.theme,
+        pick: () => this.pickTheme(th.id),
+      })),
+      themeMessage: this.state.themeMessage,
+      themeMessageColor: this.state.themeOk ? 'var(--color-accent-800)' : 'var(--color-danger)',
+      textSizes: TEXT_SCALES.map(ts => ({
+        label: ts.label,
+        // 15px is the app's body size, so each sample shows that size as this
+        // option would actually render it.
+        sampleSize: Math.round(15 * ts.scale) + 'px',
+        percent: Math.round(ts.scale * 100) + '%',
+        activeClass: ts.id === this.state.textSize ? 'ts-option-active' : '',
+        pressed: ts.id === this.state.textSize,
+        pick: () => this.pickTextSize(ts.id),
+      })),
+      textSizeMessage: this.state.textSizeMessage,
+      textSizeMessageColor: this.state.textSizeOk ? 'var(--color-accent-800)' : 'var(--color-danger)',
+
+      noteFonts: NOTE_FONTS.map(nf => ({
+        label: nf.label,
+        note: nf.note,
+        // Each sample is painted in the font it offers, so the tiles are the
+        // preview and there is nothing to apply to find out.
+        stack: noteFontStack(nf.id),
+        activeClass: nf.id === this.state.noteFont ? 'ts-option-active' : '',
+        pressed: nf.id === this.state.noteFont,
+        pick: () => this.pickNoteFont(nf.id),
+      })),
+      noteFontMessage: this.state.noteFontMessage,
+      noteFontMessageColor: this.state.noteFontOk ? 'var(--color-accent-800)' : 'var(--color-danger)',
+      showNotebooks: section === 'notebooks',
+      showData: section === 'data',
+      showLegal: section === 'legal',
+      ...this.legalVals(),
+      showDanger: section === 'danger',
+
+      ...passwordRuleRows(this.state.newPassword),
+
+      storageLabel: fmtBytes(total) + ' used by notivlo',
+      storagePercentLabel: percent + '% of ~5 MB',
+      storagePercentStr: Math.max(percent, 0.5) + '%',
+      storageBreakdown: 'Notebooks and their contents account for ' + fmtBytes(notebookBytes) +
+        '. Chapter text is the largest item.',
+      exportData: () => this.exportData(),
+      exportMessage: this.state.exportMessage,
+
+      askResetData: () => this.askResetData(),
+      askDeleteAccount: () => this.askDeleteAccount(),
+      dangerMessage: this.state.dangerMessage,
+      dangerMessageBg: dMsgStyle.bg,
+      dangerMessageBorder: dMsgStyle.border,
+      dangerMessageColor: dMsgStyle.color,
+
+      gateOpen: !!gate,
+      gateKicker: gate ? gate.kicker : '',
+      gateKickerColor: gate && gate.danger ? 'var(--color-danger)' : 'var(--color-accent-700)',
+      gateTitle: gate ? gate.title : '',
+      gateDetail: gate ? gate.detail : '',
+      // Two buttons rather than one with a swapped class: a destructive
+      // confirm should never be the page's primary-looking button.
+      gateDanger: !!gate && !!gate.danger,
+      gateSafe: !!gate && !gate.danger,
+      gateConfirmLabel: this.state.gateBusy
+        ? 'Checking…'
+        : (gate ? gate.confirmLabel : ''),
+      gateBusy: this.state.gateBusy,
+      gateMessage: this.state.gateMessage,
+      gatePassword: this.state.gatePassword,
+      onGatePasswordChange: (e) => this.setState({ gatePassword: e.target.value, gateMessage: '' }),
+      onGateKeyDown: (e) => {
+        if (e.key === 'Enter') { if (e.preventDefault) e.preventDefault(); this.submitGate(); }
+        if (e.key === 'Escape') this.cancelGate();
+      },
+      submitGate: () => this.submitGate(),
+      cancelGate: () => this.cancelGate(),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

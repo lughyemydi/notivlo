@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file: blob: 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob:; font-src 'self' file: data:; connect-src 'self' file: data: blob: https://tftwbhkypzsrhwaxkgbr.supabase.co; worker-src 'none'; child-src 'none'; media-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="no-referrer">
+<title>notivlo — Weekly agenda</title>
+<script>
+  try {
+    if (!localStorage.getItem('folio_session')) {
+      location.replace('SignIn.dc.html');
+    }
+  } catch (e) {}
+</script>
+<script src="./theme.js"></script>
+<script src="./text-size.js"></script>
+<script src="./agenda-timegrid.js"></script>
+<script src="./support.js"></script>
+<!-- The backend. Inert while supabase-config.js holds no project: with it
+     empty every page below falls back to localStorage, which is how the app
+     worked before there was a server. Order matters — each file depends on
+     the one above it, and they are in <head> rather than <helmet> for the
+     reason written at the top of auth.js. -->
+<script src="./supabase-config.js"></script>
+<script src="./supabase-client.js"></script>
+<script src="./supabase-auth.js"></script>
+<script src="./supabase-sync.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="stylesheet" href="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/styles.css">
+<link rel="stylesheet" href="soft-clay.css">
+<script src="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/_ds_bundle.js"></script>
+<style>
+  body{margin:0;background:var(--color-bg);color:var(--color-text)}
+  a{color:var(--color-accent-700);text-decoration:none}
+  a:hover{color:var(--color-accent-900);text-decoration:underline}
+  .pl-item{transition:border-color .18s ease, box-shadow .18s ease, background .18s ease, transform .18s ease}
+  .pl-item:hover{background:var(--color-primary-soft) !important;box-shadow:0 12px 26px rgba(72,62,50,.12) !important;transform:translateY(-2px)}
+  .pl-remove{opacity:0;transition:opacity .12s ease}
+  .pl-item:hover .pl-remove{opacity:1}
+  /* A block on the grid is positioned, so it cannot lift on hover the way a
+     card in a list does — the remove button still appears though. */
+  .tg-block:hover .pl-remove{opacity:1}
+  .tg-block .pl-remove:focus-visible{opacity:1}
+  .tg-block-remove{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;padding:0;background:var(--color-surface);z-index:2}
+  .ag-toggle{transition:background .15s ease, border-color .15s ease}
+  .tbtn{transition:background .15s ease, color .15s ease}
+  .tbtn:hover{background:var(--color-primary-soft) !important}
+  .glass-btn-primary{transition:background .18s ease, transform .12s ease}
+  .glass-btn-primary:hover{background:var(--color-primary-hover) !important}
+  /* Right-click menu for agenda entries the reader made. */
+  .ctx-menu{position:fixed;z-index:1000;min-width:198px;padding:6px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:16px;box-shadow:0 20px 44px rgba(72,62,50,.20)}
+  .ctx-label{padding:6px 10px 5px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-500);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ctx-item{display:flex;align-items:center;gap:9px;width:100%;padding:7px 10px;border:none;background:transparent;border-radius:10px;font-family:var(--font-body);font-size:13px;color:var(--color-text);text-align:left;cursor:pointer;transition:background .12s ease}
+  .ctx-item:hover{background:rgba(108,205,177,.16)}
+  .ctx-item svg{flex:none;opacity:.7}
+  .ctx-danger{color:var(--color-danger-strong)}
+  .ctx-danger:hover{background:rgba(182,60,53,.14)}
+  .glass-btn-ghost{transition:background .18s ease}
+  .glass-btn-ghost:hover{background:var(--color-primary-soft) !important}
+  /* Logo links home. Needs to outrank `.nav a`'s font-size:14px, which would
+     otherwise shrink the brand from its 18px. */
+  .nav a.nav-brand{font-size:18px;color:var(--color-text);cursor:pointer;transition:color .15s ease, opacity .15s ease}
+  .nav a.nav-brand:hover{color:var(--color-accent-700);text-decoration:none;opacity:.85}
+  @keyframes floatA{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,50px) scale(1.08)}}
+  @keyframes floatB{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-50px,30px) scale(.94)}}
+  @media (max-width: 760px){
+    .pl-form-grid{grid-template-columns:1fr !important}
+    /* The bar fitted a 375px screen with two pixels to spare and nothing
+       narrower. Same compact shape as Home's and Settings' own nav rules. */
+    .nav{padding:8px 14px !important;gap:8px !important}
+    .nav .btn{flex:none;width:36px;height:36px;padding:0 !important;justify-content:center}
+    .nav-btn-label{display:none}
+  }
+</style>
+</helmet>
+
+<div style="position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none">
+  <div style="position:absolute;width:520px;height:520px;top:-160px;right:-100px;border-radius:50%;background:radial-gradient(circle at 30% 30%,var(--color-accent-300),transparent 70%);filter:blur(60px);opacity:.55;animation:floatA 18s ease-in-out infinite alternate"></div>
+  <div style="position:absolute;width:460px;height:460px;bottom:-160px;left:-100px;border-radius:50%;background:radial-gradient(circle at 40% 40%,var(--color-neutral-300),transparent 70%);filter:blur(60px);opacity:.5;animation:floatB 22s ease-in-out infinite alternate"></div>
+</div>
+
+<div style="position:relative;z-index:1;min-height:100vh;font-family:var(--font-body)">
+
+  <nav class="nav" style="display:flex;align-items:center;gap:var(--space-4);position:sticky;top:14px;z-index:40;max-width:1180px;margin:14px auto 0;background:var(--color-surface);border:1px solid var(--color-border);border-radius:28px;box-shadow:0 14px 30px rgba(72,62,50,.10),inset 0 1px 0 rgb(var(--clay-edge) / .7);padding:10px 28px">
+    <a href="Home.dc.html" class="nav-brand" aria-label="notivlo — go to home"><span class="brand-logo">notivlo</span></a>
+    <div style="flex:1"></div>
+    <a href="Home.dc.html" class="btn btn-ghost glass-btn-ghost" aria-label="Back to home" title="Back to home" style="border-radius:999px;background:var(--color-surface)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      <span class="nav-btn-label">Back to home</span>
+    </a>
+    <button type="button" class="btn btn-ghost btn-icon glass-btn-ghost" onClick="{{ signOut }}" aria-label="Sign out" style="border-radius:50%;width:36px;height:36px;background:var(--color-surface)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+    </button>
+  </nav>
+
+  <div style="max-width:1180px;margin:0 auto;padding:var(--space-8) var(--space-6) var(--space-2)">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap">
+      <h1 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:42px;margin:0 0 var(--space-2)">Weekly agenda</h1>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button type="button" class="btn btn-ghost btn-icon glass-btn-ghost" onClick="{{ prevWeek }}" aria-label="Previous week" style="width:30px;height:30px;border-radius:50%;background:var(--color-surface)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <sc-if value="{{ notCurrentWeek }}" hint-placeholder-val="{{ false }}">
+          <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ goToday }}" style="border-radius:999px;background:var(--color-surface);font-size:13px;padding:6px 14px">Today</button>
+        </sc-if>
+        <button type="button" class="btn btn-ghost btn-icon glass-btn-ghost" onClick="{{ nextWeek }}" aria-label="Next week" style="width:30px;height:30px;border-radius:50%;background:var(--color-surface)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+    <p style="margin:0;color:var(--color-neutral-700);font-size:16px">Track deadlines, classes and events across your week — {{ weekRange }}.</p>
+  </div>
+
+  <section style="max-width:1180px;margin:0 auto;padding:var(--space-6) var(--space-6) 0">
+    <sc-if value="{{ adding }}" hint-placeholder-val="{{ false }}">
+      <div style="position:relative;z-index:5;padding:var(--space-4);margin-bottom:var(--space-6);display:flex;flex-direction:column;gap:var(--space-3);background:var(--color-surface);border:1px solid var(--color-border);border-radius:26px;box-shadow:0 14px 32px rgba(72,62,50,.09),inset 0 1px 0 rgb(var(--clay-edge) / .65)">
+        <div class="card-kicker">{{ formHeading }}</div>
+        <div class="pl-form-grid" style="display:grid;grid-template-columns:1.4fr 0.8fr 0.8fr 0.8fr;gap:var(--space-3)">
+          <div class="field">
+            <label>Title</label>
+            <input class="input" placeholder="e.g. Essay draft due" maxlength="120" value="{{ formTitle }}" onChange="{{ onFormTitleChange }}" onKeyDown="{{ onFormKeyDown }}" autoFocus="{{ true }}" style="border-radius:14px;background:var(--color-surface)"/>
+          </div>
+          <div class="field">
+            <label>Type</label>
+            <select class="input" value="{{ formType }}" onChange="{{ onFormTypeChange }}" style="border-radius:14px;background:var(--color-surface)">
+              <option value="assignment">Deadline</option>
+              <option value="event">Event</option>
+              <option value="class">Class</option>
+              <option value="study">Study block</option>
+              <option value="task">Task</option>
+            </select>
+          </div>
+          <div class="field" style="position:relative">
+            <label>Day</label>
+            <button type="button" onClick="{{ toggleDayPicker }}" class="input" style="display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;cursor:pointer;border-radius:14px;background:var(--color-surface)">
+              <span>{{ formDateLabel }}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;opacity:.6"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg>
+            </button>
+            <sc-if value="{{ dayPickerOpen }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ closeDayPicker }}" style="position:fixed;inset:0;z-index:90"></div>
+              <div style="position:absolute;top:calc(100% + 8px);left:0;z-index:100;width:250px;padding:var(--space-3);background:var(--color-surface);border:1px solid var(--color-border);border-radius:18px;box-shadow:0 20px 44px rgba(72,62,50,.18)">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2)">
+                  <button type="button" class="tbtn" onClick="{{ prevMonth }}" aria-label="Previous month" style="border:none;background:transparent;color:var(--color-neutral-600);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+                  <div style="font-size:12px;color:var(--color-neutral-500);letter-spacing:.06em;text-transform:uppercase">{{ calendarMonthLabel }}</div>
+                  <button type="button" class="tbtn" onClick="{{ nextMonth }}" aria-label="Next month" style="border:none;background:transparent;color:var(--color-neutral-600);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">
+                  <sc-for list="{{ weekdayLabels }}" as="wd" hint-placeholder-count="7">
+                    <div style="font-size:11px;color:var(--color-neutral-400);text-align:center">{{ wd }}</div>
+                  </sc-for>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+                  <sc-for list="{{ calendarDays }}" as="cd" hint-placeholder-count="42">
+                    <button type="button" onClick="{{ cd.select }}" aria-label="{{ cd.ariaLabel }}" style="aspect-ratio:1;border-radius:50%;border:1.5px solid {{ cd.border }};background:{{ cd.bg }};color:{{ cd.color }};font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;padding:0">{{ cd.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+          <div class="field">
+            <label>Time</label>
+            <input class="input" placeholder="e.g. 5:00 PM" maxlength="20" value="{{ formTime }}" onChange="{{ onFormTimeChange }}" onKeyDown="{{ onFormKeyDown }}" style="border-radius:14px;background:var(--color-surface)"/>
+          </div>
+        </div>
+        <div class="field" style="max-width:340px">
+          <label>Link to notebook (optional)</label>
+          <select class="input" value="{{ formNotebook }}" onChange="{{ onFormNotebookChange }}" style="border-radius:14px;background:var(--color-surface)">
+            <option value="">None</option>
+            <sc-for list="{{ notebookOptions }}" as="nb" hint-placeholder-count="4">
+              <option value="{{ nb.slug }}">{{ nb.title }}</option>
+            </sc-for>
+          </select>
+        </div>
+        <div style="display:flex;gap:var(--space-2)">
+          <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ confirmAdd }}" style="border-radius:999px;background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary)">{{ formAction }}</button>
+          <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ cancelAdd }}" style="border-radius:999px;background:var(--color-surface)">Cancel</button>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ notAdding }}" hint-placeholder-val="{{ true }}">
+      <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ startAdd }}" style="margin-bottom:var(--space-6);border-radius:999px;background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .35)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Add deadline or event
+      </button>
+    </sc-if>
+  </section>
+
+  <section style="max-width:1180px;margin:0 auto;padding:0 var(--space-6) var(--space-8)">
+    <div style="padding:var(--space-6);background:var(--color-surface);border:1px solid var(--color-border);border-radius:26px;box-shadow:0 14px 32px rgba(72,62,50,.09),inset 0 1px 0 rgb(var(--clay-edge) / .65)">
+      <!-- One shared clock, 06:00 to 23:00, with a column per day beside it.
+           Every top and height below is set from the layout in
+           agenda-timegrid.js — the stylesheet only says what things look
+           like, never where they go. -->
+      <div class="tg-scroll">
+        <div class="tg">
+
+          <div class="tg-head">
+            <div class="tg-head-gutter"></div>
+            <sc-for list="{{ days }}" as="day" hint-placeholder-count="7">
+              <div class="tg-head-col {{ day.todayClass }}">
+                <div class="tg-head-line">
+                  <span class="tg-head-day">{{ day.day }}</span>
+                  <span class="tg-head-date">{{ day.date }}</span>
+                  <sc-if value="{{ day.isToday }}" hint-placeholder-val="{{ false }}">
+                    <span class="tag tag-accent" style="font-size:10px;padding:1px 7px">Today</span>
+                  </sc-if>
+                </div>
+                <!-- Entries with no time of day have no place on a clock, so
+                     they sit above it rather than being given an hour they
+                     never asked for. -->
+                <sc-if value="{{ day.hasUntimed }}" hint-placeholder-val="{{ false }}">
+                  <div class="tg-tray">
+                    <sc-for list="{{ day.untimed }}" as="u" hint-placeholder-count="1">
+                      <div class="tg-chip {{ u.doneClass }}" onContextMenu="{{ u.contextMenu }}" title="{{ u.tooltip }}">
+                        <sc-if value="{{ u.checkable }}" hint-placeholder-val="{{ false }}">
+                          <button type="button" class="tg-check" onClick="{{ u.toggle }}" aria-label="Toggle done" style="border-color:{{ u.dotColor }};background:{{ u.dotBg }}">
+                            <sc-if value="{{ u.done }}" hint-placeholder-val="{{ false }}">
+                              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="var(--color-bg)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                            </sc-if>
+                          </button>
+                        </sc-if>
+                        <span class="tg-chip-text">{{ u.title }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+
+          <div class="tg-body" style="{{ gridStyle }}">
+            <div class="tg-gutter">
+              <sc-for list="{{ gridHours }}" as="hr" hint-placeholder-count="17">
+                <div class="tg-hour {{ hr.quietClass }}" style="{{ hr.style }}">{{ hr.label }}</div>
+              </sc-for>
+              <div class="tg-hour tg-hour-end" style="{{ gridEnd.style }}">{{ gridEnd.label }}</div>
+            </div>
+
+            <div class="tg-canvas">
+              <div class="tg-lines">
+                <sc-for list="{{ gridLines }}" as="ln" hint-placeholder-count="18">
+                  <div class="tg-line {{ ln.lineClass }}" style="{{ ln.style }}"></div>
+                </sc-for>
+              </div>
+
+              <sc-for list="{{ days }}" as="day" hint-placeholder-count="7">
+                <div class="tg-col {{ day.todayClass }}">
+                  <!-- The holes between what is booked, measured, so the time
+                       you actually have free can be read off the page. -->
+                  <sc-for list="{{ day.gaps }}" as="gap" hint-placeholder-count="1">
+                    <div class="tg-gap" style="{{ gap.style }}"><span class="tg-gap-label">{{ gap.label }}</span></div>
+                  </sc-for>
+
+                  <sc-for list="{{ day.timed }}" as="b" hint-placeholder-count="1">
+                    <div class="tg-block {{ b.blockClass }}" data-lanes="{{ b.lanes }}" data-lines="{{ b.lines }}" style="{{ b.style }}" onContextMenu="{{ b.contextMenu }}" title="{{ b.tooltip }}">
+                      <button type="button" class="btn btn-ghost btn-icon pl-remove tg-block-remove" onClick="{{ b.remove }}" aria-label="Remove">
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                      </button>
+                      <div class="tg-block-head">
+                        <sc-if value="{{ b.checkable }}" hint-placeholder-val="{{ false }}">
+                          <button type="button" class="tg-check" onClick="{{ b.toggle }}" aria-label="Toggle done" style="border-color:{{ b.dotColor }};background:{{ b.dotBg }}">
+                            <sc-if value="{{ b.done }}" hint-placeholder-val="{{ false }}">
+                              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="var(--color-bg)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                            </sc-if>
+                          </button>
+                        </sc-if>
+                        <span class="tg-block-time">{{ b.time }}</span>
+                      </div>
+                      <span class="tg-block-title">{{ b.title }}</span>
+                    </div>
+                  </sc-for>
+
+                  <sc-if value="{{ day.empty }}" hint-placeholder-val="{{ false }}">
+                    <p class="tg-col-empty">Nothing planned</p>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+  <sc-if value="{{ ctxOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeCtx }}" onContextMenu="{{ closeCtx }}" style="position:fixed;inset:0;z-index:999"></div>
+    <div class="ctx-menu" role="menu" style="{{ ctxStyle }}">
+      <div class="ctx-label">{{ ctxTitle }}</div>
+      <sc-for list="{{ ctxItems }}" as="mi" hint-placeholder-count="3">
+        <button type="button" role="menuitem" class="ctx-item {{ mi.danger }}" onClick="{{ mi.run }}">
+          <span style="display:inline-flex" dangerouslySetInnerHTML="{{ mi.iconHtml }}"></span>
+          <span>{{ mi.label }}</span>
+        </button>
+      </sc-for>
+    </div>
+  </sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+// Shared localStorage stores — Home.dc.html reads and writes the same keys,
+// so agenda items and notebooks stay in sync across pages.
+const AGENDA_KEY = 'folio_agenda_v2';
+const NOTEBOOKS_KEY = 'folio_notebooks_v1';
+
+// --- Real-date helpers -------------------------------------------------
+// Agenda items are keyed by an actual ISO date ('YYYY-MM-DD') rather than a
+// day-of-week index, so the agenda tracks the real calendar: "today" is the
+// device's actual today, and any date (past, future, any month) can hold items.
+function pad2(n) { return String(n).padStart(2, '0'); }
+function toISODate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function parseISODate(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+function addMonths(d, n) { return new Date(d.getFullYear(), d.getMonth() + n, 1); }
+function startOfWeekMonday(d) { const day = d.getDay(); return addDays(d, day === 0 ? -6 : 1 - day); }
+function todayDate() { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+function sameDate(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+function shortLabel(d) { return MONTH_ABBR[d.getMonth()] + ' ' + d.getDate(); }
+function weekdayName(d) { return WEEKDAY_NAMES[d.getDay()]; }
+function formatWeekRange(start, end) {
+  if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
+    return MONTH_ABBR[start.getMonth()] + ' ' + start.getDate() + ' – ' + end.getDate();
+  }
+  return shortLabel(start) + ' – ' + shortLabel(end);
+}
+
+// Builds a full 5–6 week month grid (with leading/trailing days from
+// neighboring months for context) for any given month.
+function buildMonthCells(viewDate) {
+  const year = viewDate.getFullYear(), month = viewDate.getMonth();
+  const firstOfMonth = new Date(year, month, 1);
+  const gridStart = startOfWeekMonday(firstOfMonth);
+  const cells = [];
+  for (let i = 0; i < 42; i++) {
+    const d = addDays(gridStart, i);
+    cells.push({ date: d, iso: toISODate(d), inMonth: d.getMonth() === month });
+  }
+  while (cells.length > 35 && cells.slice(-7).every(c => !c.inMonth)) cells.splice(-7, 7);
+  return { monthLabel: firstOfMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }), cells };
+}
+
+const TYPE_META = {
+  class: { tagClass: 'tag-outline', tagLabel: 'Class' },
+  study: { tagClass: 'tag-accent', tagLabel: 'Study' },
+  assignment: { tagClass: 'tag-neutral', tagLabel: 'Deadline' },
+  task: { tagClass: 'tag-neutral', tagLabel: 'Task' },
+  event: { tagClass: 'tag-accent', tagLabel: 'Event' },
+};
+
+// Which stripe a block wears on the grid. The stylesheet holds the colours.
+const BLOCK_CLASS = {
+  class: 'tg-block-class',
+  study: 'tg-block-study',
+  assignment: 'tg-block-deadline',
+  task: 'tg-block-task',
+  event: 'tg-block-event',
+};
+
+// The same seven subjects, under the same slugs, as Home's SEED_NOTEBOOKS and
+// Notebook.dc.html's example chapters. All three have to agree: an entry here
+// points an agenda item at a notebook by slug, and a slug that exists in only
+// one of the three opens a notebook with nothing in it.
+const FALLBACK_NOTEBOOKS = [
+  ['Mathematics', 'mathematics'],
+  ['Physics', 'physics'],
+  ['Chemistry', 'chemistry'],
+  ['Biology', 'biology'],
+  ['Economics', 'economics'],
+  ['English Literature', 'english-literature'],
+  ['Computer Science', 'computer-science'],
+].map(([title, slug]) => ({ title, slug }));
+
+function readNotebookOptions() {
+  try {
+    const raw = localStorage.getItem(NOTEBOOKS_KEY);
+    if (raw) {
+      const list = JSON.parse(raw);
+      if (Array.isArray(list)) {
+        return list
+          .filter(nb => nb && typeof nb.slug === 'string' && typeof nb.title === 'string')
+          .map(nb => ({ title: nb.title, slug: nb.slug }));
+      }
+    }
+  } catch (e) {}
+  return FALLBACK_NOTEBOOKS;
+}
+
+const CHECKABLE_TYPES = { assignment: true, task: true };
+
+// Seed content is defined relative to today (offset in days) rather than a
+// fixed date, so it always lands on "this week" — Wednesday's items land on
+// whatever day is actually today — regardless of when the app is first opened.
+function buildSeedItems() {
+  const today = todayDate();
+  const raw = [
+    { id: 'seed-1', offset: -2, type: 'class', title: 'Chemistry — titration practical', time: '9:00 AM' },
+    { id: 'seed-2', offset: -2, type: 'assignment', title: 'Stoichiometry problem set due', time: '11:59 PM', done: true, notebookSlug: 'chemistry', nbCh: 0 },
+    { id: 'seed-3', offset: -1, type: 'study', title: 'Study block — 9709 Paper 1 past paper', time: '4:00–5:30 PM' },
+    { id: 'seed-4', offset: -1, type: 'task', title: 'Read the enzymes chapter', time: 'Any time', done: true, notebookSlug: 'biology', nbCh: 2 },
+    { id: 'seed-5', offset: 0, type: 'class', title: 'Physics — kinematics problem class', time: '10:00 AM' },
+    { id: 'seed-6', offset: 0, type: 'assignment', title: 'Unseen poetry essay due', time: '5:00 PM', done: false, notebookSlug: 'english-literature', nbCh: 0 },
+    { id: 'seed-7', offset: 0, type: 'study', title: 'Study block — elasticity notes', time: '7:00–8:00 PM' },
+    { id: 'seed-8', offset: 1, type: 'class', title: 'Economics — data response workshop', time: '1:00 PM' },
+    { id: 'seed-9', offset: 1, type: 'task', title: 'Two\u2019s complement exercises', time: 'Any time', done: false, notebookSlug: 'computer-science', nbCh: 0 },
+    { id: 'seed-10', offset: 2, type: 'assignment', title: 'Projectiles question sheet due', time: '11:59 PM', done: false, notebookSlug: 'physics', nbCh: 1 },
+    { id: 'seed-11', offset: 3, type: 'study', title: 'Study block — 9702 Paper 2 timed practice', time: '2:00–4:00 PM' },
+    { id: 'seed-12', offset: 4, type: 'event', title: 'Mock exam — 9701 Paper 2', time: '9:00–11:00 AM' },
+  ];
+  return raw.map(({ offset, ...rest }) => ({ ...rest, date: toISODate(addDays(today, offset)) }));
+}
+
+const CTX_ICONS = {
+  edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>',
+  check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  undo: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>',
+  open: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>',
+};
+
+// Keep the popover on screen: a menu opened near the right or bottom edge
+// shifts back rather than spilling out of the viewport.
+function ctxPosition(x, y, count) {
+  const w = 212, h = count * 34 + 38;
+  return {
+    left: Math.max(8, Math.min(x, window.innerWidth - w - 8)) + 'px',
+    top: Math.max(8, Math.min(y, window.innerHeight - h - 8)) + 'px',
+  };
+}
+
+// Real calendar dates only: '2026-02-30' is shaped right but isn't a day.
+function isValidIsoDate(s) {
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const d = parseISODate(s);
+  return !isNaN(d.getTime()) && toISODate(d) === s;
+}
+
+function readItems() {
+  let raw = null;
+  try { raw = localStorage.getItem(AGENDA_KEY); } catch (e) {}
+  if (raw != null) {
+    try {
+      const items = JSON.parse(raw);
+      if (Array.isArray(items)) return items.filter(it => it && typeof it === 'object' && !Array.isArray(it));
+    } catch (e) {}
+    // Present but unreadable: show an empty week rather than overwrite it with
+    // the demo agenda, so a recoverable value isn't destroyed on sight.
+    return [];
+  }
+  const seeded = buildSeedItems();
+  try { localStorage.setItem(AGENDA_KEY, JSON.stringify(seeded)); } catch (e) {}
+  return seeded;
+}
+
+function writeItems(items) {
+  try { localStorage.setItem(AGENDA_KEY, JSON.stringify(items)); } catch (e) {}
+}
+
+class Component extends DCLogic {
+  state = {
+    items: readItems(),
+    adding: false,
+    formTitle: '',
+    formType: 'assignment',
+    formDate: toISODate(todayDate()),
+    formTime: '',
+    formNotebook: '',
+    dayPickerOpen: false,
+    editingId: null,
+    ctx: null,
+    calendarViewIso: toISODate(todayDate()),
+    weekStartIso: toISODate(startOfWeekMonday(todayDate())),
+  };
+
+  componentDidMount() {
+    if (!window.notivloSync || !window.notivloSync.enabled()) return;
+    window.notivloSync.sync().then((res) => {
+      if (res && res.pulled) this.setState({ items: readItems() });
+    });
+  }
+
+  startAdd() {
+    const iso = toISODate(todayDate());
+    this.setState({ adding: true, editingId: null, formTitle: '', formType: 'assignment', formDate: iso, formTime: '', formNotebook: '', dayPickerOpen: false, calendarViewIso: iso });
+  }
+  cancelAdd() { this.setState({ adding: false, editingId: null, dayPickerOpen: false }); }
+
+  openCtx(e, id) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.setState({ ctx: { x: e.clientX, y: e.clientY, id } });
+  }
+
+  // Loads an existing entry back into the same form used to create one.
+  startEdit(id) {
+    const item = this.state.items.find(it => it.id === id);
+    if (!item) return this.setState({ ctx: null });
+    this.setState({
+      ctx: null,
+      adding: true,
+      editingId: id,
+      formTitle: item.title,
+      formType: item.type,
+      formDate: item.date,
+      // 'Any time' is the placeholder confirmAdd writes for a blank time; show
+      // it as blank again so editing doesn't turn it into a literal entry.
+      formTime: item.time === 'Any time' ? '' : (item.time || ''),
+      formNotebook: item.notebookSlug || '',
+      dayPickerOpen: false,
+      calendarViewIso: item.date,
+      weekStartIso: toISODate(startOfWeekMonday(parseISODate(item.date))),
+    });
+  }
+
+  ctxMenuFor(ctx) {
+    if (!ctx) return { title: '', items: [] };
+    const item = this.state.items.find(it => it.id === ctx.id);
+    if (!item) return { title: '', items: [] };
+    const icon = (name) => ({ __html: CTX_ICONS[name] });
+    const menu = [{ label: 'Edit entry', iconHtml: icon('edit'), run: () => this.startEdit(item.id) }];
+    if (item.notebookSlug) {
+      menu.push({
+        label: 'Open notebook',
+        iconHtml: icon('open'),
+        run: () => {
+          window.location.href = 'Notebook.dc.html?nb=' + item.notebookSlug +
+            (item.nbCh != null ? '&ch=' + item.nbCh : '');
+        },
+      });
+    }
+    if (CHECKABLE_TYPES[item.type]) {
+      menu.push({
+        label: item.done ? 'Mark not done' : 'Mark done',
+        iconHtml: icon(item.done ? 'undo' : 'check'),
+        run: () => { this.setState({ ctx: null }); this.toggleItem(item.id); },
+      });
+    }
+    menu.push({ label: 'Delete entry', iconHtml: icon('trash'), danger: 'ctx-danger', run: () => { this.setState({ ctx: null }); this.removeItem(item.id); } });
+    return { title: item.title, items: menu };
+  }
+  toggleDayPicker() { this.setState(s => ({ dayPickerOpen: !s.dayPickerOpen })); }
+  closeDayPicker() { this.setState({ dayPickerOpen: false }); }
+  selectDate(iso) { this.setState({ formDate: iso, calendarViewIso: iso, dayPickerOpen: false }); }
+  prevMonth() { this.setState(s => ({ calendarViewIso: toISODate(addMonths(parseISODate(s.calendarViewIso), -1)) })); }
+  nextMonth() { this.setState(s => ({ calendarViewIso: toISODate(addMonths(parseISODate(s.calendarViewIso), 1)) })); }
+  prevWeek() { this.setState(s => ({ weekStartIso: toISODate(addDays(parseISODate(s.weekStartIso), -7)) })); }
+  nextWeek() { this.setState(s => ({ weekStartIso: toISODate(addDays(parseISODate(s.weekStartIso), 7)) })); }
+  goToday() { this.setState({ weekStartIso: toISODate(startOfWeekMonday(todayDate())) }); }
+  signOut() {
+    try { localStorage.removeItem('folio_session'); } catch (e) {}
+    window.location.href = 'SignIn.dc.html';
+  }
+
+  confirmAdd() {
+    // Clamped rather than rejected: the inputs carry the same maxlength, so this
+    // only ever trims something that bypassed the form.
+    const title = this.state.formTitle.trim().slice(0, 120);
+    if (!title) return;
+    if (!isValidIsoDate(this.state.formDate)) return;
+    const fields = {
+      date: this.state.formDate,
+      title,
+      type: this.state.formType,
+      time: this.state.formTime.trim().slice(0, 20) || 'Any time',
+      notebookSlug: this.state.formNotebook || null,
+    };
+    this.setState(s => {
+      // Editing keeps the entry's id and its done state; only the form's own
+      // fields are replaced.
+      const items = s.editingId
+        ? s.items.map(it => it.id !== s.editingId ? it : { ...it, ...fields })
+        : [...s.items, { id: 'item-' + Date.now(), ...fields }];
+      writeItems(items);
+      // Jump the visible week to wherever the item landed, so it's never "lost".
+      const weekStartIso = toISODate(startOfWeekMonday(parseISODate(fields.date)));
+      return { items, adding: false, editingId: null, weekStartIso };
+    });
+  }
+
+  removeItem(id) {
+    this.setState(s => {
+      const items = s.items.filter(it => it.id !== id);
+      writeItems(items);
+      return { items };
+    });
+  }
+
+  toggleItem(id) {
+    this.setState(s => {
+      const items = s.items.map(it => it.id !== id ? it : { ...it, done: !it.done });
+      writeItems(items);
+      return { items };
+    });
+  }
+
+  renderVals() {
+    const today = todayDate();
+    const weekStart = parseISODate(this.state.weekStartIso);
+    // The week as the grid wants it: seven days of raw entries. Everything
+    // about where an entry lands comes back from layoutWeek — this page only
+    // decides what each one looks like once it has a place.
+    const rawDays = [];
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(weekStart, i);
+      const iso = toISODate(d);
+      rawDays.push({
+        day: weekdayName(d),
+        date: shortLabel(d),
+        isToday: sameDate(d, today),
+        items: this.state.items.filter(it => it.date === iso),
+      });
+    }
+
+    const grid = notivloTimeGrid.layoutWeek(rawDays);
+
+    // The shared bits of every entry, timed or not.
+    const dress = (it) => {
+      const meta = TYPE_META[it.type] || TYPE_META.task;
+      const checkable = !!CHECKABLE_TYPES[it.type];
+      const done = checkable && !!it.done;
+      return {
+        id: it.id,
+        title: it.title,
+        time: it.time || '',
+        // The stripe down a block's edge is the only thing carrying its
+        // type now that there is no room for a tag, so the tooltip says it.
+        tooltip: meta.tagLabel + ' · ' + it.title + (it.time ? ' — ' + it.time : ''),
+        tagLabel: meta.tagLabel,
+        checkable, done,
+        doneClass: done ? 'tg-done' : '',
+        dotColor: done ? 'var(--color-accent-600)' : 'var(--color-neutral-400)',
+        dotBg: done ? 'var(--color-accent-600)' : 'transparent',
+        toggle: () => this.toggleItem(it.id),
+        remove: () => this.removeItem(it.id),
+        contextMenu: (e) => this.openCtx(e, it.id),
+      };
+    };
+
+    const days = grid.days.map(day => ({
+      day: day.day,
+      date: day.date,
+      isToday: day.isToday,
+      todayClass: day.isToday ? 'tg-today' : '',
+      timed: day.timed.map(b => {
+        const base = dress(b.item);
+        return {
+          ...base,
+          blockClass: [
+            BLOCK_CLASS[b.item.type] || BLOCK_CLASS.task,
+            b.point ? 'tg-point' : '',
+            b.pinned ? 'tg-pinned' : '',
+            base.doneClass,
+          ].filter(Boolean).join(' '),
+          lanes: b.lanes,
+          lines: b.lines,
+          style: {
+            top: b.top + 'px',
+            height: b.height + 'px',
+            left: b.leftPct + '%',
+            // A hair off a full share, so neighbouring lanes don't touch.
+            width: b.lanes > 1 ? 'calc(' + b.widthPct + '% - 3px)' : '100%',
+          },
+        };
+      }),
+      untimed: day.untimed.map(dress),
+      hasUntimed: day.untimed.length > 0,
+      gaps: day.gaps.map(g => ({
+        label: g.label,
+        style: { top: g.top + 'px', height: g.height + 'px' },
+      })),
+      empty: day.timed.length === 0 && day.untimed.length === 0,
+    }));
+
+    const isCurrentWeek = this.state.weekStartIso === toISODate(startOfWeekMonday(today));
+    const monthGrid = buildMonthCells(parseISODate(this.state.calendarViewIso));
+    const todayIso = toISODate(today);
+
+    return {
+      weekRange: formatWeekRange(weekStart, addDays(weekStart, 6)),
+      days,
+      gridStyle: { height: grid.height + 'px' },
+      gridHours: grid.rows.map(r => ({
+        label: r.label,
+        quietClass: r.quiet ? 'tg-hour-quiet' : '',
+        // A shrunken hour is still labelled, just quieter.
+        style: { top: r.top + 'px', height: r.height + 'px', opacity: (0.55 + 0.45 * r.density).toFixed(3) },
+      })),
+      gridEnd: {
+        label: notivloTimeGrid.hourLabel(notivloTimeGrid.END_HOUR),
+        style: { top: grid.height + 'px', opacity: '1' },
+      },
+      gridLines: grid.rows.map(r => ({
+        lineClass: r.quiet ? 'tg-line-quiet' : '',
+        style: { top: r.top + 'px' },
+      })).concat([{ lineClass: 'tg-line-end', style: { top: grid.height + 'px' } }]),
+      notCurrentWeek: !isCurrentWeek,
+      signOut: () => this.signOut(),
+      prevWeek: () => this.prevWeek(),
+      nextWeek: () => this.nextWeek(),
+      goToday: () => this.goToday(),
+      ...(() => {
+        const menu = this.ctxMenuFor(this.state.ctx);
+        return {
+          ctxOpen: !!this.state.ctx && menu.items.length > 0,
+          ctxTitle: menu.title,
+          ctxStyle: this.state.ctx ? ctxPosition(this.state.ctx.x, this.state.ctx.y, menu.items.length) : {},
+          ctxItems: menu.items,
+          closeCtx: (e) => { if (e && e.preventDefault) e.preventDefault(); this.setState({ ctx: null }); },
+        };
+      })(),
+
+      adding: this.state.adding,
+      notAdding: !this.state.adding,
+      formHeading: this.state.editingId ? 'Edit entry' : 'New entry',
+      formAction: this.state.editingId ? 'Save changes' : 'Add to agenda',
+      startAdd: () => this.startAdd(),
+      cancelAdd: () => this.cancelAdd(),
+      confirmAdd: () => this.confirmAdd(),
+      formTitle: this.state.formTitle,
+      onFormTitleChange: (e) => this.setState({ formTitle: e.target.value }),
+      onFormKeyDown: (e) => { if (e.key === 'Enter') this.confirmAdd(); if (e.key === 'Escape') this.cancelAdd(); },
+      formType: this.state.formType,
+      onFormTypeChange: (e) => this.setState({ formType: e.target.value }),
+      formDateLabel: (() => {
+        const d = parseISODate(this.state.formDate);
+        return weekdayName(d) + ' ' + shortLabel(d) + (d.getFullYear() !== today.getFullYear() ? ', ' + d.getFullYear() : '');
+      })(),
+      dayPickerOpen: this.state.dayPickerOpen,
+      toggleDayPicker: () => this.toggleDayPicker(),
+      closeDayPicker: () => this.closeDayPicker(),
+      prevMonth: () => this.prevMonth(),
+      nextMonth: () => this.nextMonth(),
+      calendarMonthLabel: monthGrid.monthLabel,
+      weekdayLabels: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
+      calendarDays: monthGrid.cells.map(c => {
+        const selected = c.iso === this.state.formDate;
+        const isToday = c.iso === todayIso;
+        return {
+          label: c.date.getDate(),
+          ariaLabel: weekdayName(c.date) + ' ' + shortLabel(c.date),
+          select: () => this.selectDate(c.iso),
+          border: selected ? 'var(--color-accent-600)' : (isToday ? 'var(--color-accent-400)' : 'transparent'),
+          bg: selected ? 'var(--color-accent-600)' : 'transparent',
+          color: selected ? 'var(--color-bg)' : (c.inMonth ? 'var(--color-text)' : 'var(--color-neutral-300)'),
+        };
+      }),
+      formTime: this.state.formTime,
+      onFormTimeChange: (e) => this.setState({ formTime: e.target.value }),
+      formNotebook: this.state.formNotebook,
+      onFormNotebookChange: (e) => this.setState({ formNotebook: e.target.value }),
+      notebookOptions: readNotebookOptions(),
+    };
+  }
+}
+
+</script>
+</body>
+</html>
