@@ -29,6 +29,8 @@
 <script src="./supabase-client.js"></script>
 <script src="./supabase-auth.js"></script>
 <script src="./supabase-sync.js"></script>
+<!-- Sending feedback. After supabase-client.js, which it posts through. -->
+<script src="./feedback.js"></script>
 </head>
 <body>
 <x-dc>
@@ -483,6 +485,40 @@
         </div>
       </sc-if>
 
+      <sc-if value="{{ showFeedback }}" hint-placeholder-val="{{ false }}">
+        <!-- Feedback -->
+        <div class="set-card">
+          <div>
+            <div class="card-kicker">Feedback</div>
+            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">Tell me what's broken</h2>
+          </div>
+
+          <p style="margin:0;font-size:13px;color:var(--color-neutral-600);max-width:62ch">notivlo is an early beta built by one person. A bug, something that confused you, a subject that is missing, a feature you expected to find — all of it is worth sending.</p>
+
+          <div class="field">
+            <label>What happened, or what's missing?</label>
+            <textarea class="input" rows="5" maxlength="{{ feedbackMax }}" placeholder="I tried to… and then…" value="{{ feedbackMessage }}" onChange="{{ onFeedbackMessageChange }}" style="border-radius:14px;background:var(--color-surface);resize:vertical;line-height:1.55"></textarea>
+            <p style="margin:var(--space-1) 0 0;font-size:12px;color:var(--color-neutral-500)">{{ feedbackCountHint }}</p>
+          </div>
+
+          <div class="field" style="max-width:360px">
+            <label>Email — optional, only so I can reply</label>
+            <input class="input" type="email" maxlength="254" placeholder="you@example.com" value="{{ feedbackEmail }}" onChange="{{ onFeedbackEmailChange }}" style="border-radius:14px;background:var(--color-surface)"/>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3)">
+            <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ sendFeedback }}" disabled="{{ feedbackSending }}" style="border-radius:999px">{{ feedbackButtonLabel }}</button>
+            <sc-if value="{{ feedbackMessageOut }}" hint-placeholder-val="{{ false }}">
+              <span style="font-size:13px;color:{{ feedbackMessageColor }}">{{ feedbackMessageOut }}</span>
+            </sc-if>
+          </div>
+
+          <div class="hr" style="opacity:.5;margin:0"></div>
+
+          <p style="margin:0;font-size:12px;color:var(--color-neutral-500);max-width:62ch">What gets sent: your message, your email if you typed one, which build you are on ({{ feedbackVersionLabel }}) and your browser's user-agent string. Nothing from your notebooks, and nothing else.</p>
+        </div>
+      </sc-if>
+
       <sc-if value="{{ showLegal }}" hint-placeholder-val="{{ false }}">
         <!-- Legal -->
         <div class="set-card">
@@ -742,10 +778,22 @@ const SETTINGS_SECTIONS = [
   { slug: 'preferences', label: 'Preferences' },
   { slug: 'notebooks',   label: 'Notebooks' },
   { slug: 'data',        label: 'Data' },
+  // Above Legal rather than below it: while this is a beta, sending a bug
+  // report is a far more likely reason to be in Settings than reading the
+  // terms, and the sidebar should be ordered by what people came for.
+  { slug: 'feedback',    label: 'Feedback' },
   { slug: 'legal',       label: 'Legal' },
   { slug: 'danger',      label: 'Danger zone', danger: true },
 ];
 const SETTINGS_SLUGS = SETTINGS_SECTIONS.map(s => s.slug);
+
+// Read from feedback.js rather than repeated here, so the limit the textarea
+// enforces is the same one the table's check constraint enforces, and the
+// build named under the button is the build actually sent.
+const FEEDBACK_MAX = (window.notivloFeedback && window.notivloFeedback.MESSAGE_MAX) || 4000;
+const FEEDBACK_VERSION_LABEL = window.notivloFeedback
+  ? window.notivloFeedback.VERSION + ' · ' + window.notivloFeedback.surface()
+  : 'unknown build';
 
 // Falls back to the first section for a missing or unrecognised ?section=, so
 // a stale or hand-edited link still lands somewhere useful.
@@ -807,6 +855,13 @@ class Component extends DCLogic {
       passwordMessage: '', passwordOk: false,
       defaultSort: prefs.defaultSort || 'recent',
       exportMessage: '',
+      // Feedback. The email is pre-filled from the account so a signed-in
+      // tester does not retype it, and stays editable because the report is
+      // allowed to carry a different one — or none.
+      feedbackMessage: '',
+      feedbackEmail: (window.notivloFeedback && window.notivloFeedback.suggestedEmail()) || '',
+      feedbackSending: false,
+      feedbackMessageOut: '', feedbackOk: false,
       notebooks: readJSON(NOTEBOOKS_KEY, []) || [],
       renamingSlug: null,
       renameValue: '',
@@ -1316,6 +1371,42 @@ class Component extends DCLogic {
     this.setState({ defaultSort: value });
   }
 
+  async sendFeedback() {
+    if (this.state.feedbackSending) return;
+
+    const api = window.notivloFeedback;
+    if (!api) {
+      return this.setState({
+        feedbackMessageOut: 'Feedback is not available in this build.',
+        feedbackOk: false,
+      });
+    }
+
+    this.setState({ feedbackSending: true, feedbackMessageOut: '', feedbackOk: false });
+
+    const res = await api.send({
+      message: this.state.feedbackMessage,
+      email: this.state.feedbackEmail,
+    });
+
+    if (!res.ok) {
+      return this.setState({
+        feedbackSending: false,
+        feedbackMessageOut: res.message,
+        feedbackOk: false,
+      });
+    }
+
+    // The message is cleared, the email is not: it was theirs before this
+    // report and will be right for the next one too.
+    this.setState({
+      feedbackSending: false,
+      feedbackMessage: '',
+      feedbackMessageOut: 'Sent — thank you. That genuinely helps.',
+      feedbackOk: true,
+    });
+  }
+
   async exportData() {
     if (this.serverBacked()) {
       this.setState({ exportMessage: 'Building your export…' });
@@ -1604,6 +1695,23 @@ class Component extends DCLogic {
       noteFontMessageColor: this.state.noteFontOk ? 'var(--color-accent-800)' : 'var(--color-danger)',
       showNotebooks: section === 'notebooks',
       showData: section === 'data',
+
+      showFeedback: section === 'feedback',
+      feedbackMessage: this.state.feedbackMessage,
+      onFeedbackMessageChange: (e) => this.setState({ feedbackMessage: e.target.value }),
+      feedbackEmail: this.state.feedbackEmail,
+      onFeedbackEmailChange: (e) => this.setState({ feedbackEmail: e.target.value }),
+      feedbackMax: FEEDBACK_MAX,
+      feedbackCountHint: this.state.feedbackMessage.trim()
+        ? this.state.feedbackMessage.trim().length + ' of ' + FEEDBACK_MAX + ' characters.'
+        : 'As much or as little detail as you have.',
+      feedbackSending: this.state.feedbackSending,
+      feedbackButtonLabel: this.state.feedbackSending ? 'Sending…' : 'Send it',
+      feedbackMessageOut: this.state.feedbackMessageOut,
+      feedbackMessageColor: this.state.feedbackOk ? 'var(--color-accent-800)' : 'var(--color-danger)',
+      feedbackVersionLabel: FEEDBACK_VERSION_LABEL,
+      sendFeedback: () => this.sendFeedback(),
+
       showLegal: section === 'legal',
       ...this.legalVals(),
       showDanger: section === 'danger',
