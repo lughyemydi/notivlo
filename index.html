@@ -5,16 +5,96 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>notivlo — every subject, every deadline, in one quiet place</title>
 <meta name="description" content="A notebook for each class, a week built around what is actually due, and a home page that opens on the next thing to do. Free to try in your browser, or download for Mac.">
+<meta name="color-scheme" content="light dark">
 <meta property="og:title" content="notivlo — every subject, every deadline, in one quiet place">
 <meta property="og:description" content="A revision app for A level. Notebooks, a weekly agenda, Recall cards and original practice papers. Try it in your browser, no sign-up needed to look around.">
 <meta property="og:type" content="website">
+
+<!-- Applied before the first paint, so a reader who chose light does not get
+     a dark page flashed at them while the stylesheet loads. The app does the
+     same thing in theme.js and for the same reason. -->
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('notivlo-site-theme');
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Palette lifted from the app's own dark theme (soft-clay.css) so the page
-   and the product look like the same thing. */
+/* Both palettes are the app's own (soft-clay.css), so the page and the
+   product are the same two themes rather than a lookalike pair.
+
+   Light is the base and dark is the override, applied either because the
+   device asks for it or because the toggle set data-theme. The
+   :not([data-theme="light"]) guard is what lets an explicit Light choice win
+   over a device that prefers dark. */
 :root{
+  --bg:#F3F2EF;
+  --surface:#FFFFFF;
+  --sunken:#F7F6F4;
+  --border:#E4E2DD;
+  --border-strong:#D4D1CA;
+  --text:#1E1E1E;
+  --muted:#5C5A56;
+  --dim:#6B6B6B;
+  --accent:#1D7A62;
+  --accent-2:#145A48;
+  --primary:#8FE0C9;
+  --primary-hover:#74D4B8;
+  --on-primary:#1E1E1E;
+  --accent-bg:#EFFAF6;
+  --accent-edge:#BFEBDD;
+  --danger:#8A3328;
+  --nav-bg:rgb(243 242 239 / .84);
+  --glow:rgb(110 216 185 / .20);
+  --shadow:0 24px 56px rgb(72 62 50 / .14);
+  --dot:#CFCCC6;
+  --field-focus:#2E9377;
+  --placeholder:#8A8A8A;
+  --featured-bg:linear-gradient(180deg,#F4FBF8,#FFFFFF);
+  --featured-edge:#9FDCC6;
+
+  --radius:20px;
+  --maxw:1120px;
+  --font-logo:'Unbounded',ui-sans-serif,system-ui,sans-serif;
+  --font:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0A09;
+    --surface:#191816;
+    --sunken:#121110;
+    --border:#2C2A27;
+    --border-strong:#3D3B37;
+    --text:#F7F5F1;
+    --muted:#BAB6AF;
+    --dim:#A29E97;
+    --accent:#9BE9D2;
+    --accent-2:#6ED8B9;
+    --primary:#1B6651;
+    --primary-hover:#216F59;
+    --on-primary:#F7F5F1;
+    --accent-bg:#122E27;
+    --accent-edge:#1E4A3D;
+    --danger:#F9A69B;
+    --nav-bg:rgb(11 10 9 / .82);
+    --glow:rgb(110 216 185 / .13);
+    --shadow:0 30px 70px rgb(0 0 0 / .55);
+    --dot:#34312D;
+    --field-focus:#4C9B81;
+    --placeholder:#6E6A64;
+    --featured-bg:linear-gradient(180deg,#0F1613,#0B0A09);
+    --featured-edge:#2E6553;
+  }
+}
+
+:root[data-theme="dark"]{
   --bg:#0B0A09;
   --surface:#191816;
   --sunken:#121110;
@@ -27,12 +107,20 @@
   --accent-2:#6ED8B9;
   --primary:#1B6651;
   --primary-hover:#216F59;
+  --on-primary:#F7F5F1;
   --accent-bg:#122E27;
-  --radius:20px;
-  --maxw:1120px;
-  --font-logo:'Unbounded',ui-sans-serif,system-ui,sans-serif;
-  --font:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --accent-edge:#1E4A3D;
+  --danger:#F9A69B;
+  --nav-bg:rgb(11 10 9 / .82);
+  --glow:rgb(110 216 185 / .13);
+  --shadow:0 30px 70px rgb(0 0 0 / .55);
+  --dot:#34312D;
+  --field-focus:#4C9B81;
+  --placeholder:#6E6A64;
+  --featured-bg:linear-gradient(180deg,#0F1613,#0B0A09);
+  --featured-edge:#2E6553;
 }
+
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
@@ -44,29 +132,64 @@ body{
 a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
 
+/* ---------- which screenshot shows ---------- */
+/* Light is the default pair; dark swaps them. Both are in the markup rather
+   than swapped by script, so the right one is correct on the first paint. */
+.shot-dark{display:none}
+.shot-light{display:block}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .shot-dark{display:block}
+  :root:not([data-theme="light"]) .shot-light{display:none}
+}
+:root[data-theme="dark"] .shot-dark{display:block}
+:root[data-theme="dark"] .shot-light{display:none}
+:root[data-theme="light"] .shot-dark{display:none}
+:root[data-theme="light"] .shot-light{display:block}
+
 /* ---------- top bar ---------- */
-.nav{position:sticky;top:0;z-index:50;background:rgb(11 10 9 / .82);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav{position:sticky;top:0;z-index:50;background:var(--nav-bg);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
 .nav-in{max-width:var(--maxw);margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px}
 .logo{font-family:var(--font-logo);font-weight:600;font-size:19px;letter-spacing:-.03em;color:var(--text)}
 .logo:hover{text-decoration:none}
 .nav-links{margin-left:auto;display:flex;align-items:center;gap:22px}
 .nav-links a{color:var(--muted);font-size:15px;font-weight:500}
 .nav-links a:hover{color:var(--text);text-decoration:none}
-.nav-cta{background:var(--primary);color:var(--text)!important;padding:8px 16px;border-radius:999px;font-weight:600}
+.nav-cta{background:var(--primary);color:var(--on-primary)!important;padding:8px 16px;border-radius:999px;font-weight:600}
 .nav-cta:hover{background:var(--primary-hover);text-decoration:none}
 @media(max-width:720px){.nav-links a:not(.nav-cta){display:none}}
+
+.theme-btn{
+  flex:none;width:36px;height:36px;border-radius:50%;
+  border:1px solid var(--border-strong);background:var(--surface);color:var(--text);
+  display:grid;place-items:center;cursor:pointer;padding:0;
+  transition:background .16s ease,border-color .16s ease,transform .12s ease;
+}
+.theme-btn:hover{border-color:var(--accent-2);transform:translateY(-1px)}
+.theme-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round}
+/* Each glyph shows only in the mode where it is the thing you can switch to. */
+.ico-sun{display:none}
+.ico-moon{display:block}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .ico-sun{display:block}
+  :root:not([data-theme="light"]) .ico-moon{display:none}
+}
+:root[data-theme="dark"] .ico-sun{display:block}
+:root[data-theme="dark"] .ico-moon{display:none}
+:root[data-theme="light"] .ico-sun{display:none}
+:root[data-theme="light"] .ico-moon{display:block}
 
 /* ---------- hero ---------- */
 .hero{padding:76px 0 0;text-align:center;position:relative;overflow:hidden}
 .hero::before{
   content:"";position:absolute;top:-240px;left:50%;transform:translateX(-50%);
   width:900px;height:520px;border-radius:50%;
-  background:radial-gradient(ellipse at center, rgb(110 216 185 / .13), transparent 68%);
+  background:radial-gradient(ellipse at center, var(--glow), transparent 68%);
   pointer-events:none;
 }
 .badge{
   display:inline-flex;align-items:center;gap:9px;
-  background:var(--accent-bg);border:1px solid #1E4A3D;color:var(--accent);
+  background:var(--accent-bg);border:1px solid var(--accent-edge);color:var(--accent);
   padding:6px 15px;border-radius:999px;font-size:13.5px;font-weight:600;
   letter-spacing:.01em;margin-bottom:26px;position:relative;
 }
@@ -85,24 +208,23 @@ h1{
 }
 .btn:hover{text-decoration:none;transform:translateY(-1px)}
 .btn:active{transform:translateY(0)}
-.btn-primary{background:var(--primary);color:var(--text)}
+.btn-primary{background:var(--primary);color:var(--on-primary)}
 .btn-primary:hover{background:var(--primary-hover)}
-.btn-ghost{background:transparent;color:var(--text);border-color:var(--border-strong)}
-.btn-ghost:hover{background:var(--surface);border-color:#4A4843}
+.btn-ghost{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
+.btn-ghost:hover{border-color:var(--accent-2)}
 .cta-note{margin:16px 0 0;font-size:14px;color:var(--dim);position:relative}
 
 /* ---------- screenshot frames ---------- */
 .shot{
   margin:54px auto 0;border-radius:var(--radius);border:1px solid var(--border);
-  background:var(--surface);overflow:hidden;position:relative;
-  box-shadow:0 30px 70px rgb(0 0 0 / .55);
+  background:var(--surface);overflow:hidden;position:relative;box-shadow:var(--shadow);
 }
-.shot img{display:block;width:100%;height:auto}
+.shot img{width:100%;height:auto}
 .shot-bar{
   display:flex;align-items:center;gap:7px;padding:11px 15px;
   background:var(--sunken);border-bottom:1px solid var(--border);
 }
-.tl{width:11px;height:11px;border-radius:50%;background:#34312D}
+.tl{width:11px;height:11px;border-radius:50%;background:var(--dot)}
 .hero-shot{max-width:1000px;margin-left:auto;margin-right:auto}
 
 /* ---------- sections ---------- */
@@ -153,7 +275,7 @@ h3{font-size:19px;font-weight:650;letter-spacing:-.015em;margin:0 0 9px}
   background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
   padding:28px 26px;display:flex;flex-direction:column;
 }
-.dl-opt.featured{border-color:#2E6553;background:linear-gradient(180deg,#0F1613,var(--bg))}
+.dl-opt.featured{border-color:var(--featured-edge);background:var(--featured-bg)}
 .dl-tag{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
   color:var(--accent-2);margin-bottom:11px}
 .dl-opt h3{margin-bottom:7px;font-size:20px}
@@ -190,12 +312,12 @@ textarea,input[type=email]{
   padding:13px 15px;color:var(--text);font-family:inherit;font-size:16px;resize:vertical;
   transition:border-color .16s ease;
 }
-textarea:focus,input[type=email]:focus{outline:none;border-color:#4C9B81}
-textarea::placeholder,input::placeholder{color:#6E6A64}
+textarea:focus,input[type=email]:focus{outline:none;border-color:var(--field-focus)}
+textarea::placeholder,input::placeholder{color:var(--placeholder)}
 .fb-foot{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px}
 .status{font-size:14.5px;min-height:21px}
 .status.ok{color:var(--accent)}
-.status.err{color:#F9A69B}
+.status.err{color:var(--danger)}
 .priv{font-size:13.5px;color:var(--dim);margin:20px 0 0;line-height:1.55}
 
 /* ---------- footer ---------- */
@@ -204,6 +326,10 @@ footer{border-top:1px solid var(--border);padding:40px 0;color:var(--dim);font-s
 .foot-in .logo{font-size:16px}
 .foot-links{margin-left:auto;display:flex;gap:20px}
 footer a{color:var(--muted)}
+
+@media (prefers-reduced-motion: reduce){
+  *{transition:none!important;scroll-behavior:auto!important}
+}
 </style>
 </head>
 <body>
@@ -216,6 +342,10 @@ footer a{color:var(--muted)}
       <a href="#download">Download</a>
       <a href="#feedback">Feedback</a>
       <a class="nav-cta" href="app/Home.dc.html">Open notivlo</a>
+      <button type="button" class="theme-btn" id="theme-btn" aria-label="Switch theme" title="Switch between light and dark">
+        <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.3M12 19.3v2.3M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.4 12h2.3M19.3 12h2.3M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
+      </button>
     </div>
   </div>
 </nav>
@@ -239,7 +369,8 @@ footer a{color:var(--muted)}
 
     <div class="shot hero-shot">
       <div class="shot-bar"><span class="tl"></span><span class="tl"></span><span class="tl"></span></div>
-      <img src="shots/home.png" alt="The notivlo home screen: a greeting, what is due today, and a grid of subject notebooks." width="1760" loading="eager">
+      <img class="shot-light" src="shots/home-light.webp" alt="The notivlo home screen: a greeting, what is due today, and a grid of subject notebooks." width="1760" height="1100">
+      <img class="shot-dark" src="shots/home.webp" alt="The notivlo home screen in dark mode: a greeting, what is due today, and a grid of subject notebooks." width="1760" height="1100">
     </div>
   </div>
 </header>
@@ -260,7 +391,8 @@ footer a{color:var(--muted)}
       </div>
       <div class="shot">
         <div class="shot-bar"><span class="tl"></span><span class="tl"></span><span class="tl"></span></div>
-        <img src="shots/planner.png" alt="The weekly agenda: a seven-day time grid with classes, a study block and a deadline." width="1760" loading="lazy">
+        <img class="shot-light" src="shots/planner-light.webp" alt="The weekly agenda: a seven-day time grid with classes, a study block and a deadline." width="1760" height="1100" loading="lazy">
+        <img class="shot-dark" src="shots/planner.webp" alt="The weekly agenda in dark mode: a seven-day time grid with classes, a study block and a deadline." width="1760" height="1100" loading="lazy">
       </div>
     </div>
   </div>
@@ -282,7 +414,8 @@ footer a{color:var(--muted)}
       </div>
       <div class="shot">
         <div class="shot-bar"><span class="tl"></span><span class="tl"></span><span class="tl"></span></div>
-        <img src="shots/notebook.png" alt="A Mathematics notebook open on the Quadratics chapter, with chapters listed by volume and a definition note." width="1760" loading="lazy">
+        <img class="shot-light" src="shots/notebook-light.webp" alt="A Mathematics notebook open on the Quadratics chapter, with chapters listed by volume and a definition note." width="1760" height="1100" loading="lazy">
+        <img class="shot-dark" src="shots/notebook.webp" alt="A Mathematics notebook in dark mode, open on the Quadratics chapter." width="1760" height="1100" loading="lazy">
       </div>
     </div>
   </div>
@@ -413,7 +546,51 @@ footer a{color:var(--muted)}
 (function () {
   'use strict';
 
-  /* ---- Mac download ------------------------------------------------- */
+  /* ---- Theme --------------------------------------------------------- */
+  /* Until the button is pressed there is no stored choice and the page
+     follows the device, which is what the CSS does on its own. Pressing it
+     writes an explicit choice that then outranks the device — the same
+     arrangement as Settings → Light or dark in the app. */
+  var THEME_KEY = 'notivlo-site-theme';
+  var root = document.documentElement;
+  var themeBtn = document.getElementById('theme-btn');
+
+  function resolvedTheme() {
+    var set = root.getAttribute('data-theme');
+    if (set === 'light' || set === 'dark') return set;
+    try {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch (e) {
+      return 'light';
+    }
+  }
+
+  function describe() {
+    // The label names where the button goes, not where the page is.
+    var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+    themeBtn.setAttribute('aria-label', 'Switch to ' + next + ' mode');
+    themeBtn.setAttribute('title', 'Switch to ' + next + ' mode');
+  }
+
+  themeBtn.addEventListener('click', function () {
+    var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+    describe();
+  });
+
+  // Someone who has not chosen keeps following the device, including when it
+  // changes under them at sunset.
+  try {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    var onChange = function () { if (!root.getAttribute('data-theme')) describe(); };
+    if (mq.addEventListener) mq.addEventListener('change', onChange);
+    else if (mq.addListener) mq.addListener(onChange);
+  } catch (e) {}
+
+  describe();
+
+  /* ---- Mac download -------------------------------------------------- */
   /* Points at the latest GitHub release asset, so a new build does not
      need this page edited. */
   var DMG_URL = 'https://github.com/lughyemydi/notivlo/releases/latest/download/notivlo.dmg';
