@@ -154,7 +154,7 @@
 /* --------------------------------------------------------------------------
    3. Flatten
    --------------------------------------------------------------------------
-   Everything is square, nothing is raised, nothing moves. The system allows a
+   Everything is square and nothing is raised. The system allows a
    circle only for its lettered annotation markers, which the app has none of.
    -------------------------------------------------------------------------- */
 
@@ -166,14 +166,9 @@ html *::after {
   text-shadow: none !important;
 }
 
-/* No motion. Transform is left alone — modals and the mobile tab are centred
-   with it, and zeroing it would drop them in the corner. */
-html *,
-html *::before,
-html *::after {
-  transition: none !important;
-  animation: none !important;
-}
+/* Motion is no longer switched off wholesale here: that froze the loading
+   shimmer, snapped the phone drawer and the agenda grid, and left dialogs
+   blinking into place. Section 13 says what moves and how. */
 
 /* The clay look survives in four moulded calculator keys. */
 html .nb-key,
@@ -532,4 +527,108 @@ html .nb-toolbar {
   html .editor { text-align: left !important; overflow-wrap: anywhere; }
   html .editor * { text-align: inherit; max-width: 100%; }
   html .nb-editor-card { padding-right: 34px !important; }
+}
+
+/* --------------------------------------------------------------------------
+   13. Motion
+   --------------------------------------------------------------------------
+   One system instead of each page's own: short, linear-feeling, no bounce,
+   no scale. Three kinds of movement and nothing else.
+
+     state   a control changing colour under the pointer        110ms
+     sheet   something arriving above the page                  160ms
+     layout  the drawer, the agenda grid, a progress bar        as declared
+
+   The sheets move with the individual `translate` property, never
+   `transform`. Dialogs are centred with transform: translate(-50%,-50%), and
+   the old keyframes animated `transform` to `none` — so for the length of the
+   animation the dialog sat with its corner on the centre of the screen and
+   then jumped. `translate` composes with transform instead of replacing it.
+
+   No fill-mode anywhere: if an animation never runs (a throttled or hidden
+   page), the element is simply in its final state, never stuck at opacity 0.
+   -------------------------------------------------------------------------- */
+
+:root {
+  --cs-ease: cubic-bezier(.2, 0, 0, 1);
+  --cs-t-state: .11s;
+  --cs-t-sheet: .16s;
+}
+
+@keyframes cs-fade  { from { opacity: 0; } }
+@keyframes cs-sheet { from { opacity: 0; translate: 0 10px; } }
+@keyframes cs-menu  { from { opacity: 0; translate: 0 -4px; } }
+
+/* state */
+html .btn,
+html .nb-card,
+html .due-chip,
+html .chap-row,
+html .ctx-item,
+html .nn-cat,
+html .tbtn,
+html .set-nav-item,
+html .legal-tab,
+html .input,
+html .qj-launch {
+  transition: background-color var(--cs-t-state) linear, color var(--cs-t-state) linear,
+              border-color var(--cs-t-state) linear, opacity var(--cs-t-state) linear !important;
+}
+/* Colour inside an inverting control follows it, or the label lags the fill. */
+html .due-chip *,
+html .chap-row * { transition: color var(--cs-t-state) linear !important; }
+
+/* sheet */
+html .nn-modal,
+html .gate-card,
+html .rc-card,
+html .ls-card,
+html .tx-card,
+html .nb-modal,
+html .qj-box { animation: cs-sheet var(--cs-t-sheet) var(--cs-ease) !important; }
+html .rc-back { animation: cs-sheet var(--cs-t-sheet) var(--cs-ease) !important; }
+html .ctx-menu { animation: cs-menu .1s var(--cs-ease) !important; }
+html [class*="backdrop"],
+html .qj-scrim { animation: cs-fade .14s linear !important; }
+
+/* layout: the week's bar and the storage bar fill rather than appear. */
+html [style*="linear-gradient(90deg,var(--color-accent-400)"] {
+  background: var(--cs-ink) !important;
+  transition: width .3s var(--cs-ease);
+}
+
+/* The theme switch stays one clean cut (see theme.js). */
+html.notivlo-theme-switching *,
+html.notivlo-theme-switching *::before,
+html.notivlo-theme-switching *::after { transition: none !important; }
+
+/* Anyone who has asked their device for less motion gets none. */
+@media (prefers-reduced-motion: reduce) {
+  html *,
+  html *::before,
+  html *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media print {
+  html *, html *::before, html *::after { animation: none !important; transition: none !important; }
+}
+
+/* The phone's chapters drawer. Section 7 makes the rail transparent, which is
+   right for a column on a desktop and wrong for a sheet that slides over the
+   chapter: the two texts printed through each other. Its backdrop also had
+   no position at all, so it neither dimmed the page nor caught the tap that
+   is meant to close the drawer. */
+@media (max-width: 760px) {
+  html .nb-chapters {
+    background: var(--cs-surface-raised) !important;
+    border-left: var(--cs-hair) solid var(--cs-rule) !important;
+    padding: 16px !important;
+    transition: transform .22s var(--cs-ease) !important;
+  }
+  html .nb-mobile-backdrop { position: fixed; inset: 0; z-index: 205; }
+  body:has(.nb-chapters-open) .nb-mobile-fab,
+  body:has(.nb-chapters-open) .qj-launch { display: none !important; }
 }
