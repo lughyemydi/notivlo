@@ -24,117 +24,155 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Google Sans Flex and Google Sans Code are the design system's own two
+     faces, loaded from Google's CDN as it asks. Unbounded stays for the
+     wordmark: that is the brand, not the theme. -->
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400..700&family=Google+Sans+Code:wght@400..700&family=Unbounded:wght@600&display=swap" rel="stylesheet">
 <style>
-/* Both palettes are the app's own (soft-clay.css), so the page and the
-   product are the same two themes rather than a lookalike pair.
+/* ==========================================================================
+   Concrete & Signal, on the landing page
+   --------------------------------------------------------------------------
+   The same design system the app moved to in beta 3: a warm concrete ground,
+   one loud colour field per section, ink hairlines instead of cards, and
+   small monospaced labels. The values are the system's own tokens, so the
+   page and the product are one look rather than a resemblance.
 
+   Four of its rules drive almost everything here:
+
+   1. Hairlines, not boxes. Nothing is filled, raised or rounded; regions are
+      separated by a 2px rule. There are no cards and no shadows.
+   2. One colour field per section, rotated so no two neighbours share it —
+      signal, then cobalt, then lime. The screenshot sits on the field the way
+      the system puts its line art on one.
+   3. signal and lime are never text on the light ground, and never carry ink
+      text in dark. Text on a field uses that field's on- token, which is why
+      each field sets --on-field and --art rather than inheriting them.
+   4. No motion. No transitions, no hover lift, no smooth scrolling. What
+      replaces the lift is inversion: a control fills with ink on hover.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   The palette, straight from the system's tokens.json
+   --------------------------------------------------------------------------
    Light is the base and dark is the override, applied either because the
    device asks for it or because the toggle set data-theme. The
    :not([data-theme="light"]) guard is what lets an explicit Light choice win
-   over a device that prefers dark. */
+   over a device that prefers dark.
+   -------------------------------------------------------------------------- */
 :root{
-  --bg:#F3F2EF;
-  --surface:#FFFFFF;
-  --sunken:#F7F6F4;
-  --border:#E4E2DD;
-  --border-strong:#D4D1CA;
-  --text:#1E1E1E;
-  --muted:#5C5A56;
-  --dim:#6B6B6B;
-  --accent:#1D7A62;
-  --accent-2:#145A48;
-  --primary:#8FE0C9;
-  --primary-hover:#74D4B8;
-  --on-primary:#1E1E1E;
-  --accent-bg:#EFFAF6;
-  --accent-edge:#BFEBDD;
-  --danger:#8A3328;
-  --nav-bg:rgb(243 242 239 / .84);
-  --glow:rgb(110 216 185 / .20);
-  --shadow:0 24px 56px rgb(72 62 50 / .14);
-  --dot:#CFCCC6;
-  --field-focus:#2E9377;
-  --placeholder:#8A8A8A;
-  --featured-bg:linear-gradient(180deg,#F4FBF8,#FFFFFF);
-  --featured-edge:#9FDCC6;
+  --surface:#e6e3dc;
+  --surface-raised:#f6f4ef;
+  --ink:#14161b;
+  --ink-soft:#2b2d33;
+  --rule:#14161b;
+  --rule-faint:rgb(20 22 27 / .22);
 
-  --radius:20px;
-  --maxw:1120px;
-  --font-logo:'Unbounded',ui-sans-serif,system-ui,sans-serif;
-  --font:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  /* Fixed in both themes, by the system's own rule, so a field and the art
+     on it look identical in light and dark. */
+  --signal:#ff5a1f;
+  --cobalt:#2b4bff;
+  --lime:#cfff3f;
+  --on-signal:#14161b;
+  --on-cobalt:#f6f4ef;
+  --on-lime:#14161b;
+  --night:#14161b;
+  --paper:#f6f4ef;
+
+  /* Cobalt is the only accent that may be text on the light ground; lime is
+     the only one that may be text on the dark. Hence one token, two values. */
+  --accent-text:#2b4bff;
+
+  --hair:2px;
+  --maxw:1240px;
+  --gutter:64px;
+
+  --sans:'Google Sans Flex','Google Sans',Arial,sans-serif;
+  --mono:'Google Sans Code',ui-monospace,SFMono-Regular,Menlo,'Courier New',monospace;
+  --logo:'Unbounded',var(--sans);
+
+  color-scheme:light;
 }
 
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0B0A09;
-    --surface:#191816;
-    --sunken:#121110;
-    --border:#2C2A27;
-    --border-strong:#3D3B37;
-    --text:#F7F5F1;
-    --muted:#BAB6AF;
-    --dim:#A29E97;
-    --accent:#9BE9D2;
-    --accent-2:#6ED8B9;
-    --primary:#1B6651;
-    --primary-hover:#216F59;
-    --on-primary:#F7F5F1;
-    --accent-bg:#122E27;
-    --accent-edge:#1E4A3D;
-    --danger:#F9A69B;
-    --nav-bg:rgb(11 10 9 / .82);
-    --glow:rgb(110 216 185 / .13);
-    --shadow:0 30px 70px rgb(0 0 0 / .55);
-    --dot:#34312D;
-    --field-focus:#4C9B81;
-    --placeholder:#6E6A64;
-    --featured-bg:linear-gradient(180deg,#0F1613,#0B0A09);
-    --featured-edge:#2E6553;
+    --surface:#14161b;
+    --surface-raised:#1f232b;
+    --ink:#f6f4ef;
+    --ink-soft:#c9ccd3;
+    --rule:#f6f4ef;
+    --rule-faint:rgb(246 244 239 / .26);
+    --accent-text:#cfff3f;
+    color-scheme:dark;
   }
 }
 
 :root[data-theme="dark"]{
-  --bg:#0B0A09;
-  --surface:#191816;
-  --sunken:#121110;
-  --border:#2C2A27;
-  --border-strong:#3D3B37;
-  --text:#F7F5F1;
-  --muted:#BAB6AF;
-  --dim:#A29E97;
-  --accent:#9BE9D2;
-  --accent-2:#6ED8B9;
-  --primary:#1B6651;
-  --primary-hover:#216F59;
-  --on-primary:#F7F5F1;
-  --accent-bg:#122E27;
-  --accent-edge:#1E4A3D;
-  --danger:#F9A69B;
-  --nav-bg:rgb(11 10 9 / .82);
-  --glow:rgb(110 216 185 / .13);
-  --shadow:0 30px 70px rgb(0 0 0 / .55);
-  --dot:#34312D;
-  --field-focus:#4C9B81;
-  --placeholder:#6E6A64;
-  --featured-bg:linear-gradient(180deg,#0F1613,#0B0A09);
-  --featured-edge:#2E6553;
+  --surface:#14161b;
+  --surface-raised:#1f232b;
+  --ink:#f6f4ef;
+  --ink-soft:#c9ccd3;
+  --rule:#f6f4ef;
+  --rule-faint:rgb(246 244 239 / .26);
+  --accent-text:#cfff3f;
+  color-scheme:dark;
 }
 
+/* --------------------------------------------------------------------------
+   Ground and type
+   --------------------------------------------------------------------------
+   The system's sizes are authored for a 1920 by 1080 canvas, and it asks for
+   the whole scale to be divided by one factor on the web, keeping the ratios.
+   That factor is 0.5 here: display-xl 160 → 80, title 72 → 36, lead 44 → 22,
+   body 32 → 16, small 28 → 14, mono-tag 28 → 14, mono-spec 24 → 12. The
+   clamps hold those ratios down to a phone.
+   -------------------------------------------------------------------------- */
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{background:var(--surface)}
 body{
-  margin:0;background:var(--bg);color:var(--text);
-  font-family:var(--font);font-size:17px;line-height:1.6;
+  margin:0;background:var(--surface);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.42;
   -webkit-font-smoothing:antialiased;
 }
-.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
-a{color:var(--accent);text-decoration:none}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)}
+
+h1{
+  font-size:clamp(40px,7.4vw,80px);line-height:.95;letter-spacing:-.03em;
+  font-weight:700;margin:0 0 24px;
+}
+h2{
+  font-size:clamp(27px,3.6vw,36px);line-height:1;letter-spacing:-.03em;
+  font-weight:700;margin:0 0 16px;
+}
+h3{font-size:20px;line-height:1.1;letter-spacing:-.025em;font-weight:700;margin:0 0 8px}
+p{margin:0}
+
+/* Labels are Google Sans Code, sentence case, no tracking games. Counters
+   are written in the system's own 01 / 03 form. */
+.tag{
+  font-family:var(--mono);font-size:14px;line-height:1.3;font-weight:400;
+  color:var(--ink-soft);margin:0 0 20px;
+}
+.spec{
+  font-family:var(--mono);font-size:12px;line-height:1.3;color:var(--ink-soft);
+  border-top:var(--hair) solid var(--rule);padding-top:10px;margin:24px 0 0;
+}
+.body{color:var(--ink-soft);max-width:58ch}
+
+a{color:var(--accent-text);text-decoration:none}
 a:hover{text-decoration:underline}
 
-/* ---------- which screenshot shows ---------- */
-/* Light is the default pair; dark swaps them. Both are in the markup rather
-   than swapped by script, so the right one is correct on the first paint. */
+/* Square, and in the accent that is legible on the ground of each theme. */
+:focus-visible{outline:var(--hair) solid var(--accent-text);outline-offset:2px}
+
+/* No motion, anywhere — the scroll included. */
+*,*::before,*::after{transition:none!important;animation:none!important}
+
+/* --------------------------------------------------------------------------
+   Which screenshot shows
+   --------------------------------------------------------------------------
+   Light is the default pair; dark swaps them. Both are in the markup rather
+   than swapped by script, so the right one is correct on the first paint.
+   -------------------------------------------------------------------------- */
 .shot-dark{display:none}
 .shot-light{display:block}
 @media (prefers-color-scheme: dark){
@@ -146,26 +184,74 @@ a:hover{text-decoration:underline}
 :root[data-theme="light"] .shot-dark{display:none}
 :root[data-theme="light"] .shot-light{display:block}
 
-/* ---------- top bar ---------- */
-.nav{position:sticky;top:0;z-index:50;background:var(--nav-bg);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
-.nav-in{max-width:var(--maxw);margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px}
-.logo{font-family:var(--font-logo);font-weight:600;font-size:19px;letter-spacing:-.03em;color:var(--text)}
+/* --------------------------------------------------------------------------
+   Colour fields
+   --------------------------------------------------------------------------
+   One per section. Each sets the tokens for whatever sits on it, because ink
+   on a field is wrong in dark and the art has to read the same in both
+   themes: night strokes on signal and lime, paper on cobalt.
+   -------------------------------------------------------------------------- */
+.field{background:var(--fill);padding:48px}
+.field-signal{--fill:var(--signal);--on-field:var(--on-signal);--art:var(--night)}
+.field-cobalt{--fill:var(--cobalt);--on-field:var(--on-cobalt);--art:var(--paper)}
+.field-lime{--fill:var(--lime);--on-field:var(--on-lime);--art:var(--night)}
+.field .shot{border-color:var(--art)}
+.field-tag{font-family:var(--mono);font-size:12px;color:var(--on-field);margin:0 0 14px}
+
+/* A screenshot is the art on the field: outlined, square, nothing behind it.
+   No window chrome — a fake title bar is a box, and the system has none. */
+.shot{display:block;border:var(--hair) solid var(--rule);background:var(--surface-raised)}
+.shot img{display:block;width:100%;height:auto}
+
+/* --------------------------------------------------------------------------
+   Top bar: full width, held by one rule
+   -------------------------------------------------------------------------- */
+.nav{
+  position:sticky;top:0;z-index:50;
+  background:var(--surface);border-bottom:var(--hair) solid var(--rule);
+}
+.nav-in{
+  max-width:var(--maxw);margin:0 auto;
+  padding:16px var(--gutter);display:flex;align-items:center;gap:24px;
+}
+.logo{font-family:var(--logo);font-weight:600;font-size:19px;letter-spacing:-.03em;color:var(--ink)}
 .logo:hover{text-decoration:none}
 .nav-links{margin-left:auto;display:flex;align-items:center;gap:22px}
-.nav-links a{color:var(--muted);font-size:15px;font-weight:500}
-.nav-links a:hover{color:var(--text);text-decoration:none}
-.nav-cta{background:var(--primary);color:var(--on-primary)!important;padding:8px 16px;border-radius:999px;font-weight:600}
-.nav-cta:hover{background:var(--primary-hover);text-decoration:none}
-@media(max-width:720px){.nav-links a:not(.nav-cta){display:none}}
+.nav-links a:not(.nav-cta){font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.nav-links a:not(.nav-cta):hover{color:var(--ink);text-decoration:none}
+@media(max-width:780px){.nav-links a:not(.nav-cta){display:none}}
+
+/* --------------------------------------------------------------------------
+   Controls: flat, square, monospaced. Hover inverts rather than lifts.
+   -------------------------------------------------------------------------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:14px 22px;border:var(--hair) solid transparent;cursor:pointer;
+  font-family:var(--mono);font-size:12px;font-weight:700;line-height:1;
+  text-decoration:none;
+}
+.btn:hover{text-decoration:none}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2;
+  stroke-linecap:round;stroke-linejoin:round}
+.btn-primary{background:var(--signal);border-color:var(--signal);color:var(--on-signal)}
+.btn-ghost{background:transparent;border-color:var(--rule);color:var(--ink)}
+.nav-cta{
+  background:var(--signal);color:var(--on-signal);border:var(--hair) solid var(--signal);
+  padding:10px 16px;font-family:var(--mono);font-size:12px;font-weight:700;
+}
+@media (hover:hover){
+  .btn-primary:hover,.nav-cta:hover{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+  .btn-ghost:hover{background:var(--ink);color:var(--surface)}
+}
+.btn:active{opacity:.75}
 
 .theme-btn{
-  flex:none;width:36px;height:36px;border-radius:50%;
-  border:1px solid var(--border-strong);background:var(--surface);color:var(--text);
-  display:grid;place-items:center;cursor:pointer;padding:0;
-  transition:background .16s ease,border-color .16s ease,transform .12s ease;
+  flex:none;width:34px;height:34px;padding:0;cursor:pointer;
+  border:var(--hair) solid var(--rule);background:transparent;color:var(--ink);
+  display:grid;place-items:center;
 }
-.theme-btn:hover{border-color:var(--accent-2);transform:translateY(-1px)}
-.theme-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9;
+@media (hover:hover){.theme-btn:hover{background:var(--ink);color:var(--surface)}}
+.theme-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;
   stroke-linecap:round;stroke-linejoin:round}
 /* Each glyph shows only in the mode where it is the thing you can switch to. */
 .ico-sun{display:none}
@@ -179,156 +265,133 @@ a:hover{text-decoration:underline}
 :root[data-theme="light"] .ico-sun{display:none}
 :root[data-theme="light"] .ico-moon{display:block}
 
-/* ---------- hero ---------- */
-.hero{padding:76px 0 0;text-align:center;position:relative;overflow:hidden}
-.hero::before{
-  content:"";position:absolute;top:-240px;left:50%;transform:translateX(-50%);
-  width:900px;height:520px;border-radius:50%;
-  background:radial-gradient(ellipse at center, var(--glow), transparent 68%);
-  pointer-events:none;
-}
-.badge{
-  display:inline-flex;align-items:center;gap:9px;
-  background:var(--accent-bg);border:1px solid var(--accent-edge);color:var(--accent);
-  padding:6px 15px;border-radius:999px;font-size:13.5px;font-weight:600;
-  letter-spacing:.01em;margin-bottom:26px;position:relative;
-}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--accent-2)}
-h1{
-  font-size:clamp(34px,6vw,60px);line-height:1.08;letter-spacing:-.035em;
-  font-weight:700;margin:0 0 22px;position:relative;
-}
-.sub{font-size:clamp(17px,2.2vw,20px);color:var(--muted);max-width:620px;margin:0 auto 34px;position:relative}
-.cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative}
-.btn{
-  display:inline-flex;align-items:center;gap:10px;padding:15px 28px;border-radius:999px;
-  font-weight:600;font-size:16.5px;border:1px solid transparent;cursor:pointer;
-  transition:background .16s ease,transform .12s ease,border-color .16s ease;
-  font-family:inherit;
-}
-.btn:hover{text-decoration:none;transform:translateY(-1px)}
-.btn:active{transform:translateY(0)}
-.btn-primary{background:var(--primary);color:var(--on-primary)}
-.btn-primary:hover{background:var(--primary-hover)}
-.btn-ghost{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
-.btn-ghost:hover{border-color:var(--accent-2)}
-.cta-note{margin:16px 0 0;font-size:14px;color:var(--dim);position:relative}
+/* --------------------------------------------------------------------------
+   Hero
+   --------------------------------------------------------------------------
+   Asymmetric and anchored: the copy hangs from the top-left margin instead of
+   sitting centred in the middle of the page, which is the system's layout
+   rule. The signal field below it carries the screenshot.
+   -------------------------------------------------------------------------- */
+.hero{padding:72px 0 0}
+.hero-copy{max-width:900px}
+.hero .body{font-size:18px;max-width:52ch;margin-bottom:28px}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap}
+.cta-note{font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin:16px 0 0}
+.hero-field{margin-top:48px}
+.hero-field .shot{max-width:1000px;margin:0 auto}
 
-/* ---------- screenshot frames ---------- */
-.shot{
-  margin:54px auto 0;border-radius:var(--radius);border:1px solid var(--border);
-  background:var(--surface);overflow:hidden;position:relative;box-shadow:var(--shadow);
+/* --------------------------------------------------------------------------
+   Split sections: a full-height field on one side, an anchored text column on
+   the other, with the key list and spec line pinned to its bottom.
+   -------------------------------------------------------------------------- */
+.split{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;
+  border-bottom:var(--hair) solid var(--rule)}
+.split-copy{
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:48px var(--gutter);min-height:420px;
 }
-.shot img{width:100%;height:auto}
-.shot-bar{
-  display:flex;align-items:center;gap:7px;padding:11px 15px;
-  background:var(--sunken);border-bottom:1px solid var(--border);
+.split.flip .split-field{order:2}
+@media(max-width:900px){
+  .split{grid-template-columns:1fr}
+  .split.flip .split-field{order:0}
+  .split-copy{min-height:0;padding:36px var(--gutter)}
 }
-.tl{width:11px;height:11px;border-radius:50%;background:var(--dot)}
-.hero-shot{max-width:1000px;margin-left:auto;margin-right:auto}
 
-/* ---------- sections ---------- */
-section{padding:92px 0}
-.eyebrow{
-  font-size:13px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
-  color:var(--accent-2);margin:0 0 14px;
+/* Key rows, the system's lettered key: each row is a small line with a
+   hairline above it, the letter in mono bold in a fixed 28px column. */
+.keys{list-style:none;padding:0;margin:28px 0 0}
+.keys li{
+  display:flex;gap:12px;align-items:baseline;
+  border-top:var(--hair) solid var(--rule);padding:10px 0;
+  font-size:14px;line-height:1.2;color:var(--ink-soft);
 }
-h2{font-size:clamp(27px,4vw,40px);line-height:1.15;letter-spacing:-.03em;font-weight:700;margin:0 0 18px}
-h3{font-size:19px;font-weight:650;letter-spacing:-.015em;margin:0 0 9px}
-.lede{font-size:18.5px;color:var(--muted);max-width:620px;margin:0}
+.key-letter{
+  flex:none;width:28px;font-family:var(--mono);font-weight:700;font-size:14px;
+  color:var(--ink);
+}
 
-.split{display:grid;grid-template-columns:1fr 1.25fr;gap:56px;align-items:center}
-.split.flip .split-text{order:2}
-@media(max-width:900px){.split{grid-template-columns:1fr;gap:36px}.split.flip .split-text{order:0}}
-.split .shot{margin-top:0}
-.feat-list{list-style:none;padding:0;margin:26px 0 0;display:flex;flex-direction:column;gap:13px}
-.feat-list li{display:flex;gap:12px;align-items:flex-start;color:var(--muted);font-size:16px}
-.tick{flex:none;width:19px;height:19px;margin-top:3px;border-radius:50%;background:var(--accent-bg);
-  display:grid;place-items:center;color:var(--accent);font-size:11px;font-weight:700}
+/* --------------------------------------------------------------------------
+   Plain sections and the ruled grid
+   -------------------------------------------------------------------------- */
+section{padding:72px 0}
+.sec-head{max-width:58ch;margin-bottom:8px}
 
-/* ---------- grid of features ---------- */
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:46px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0 40px}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:620px){.grid{grid-template-columns:1fr}}
-.card{
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  padding:26px 24px;transition:border-color .18s ease,transform .18s ease;
-}
-.card:hover{border-color:var(--border-strong);transform:translateY(-2px)}
-.card p{margin:0;color:var(--muted);font-size:15.5px;line-height:1.55}
-.ico{
-  width:36px;height:36px;border-radius:11px;background:var(--accent-bg);
-  display:grid;place-items:center;margin-bottom:15px;
-}
-.ico svg{width:19px;height:19px;stroke:var(--accent);fill:none;stroke-width:1.9;
-  stroke-linecap:round;stroke-linejoin:round}
+/* A region, not an object: no fill, no outline, one hairline on top. */
+.cell{border-top:var(--hair) solid var(--rule);padding:20px 0 28px}
+.cell-no{font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin:0 0 14px}
+.cell p{color:var(--ink-soft);font-size:14px;line-height:1.42}
+.cell svg{width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;margin-bottom:14px;display:block}
 
-/* ---------- download ---------- */
-.dl-wrap{
-  background:linear-gradient(180deg,var(--surface),var(--sunken));
-  border:1px solid var(--border);border-radius:26px;padding:48px 40px;
-}
-@media(max-width:620px){.dl-wrap{padding:34px 22px}}
-.dl-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:32px}
+/* --------------------------------------------------------------------------
+   Download and feedback: ruled regions on the ground, not panels
+   -------------------------------------------------------------------------- */
+.dl-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 40px;margin-top:40px}
 @media(max-width:760px){.dl-grid{grid-template-columns:1fr}}
-.dl-opt{
-  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
-  padding:28px 26px;display:flex;flex-direction:column;
+.dl-opt{border-top:var(--hair) solid var(--rule);padding:20px 0 0;display:flex;flex-direction:column}
+.dl-opt p{color:var(--ink-soft);font-size:14px;margin:0 0 22px;flex:1}
+.dl-opt .btn{align-self:flex-start}
+.dl-meta{font-family:var(--mono);font-size:12px;color:var(--ink-soft);
+  border-top:var(--hair) solid var(--rule);padding-top:10px;margin-top:20px}
+
+details{margin-top:40px;border-top:var(--hair) solid var(--rule);padding-top:20px}
+summary{
+  cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:10px;
+  font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink);
 }
-.dl-opt.featured{border-color:var(--featured-edge);background:var(--featured-bg)}
-.dl-tag{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--accent-2);margin-bottom:11px}
-.dl-opt h3{margin-bottom:7px;font-size:20px}
-.dl-opt p{color:var(--muted);font-size:15px;margin:0 0 22px;flex:1}
-.dl-meta{font-size:13.5px;color:var(--dim);margin-top:13px}
-details{margin-top:26px;border-top:1px solid var(--border);padding-top:22px}
-summary{cursor:pointer;font-weight:600;font-size:15.5px;color:var(--text);list-style:none;
-  display:flex;align-items:center;gap:9px}
 summary::-webkit-details-marker{display:none}
-summary::before{content:"›";display:inline-block;transition:transform .18s ease;color:var(--accent-2);
-  font-size:19px;line-height:1}
-details[open] summary::before{transform:rotate(90deg)}
-.steps{margin:18px 0 0;padding-left:22px;color:var(--muted);font-size:15.3px;line-height:1.75}
-.steps li{margin-bottom:9px}
-code{
-  background:var(--sunken);border:1px solid var(--border);border-radius:6px;
-  padding:2px 7px;font-size:13.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-  color:var(--accent);
-}
+summary::before{content:"+";font-family:var(--mono);color:var(--ink)}
+details[open] summary::before{content:"−"}
+.note{color:var(--ink-soft);font-size:14px;line-height:1.42;max-width:70ch;margin:18px 0 0}
+.steps{margin:18px 0 0;padding-left:20px;color:var(--ink-soft);font-size:14px;line-height:1.7;max-width:70ch}
+.steps li{margin-bottom:8px}
+code{font-family:var(--mono);font-size:12px;color:var(--ink);
+  border-bottom:var(--hair) solid var(--rule-faint)}
 .code-block{
-  display:block;background:var(--sunken);border:1px solid var(--border);border-radius:11px;
-  padding:14px 16px;margin:12px 0 0;overflow-x:auto;color:var(--accent);
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;
+  display:block;font-family:var(--mono);font-size:12px;color:var(--ink);
+  background:var(--surface-raised);border:var(--hair) solid var(--rule-faint);
+  padding:12px 14px;margin:14px 0 0;overflow-x:auto;
 }
 
-/* ---------- feedback ---------- */
-.fb{background:var(--surface);border:1px solid var(--border);border-radius:26px;padding:46px 40px}
-@media(max-width:620px){.fb{padding:32px 22px}}
-.field{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
-label{font-size:14.5px;font-weight:600;color:var(--text)}
-.opt{font-weight:400;color:var(--dim)}
+/* An input is a line to write on, not a pill. */
+form{margin-top:36px;max-width:640px}
+.field-row{display:flex;flex-direction:column;gap:6px;margin-bottom:24px}
+label{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.opt{color:var(--ink-soft)}
 textarea,input[type=email]{
-  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:13px;
-  padding:13px 15px;color:var(--text);font-family:inherit;font-size:16px;resize:vertical;
-  transition:border-color .16s ease;
+  width:100%;background:transparent;color:var(--ink);
+  border:0;border-bottom:var(--hair) solid var(--rule-faint);
+  padding:8px 0;font-family:var(--mono);font-size:14px;line-height:1.5;resize:vertical;
 }
-textarea:focus,input[type=email]:focus{outline:none;border-color:var(--field-focus)}
-textarea::placeholder,input::placeholder{color:var(--placeholder)}
-.fb-foot{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px}
-.status{font-size:14.5px;min-height:21px}
-.status.ok{color:var(--accent)}
-.status.err{color:var(--danger)}
-.priv{font-size:13.5px;color:var(--dim);margin:20px 0 0;line-height:1.55}
+textarea:focus,input[type=email]:focus{outline:none;border-bottom-color:var(--rule)}
+textarea::placeholder,input::placeholder{color:var(--ink-soft);opacity:.7}
+.fb-foot{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.status{font-family:var(--mono);font-size:12px;min-height:18px;color:var(--ink-soft)}
+/* The words carry the status, which is the system's rule; the colour only
+   agrees with them. Cobalt is legible on the light ground and lime on the
+   dark, so both go through the one accent token. */
+.status.ok{color:var(--accent-text)}
+.status.err{color:var(--ink);font-weight:700}
+.priv{font-family:var(--mono);color:var(--ink-soft);font-size:12px;line-height:1.5;
+  max-width:70ch;margin:28px 0 0}
 
-/* ---------- footer ---------- */
-footer{border-top:1px solid var(--border);padding:40px 0;color:var(--dim);font-size:14.5px}
-.foot-in{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
-.foot-in .logo{font-size:16px}
+/* --------------------------------------------------------------------------
+   Footer
+   -------------------------------------------------------------------------- */
+footer{border-top:var(--hair) solid var(--rule);padding:32px 0}
+.foot-in{display:flex;gap:20px;align-items:baseline;flex-wrap:wrap;
+  font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.foot-in .logo{font-size:15px}
 .foot-links{margin-left:auto;display:flex;gap:20px}
-footer a{color:var(--muted)}
+footer a{color:var(--ink-soft)}
+footer a:hover{color:var(--ink)}
 
-@media (prefers-reduced-motion: reduce){
-  *{transition:none!important;scroll-behavior:auto!important}
+@media(max-width:620px){
+  :root{--gutter:20px}
+  .field{padding:24px 20px}
 }
 </style>
 </head>
@@ -351,110 +414,125 @@ footer a{color:var(--muted)}
 </nav>
 
 <header class="hero" id="top">
-  <div class="wrap">
-    <span class="badge"><span class="dot"></span> Early beta — looking for testers</span>
-    <h1>Every subject, every deadline,<br>in one quiet place.</h1>
-    <p class="sub">A notebook for each class, a week built around what is actually due, and a home page that opens on the next thing to do.</p>
+  <div class="wrap hero-copy">
+    <p class="tag">Early beta · looking for testers</p>
+    <h1>Every subject, every deadline, in one quiet place.</h1>
+    <p class="body">A notebook for each class, a week built around what is actually due, and a home page that opens on the next thing to do.</p>
     <div class="cta-row">
       <a class="btn btn-primary" href="app/SignUp.dc.html">
         Open it in your browser
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
       <a class="btn btn-ghost" href="#download">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>
         Download for Mac
       </a>
     </div>
     <p class="cta-note">Nothing to install. An account is three fields — no card, no ads, no feed.</p>
+  </div>
 
-    <div class="shot hero-shot">
-      <div class="shot-bar"><span class="tl"></span><span class="tl"></span><span class="tl"></span></div>
+  <div class="field field-signal hero-field">
+    <div class="shot">
       <img class="shot-light" src="shots/home-light.webp" alt="The notivlo home screen: a greeting, what is due today, and a grid of subject notebooks." width="1760" height="1100">
       <img class="shot-dark" src="shots/home.webp" alt="The notivlo home screen in dark mode: a greeting, what is due today, and a grid of subject notebooks." width="1760" height="1100">
     </div>
   </div>
 </header>
 
-<section id="what">
-  <div class="wrap">
-    <div class="split">
-      <div class="split-text">
-        <p class="eyebrow">The week</p>
-        <h2>Built around what is actually due</h2>
-        <p class="lede">Deadlines, classes and study blocks on one grid, so an essay due Sunday stops being a surprise on Saturday night.</p>
-        <ul class="feat-list">
-          <li><span class="tick">✓</span><span>Deadlines, classes, events and study blocks, each marked differently</span></li>
-          <li><span class="tick">✓</span><span>Free time between commitments worked out for you</span></li>
-          <li><span class="tick">✓</span><span>Tick a deadline off and it strikes through where it sits</span></li>
-          <li><span class="tick">✓</span><span>Tasks link back to the notebook chapter they belong to</span></li>
-        </ul>
-      </div>
-      <div class="shot">
-        <div class="shot-bar"><span class="tl"></span><span class="tl"></span><span class="tl"></span></div>
-        <img class="shot-light" src="shots/planner-light.webp" alt="The weekly agenda: a seven-day time grid with classes, a study block and a deadline." width="1760" height="1100" loading="lazy">
-        <img class="shot-dark" src="shots/planner.webp" alt="The weekly agenda in dark mode: a seven-day time grid with classes, a study block and a deadline." width="1760" height="1100" loading="lazy">
-      </div>
+<div class="split" id="what">
+  <div class="split-field field field-cobalt">
+    <p class="field-tag">The week</p>
+    <div class="shot">
+      <img class="shot-light" src="shots/planner-light.webp" alt="The weekly agenda: a seven-day time grid with classes, a study block and a deadline." width="1760" height="1100" loading="lazy">
+      <img class="shot-dark" src="shots/planner.webp" alt="The weekly agenda in dark mode: a seven-day time grid with classes, a study block and a deadline." width="1760" height="1100" loading="lazy">
     </div>
   </div>
-</section>
-
-<section style="padding-top:0">
-  <div class="wrap">
-    <div class="split flip">
-      <div class="split-text">
-        <p class="eyebrow">The notebooks</p>
-        <h2>One notebook per class, in volumes and chapters</h2>
-        <p class="lede">Organised the way a syllabus actually is — not one endless document, and not a folder of loose files.</p>
-        <ul class="feat-list">
-          <li><span class="tick">✓</span><span>Volumes and chapters that match the specification</span></li>
-          <li><span class="tick">✓</span><span>A proper editor: formatting, highlights, images and equations</span></li>
-          <li><span class="tick">✓</span><span>Definition cards pinned alongside what you are reading</span></li>
-          <li><span class="tick">✓</span><span>Focus mode, printing, and sharing a chapter</span></li>
-        </ul>
-      </div>
-      <div class="shot">
-        <div class="shot-bar"><span class="tl"></span><span class="tl"></span><span class="tl"></span></div>
-        <img class="shot-light" src="shots/notebook-light.webp" alt="A Mathematics notebook open on the Quadratics chapter, with chapters listed by volume and a definition note." width="1760" height="1100" loading="lazy">
-        <img class="shot-dark" src="shots/notebook.webp" alt="A Mathematics notebook in dark mode, open on the Quadratics chapter." width="1760" height="1100" loading="lazy">
-      </div>
+  <div class="split-copy">
+    <div>
+      <p class="tag">Part 01 / 03</p>
+      <h2>Built around what is actually due</h2>
+      <p class="body">Deadlines, classes and study blocks on one grid, so an essay due Sunday stops being a surprise on Saturday night.</p>
+    </div>
+    <div>
+      <ul class="keys">
+        <li><span class="key-letter">A</span><span>Deadlines, classes, events and study blocks, each marked differently</span></li>
+        <li><span class="key-letter">B</span><span>Free time between commitments worked out for you</span></li>
+        <li><span class="key-letter">C</span><span>Tick a deadline off and it strikes through where it sits</span></li>
+        <li><span class="key-letter">D</span><span>Tasks link back to the notebook chapter they belong to</span></li>
+      </ul>
+      <p class="spec">Seven days · 15-minute blocks · click an empty hour to fill it</p>
     </div>
   </div>
-</section>
+</div>
 
-<section style="padding-top:0">
+<div class="split flip">
+  <div class="split-field field field-lime">
+    <p class="field-tag">The notebooks</p>
+    <div class="shot">
+      <img class="shot-light" src="shots/notebook-light.webp" alt="A Mathematics notebook open on the Quadratics chapter, with chapters listed by volume and a definition note." width="1760" height="1100" loading="lazy">
+      <img class="shot-dark" src="shots/notebook.webp" alt="A Mathematics notebook in dark mode, open on the Quadratics chapter." width="1760" height="1100" loading="lazy">
+    </div>
+  </div>
+  <div class="split-copy">
+    <div>
+      <p class="tag">Part 02 / 03</p>
+      <h2>One notebook per class, in volumes and chapters</h2>
+      <p class="body">Organised the way a syllabus actually is — not one endless document, and not a folder of loose files.</p>
+    </div>
+    <div>
+      <ul class="keys">
+        <li><span class="key-letter">A</span><span>Volumes and chapters that match the specification</span></li>
+        <li><span class="key-letter">B</span><span>A proper editor: formatting, highlights, images and equations</span></li>
+        <li><span class="key-letter">C</span><span>Definition cards pinned alongside what you are reading</span></li>
+        <li><span class="key-letter">D</span><span>Focus mode, printing, and sharing a chapter</span></li>
+      </ul>
+      <p class="spec">Volumes · chapters · four text sizes</p>
+    </div>
+  </div>
+</div>
+
+<section id="everything">
   <div class="wrap">
-    <p class="eyebrow">Everything else</p>
-    <h2>What is actually in it</h2>
-    <p class="lede">Built for A level — Cambridge syllabuses including 9709, 9702, 9701, 9700, 9708 and 9618.</p>
+    <div class="sec-head">
+      <p class="tag">Part 03 / 03</p>
+      <h2>What is actually in it</h2>
+      <p class="body">Built for A level — Cambridge syllabuses including 9709, 9702, 9701, 9700, 9708 and 9618.</p>
+    </div>
 
     <div class="grid">
-      <div class="card">
-        <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h12"/></svg></div>
+      <div class="cell">
+        <p class="cell-no">01</p>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18M3 12h18M3 19h12"/></svg>
         <h3>Recall</h3>
         <p>Cards made from your own chapters. What you keep missing comes back round sooner than what you know.</p>
       </div>
-      <div class="card">
-        <div class="ico"><svg viewBox="0 0 24 24"><path d="M9 11l2 2 4-4"/><rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M8 2v4M16 2v4"/></svg></div>
+      <div class="cell">
+        <p class="cell-no">02</p>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l2 2 4-4"/><rect x="3" y="4" width="18" height="17"/><path d="M8 2v4M16 2v4"/></svg>
         <h3>Practice that follows the real thing</h3>
         <p>Short papers whenever you want one, and a full mock on a schedule. Questions are written for the app — never scraped past papers.</p>
       </div>
-      <div class="card">
-        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 013 3v13a2.5 2.5 0 00-2.5-2.5H4zM20 4h-3a3 3 0 00-3 3v13a2.5 2.5 0 012.5-2.5H20z"/></svg></div>
+      <div class="cell">
+        <p class="cell-no">03</p>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7a3 3 0 013 3v13a2.5 2.5 0 00-2.5-2.5H4zM20 4h-3a3 3 0 00-3 3v13a2.5 2.5 0 012.5-2.5H20z"/></svg>
         <h3>Written lessons</h3>
         <p>Seven lessons on the topics that trip people up — the discriminant, projectiles, titration, enzymes, elasticity, unseen poetry, two's complement.</p>
       </div>
-      <div class="card">
-        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></div>
+      <div class="cell">
+        <p class="cell-no">04</p>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
         <h3>Mark schemes, not just answers</h3>
         <p>One mark-scheme line per mark, so you can see where the marks actually went rather than guessing.</p>
       </div>
-      <div class="card">
-        <div class="ico"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-6.2-8.6"/><path d="M21 4v5h-5"/></svg></div>
+      <div class="cell">
+        <p class="cell-no">05</p>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 11-6.2-8.6"/><path d="M21 4v5h-5"/></svg>
         <h3>Syncs to your account</h3>
         <p>Sign in on another device and your notebooks, agenda and progress are there. Or skip the account and keep it on one device.</p>
       </div>
-      <div class="card">
-        <div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4"/></svg></div>
+      <div class="cell">
+        <p class="cell-no">06</p>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4"/></svg>
         <h3>Light, dark and bigger text</h3>
         <p>Follows your system or stays where you put it. Four text sizes that scale the whole app, not just the words.</p>
       </div>
@@ -464,69 +542,69 @@ footer a{color:var(--muted)}
 
 <section id="download" style="padding-top:0">
   <div class="wrap">
-    <div class="dl-wrap">
-      <p class="eyebrow">Get it</p>
+    <div class="sec-head">
+      <p class="tag">Get it</p>
       <h2>Two ways in</h2>
-      <p class="lede">The browser version and the Mac app are the same app. Start in the browser; install it if you like it.</p>
+      <p class="body">The browser version and the Mac app are the same app. Start in the browser; install it if you like it.</p>
+    </div>
 
-      <div class="dl-grid">
-        <div class="dl-opt featured">
-          <div class="dl-tag">Quickest</div>
-          <h3>Open it in your browser</h3>
-          <p>Works on any computer, phone or tablet. Nothing to install, nothing to get past.</p>
-          <a class="btn btn-primary" href="app/SignUp.dc.html" style="justify-content:center">Open notivlo</a>
-          <div class="dl-meta">Chrome, Safari, Firefox or Edge</div>
-        </div>
-
-        <div class="dl-opt">
-          <div class="dl-tag">For Mac</div>
-          <h3>Download the Mac app</h3>
-          <p>A real app in your Dock, in its own window, with the whole app bundled inside it.</p>
-          <a class="btn btn-ghost" id="dmg-link" href="#" style="justify-content:center">Download .dmg</a>
-          <div class="dl-meta">Universal · Intel &amp; Apple Silicon · macOS 13+ · 1.3 MB</div>
-        </div>
+    <div class="dl-grid">
+      <div class="dl-opt">
+        <p class="cell-no">Quickest</p>
+        <h3>Open it in your browser</h3>
+        <p>Works on any computer, phone or tablet. Nothing to install, nothing to get past.</p>
+        <a class="btn btn-primary" href="app/SignUp.dc.html">Open notivlo</a>
+        <div class="dl-meta">Chrome, Safari, Firefox or Edge</div>
       </div>
 
-      <details>
-        <summary>Mac: it will say the app can't be verified. Here's why, and what to do.</summary>
-        <p class="steps" style="padding-left:0;margin-bottom:0">notivlo isn't signed with a paid Apple Developer certificate yet, so macOS shows a warning the first time. The app is sandboxed and can only reach its own sync server — but you shouldn't take that on faith from the person asking you to install it, so here's exactly what to click.</p>
-        <ol class="steps">
-          <li>Open the <code>.dmg</code> and drag <strong>notivlo</strong> into Applications.</li>
-          <li>Open it. macOS will refuse the first time — that's expected.</li>
-          <li>Go to <strong>System Settings → Privacy &amp; Security</strong>, scroll down, and click <strong>Open Anyway</strong> next to the notivlo message.</li>
-          <li>Open it once more and confirm. That's the last time you'll see it.</li>
-        </ol>
-        <p class="steps" style="padding-left:0;margin-bottom:0">If you'd rather do it in one line instead:</p>
-        <code class="code-block">xattr -dr com.apple.quarantine /Applications/notivlo.app</code>
-      </details>
+      <div class="dl-opt">
+        <p class="cell-no">For Mac</p>
+        <h3>Download the Mac app</h3>
+        <p>A real app in your Dock, in its own window, with the whole app bundled inside it.</p>
+        <a class="btn btn-ghost" id="dmg-link" href="#">Download .dmg</a>
+        <div class="dl-meta">Universal · Intel &amp; Apple Silicon · macOS 13+ · 1.3 MB</div>
+      </div>
     </div>
+
+    <details>
+      <summary>Mac: it will say the app can't be verified. Here's why, and what to do.</summary>
+      <p class="note">notivlo isn't signed with a paid Apple Developer certificate yet, so macOS shows a warning the first time. The app is sandboxed and can only reach its own sync server — but you shouldn't take that on faith from the person asking you to install it, so here's exactly what to click.</p>
+      <ol class="steps">
+        <li>Open the <code>.dmg</code> and drag <strong>notivlo</strong> into Applications.</li>
+        <li>Open it. macOS will refuse the first time — that's expected.</li>
+        <li>Go to <strong>System Settings → Privacy &amp; Security</strong>, scroll down, and click <strong>Open Anyway</strong> next to the notivlo message.</li>
+        <li>Open it once more and confirm. That's the last time you'll see it.</li>
+      </ol>
+      <p class="note">If you'd rather do it in one line instead:</p>
+      <code class="code-block">xattr -dr com.apple.quarantine /Applications/notivlo.app</code>
+    </details>
   </div>
 </section>
 
 <section id="feedback" style="padding-top:0">
   <div class="wrap">
-    <div class="fb">
-      <p class="eyebrow">The part I actually need</p>
+    <div class="sec-head">
+      <p class="tag">The part I actually need</p>
       <h2>Tell me what's broken</h2>
-      <p class="lede">This is an early beta and it is being built by one person. Anything you noticed is worth sending — a bug, a thing that confused you, a subject that's missing, or a feature you expected to find.</p>
-
-      <form id="fb-form" style="margin-top:30px" novalidate>
-        <div class="field">
-          <label for="fb-msg">What happened, or what's missing?</label>
-          <textarea id="fb-msg" name="message" rows="5" required maxlength="4000"
-            placeholder="I tried to… and then…"></textarea>
-        </div>
-        <div class="field">
-          <label for="fb-email">Email <span class="opt">— optional, only so I can reply</span></label>
-          <input type="email" id="fb-email" name="email" maxlength="254" placeholder="you@example.com">
-        </div>
-        <div class="fb-foot">
-          <button class="btn btn-primary" type="submit" id="fb-send">Send it</button>
-          <span class="status" id="fb-status" role="status" aria-live="polite"></span>
-        </div>
-      </form>
-      <p class="priv">What gets sent: your message, your email if you typed one, which version you were on and your browser's user-agent string. Nothing from your notebooks, and nothing else.</p>
+      <p class="body">This is an early beta and it is being built by one person. Anything you noticed is worth sending — a bug, a thing that confused you, a subject that's missing, or a feature you expected to find.</p>
     </div>
+
+    <form id="fb-form" novalidate>
+      <div class="field-row">
+        <label for="fb-msg">What happened, or what's missing?</label>
+        <textarea id="fb-msg" name="message" rows="5" required maxlength="4000"
+          placeholder="I tried to… and then…"></textarea>
+      </div>
+      <div class="field-row">
+        <label for="fb-email">Email <span class="opt">— optional, only so I can reply</span></label>
+        <input type="email" id="fb-email" name="email" maxlength="254" placeholder="you@example.com">
+      </div>
+      <div class="fb-foot">
+        <button class="btn btn-primary" type="submit" id="fb-send">Send it</button>
+        <span class="status" id="fb-status" role="status" aria-live="polite"></span>
+      </div>
+    </form>
+    <p class="priv">What gets sent: your message, your email if you typed one, which version you were on and your browser's user-agent string. Nothing from your notebooks, and nothing else.</p>
   </div>
 </section>
 
