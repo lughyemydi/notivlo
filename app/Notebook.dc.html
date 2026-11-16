@@ -2784,8 +2784,20 @@ class Component extends DCLogic {
   state = (() => {
     const { slug, title, ch } = getUrlParams();
     const known = NOTEBOOKS[slug];
+    // A notebook this page has no built-in content for and whose link carries
+    // no title — one of the old example subjects still on a device from before
+    // the A level set, or any link that lost its &title — is still on the
+    // shelf under its own name. Ask the shelf before calling it untitled.
+    let shelfTitle = '';
+    if (!known && !title) {
+      try {
+        const shelf = JSON.parse(localStorage.getItem('folio_notebooks_v1'));
+        const hit = Array.isArray(shelf) && shelf.find(n => n && n.slug === slug);
+        if (hit && typeof hit.title === 'string') shelfTitle = cleanLine(hit.title, 80).trim();
+      } catch (e) {}
+    }
     const nb = known || {
-      title: title || 'Untitled Notebook',
+      title: title || shelfTitle || 'Untitled Notebook',
       subject: 'New notebook',
       activeIdx: 0,
       chapters: [{ title: 'Chapter 1', paragraphs: [''], notes: [] }],
