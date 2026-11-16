@@ -29,6 +29,7 @@
     studyMinutes: 'folio_study_minutes',
     chapterPrefix: 'folio_nb_state:',
     setup: 'folio_setup_v1',
+    session: 'folio_session',
   };
 
   // Injectable only for the node test, which has no localStorage. In the
@@ -89,10 +90,24 @@
   function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
   function today() { var n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
 
+  // --- whose guide this is ---------------------------------------------
+  // The app's own signed-in marker, read and never written. The guide's
+  // record is stamped with this address, because the record lives on the
+  // device and accounts do not: without the stamp, the first person to finish
+  // the guide on a device finished it for everyone who signs up there after.
+  function session() {
+    var s = readJson(KEYS.session, null);
+    return s && !Array.isArray(s) ? s : {};
+  }
+  function sessionEmail() { return String(session().email || '').trim().toLowerCase(); }
+  function sessionName() { return String(session().name || '').trim(); }
+
   // --- the guide's own state -------------------------------------------
   function blankState() {
     return {
       version: 1,
+      account: '',            // the address this record belongs to
+      goal: '',               // one of content.GOALS' ids, or '' when not said
       status: 'new',          // new | skipped | done
       step: 0,
       startedAt: null,
@@ -112,12 +127,19 @@
     var s = readJson(KEYS.setup, null);
     if (!s) return blankState();
     var blank = blankState();
+    // Somebody else's record. An unstamped one — written before records were
+    // stamped — is taken to be the current account's, which is what it was.
+    var owner = typeof s.account === 'string' ? s.account : '';
+    var me = sessionEmail();
+    if (owner && me && owner !== me) return blank;
     // Field by field, so a state written by an older or newer build — or by
     // hand — can never leave a missing array where the page expects one.
     return {
       version: 1,
+      account: owner,
+      goal: typeof s.goal === 'string' ? s.goal.slice(0, 40) : '',
       status: s.status === 'done' || s.status === 'skipped' ? s.status : 'new',
-      step: typeof s.step === 'number' && s.step >= 0 && s.step <= 4 ? s.step : 0,
+      step: typeof s.step === 'number' && s.step >= 0 && s.step <= 5 ? s.step : 0,
       startedAt: typeof s.startedAt === 'string' ? s.startedAt : null,
       finishedAt: typeof s.finishedAt === 'string' ? s.finishedAt : null,
       subjects: Array.isArray(s.subjects) ? s.subjects.filter(function (x) { return typeof x === 'string'; }) : [],
@@ -140,6 +162,8 @@
     if (!patch) return readState();
     var next = readState();
     for (var k in patch) if (Object.prototype.hasOwnProperty.call(patch, k)) next[k] = patch[k];
+    var me = sessionEmail();
+    if (me) next.account = me;
     writeJson(KEYS.setup, next);
     return next;
   }
@@ -302,6 +326,8 @@
     readState: readState,
     writeState: writeState,
     clearModule: clearModule,
+    sessionEmail: sessionEmail,
+    sessionName: sessionName,
     slugify: slugify,
     uniqueSlug: uniqueSlug,
     readNotebooks: readNotebooks,

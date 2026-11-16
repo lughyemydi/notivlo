@@ -99,6 +99,25 @@
     if (code === 'same_password' || msg.indexOf('should be different from the old') >= 0) {
       return 'That is already your password — pick a different one.';
     }
+    // Supabase rejects more than badly-formed addresses here: example.invalid
+    // and other undeliverable domains come back as email_address_invalid.
+    if (code === 'email_address_invalid') {
+      return 'That email address was not accepted. Check it, or try another.';
+    }
+    // With email confirmation on, a signup only succeeds if the message goes
+    // out, and Supabase's built-in sender refuses any address that is not on
+    // the project's team. Without these two branches both failures arrive as
+    // the generic fallback. See supabase/README.md -> "Why no email arrives".
+    if (code === 'email_address_not_authorized' || code.indexOf('error_sending') >= 0
+        || msg.indexOf('address not authorized') >= 0
+        || msg.indexOf('error sending') >= 0) {
+      return 'A confirmation email could not be sent to that address, so the account was not created.';
+    }
+    // Two an hour for the whole project with the built-in sender, counted
+    // across signups, resets and email changes together.
+    if (code === 'over_email_send_rate_limit' || msg.indexOf('email rate limit') >= 0) {
+      return 'This project has sent as many emails as it can this hour. Try again later.';
+    }
     if (error.status === 429 || code.indexOf('rate_limit') >= 0 || msg.indexOf('rate limit') >= 0) {
       return 'Too many attempts. Wait a minute and try again.';
     }

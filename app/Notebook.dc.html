@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file: blob: 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob:; font-src 'self' file: data:; connect-src 'self' file: data: blob: https://tftwbhkypzsrhwaxkgbr.supabase.co; worker-src 'none'; child-src 'none'; media-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="no-referrer">
-<!-- The landing page's live demo. Must stay the first script on the page: it
-     swaps localStorage for an in-memory one before anything below reads it.
-     Does nothing unless this page is framed by the demo host. -->
+<!-- The landing page's live demo. Must stay the first script on the page:
+     it swaps localStorage for an in-memory one before the guard below reads
+     it. Does nothing without ?demo=1. -->
 <script src="./demo.js"></script>
 <title>notivlo — Notebook</title>
 <script>
@@ -35,6 +35,7 @@
 <script src="./exam-session.js"></script>
 <script src="./support.js"></script>
 <script src="./quick.js" defer></script>
+<script src="./session.js" defer></script>
 <!-- The backend. Inert while supabase-config.js holds no project: with it
      empty every page below falls back to localStorage, which is how the app
      worked before there was a server. Order matters — each file depends on

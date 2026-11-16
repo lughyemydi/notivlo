@@ -170,8 +170,8 @@ class Component extends DCLogic {
   }
 
   go() {
-    // The setup guide, when it is on and this device has not already been
-    // through it. Everything else — the guide switched off, a second visit,
+    // The setup guide, when it is on and this account has no notebooks and
+    // has not already been through it. Everything else — the guide switched off, a second visit,
     // the file missing entirely — goes to Home, which is where this line
     // went before the guide existed.
     const offer = window.notivloSetup && window.notivloSetup.shouldOffer();

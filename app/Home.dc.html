@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file: blob: 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob:; font-src 'self' file: data:; connect-src 'self' file: data: blob: https://tftwbhkypzsrhwaxkgbr.supabase.co; worker-src 'none'; child-src 'none'; media-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="no-referrer">
-<!-- The landing page's live demo. Must stay the first script on the page: it
-     swaps localStorage for an in-memory one before anything below reads it.
-     Does nothing unless this page is framed by the demo host. -->
+<!-- The landing page's live demo. Must stay the first script on the page:
+     it swaps localStorage for an in-memory one before the guard below reads
+     it. Does nothing without ?demo=1. -->
 <script src="./demo.js"></script>
 <title>notivlo — Home</title>
 <script>
@@ -24,6 +24,7 @@
 <script src="./agenda-timegrid.js"></script>
 <script src="./support.js"></script>
 <script src="./quick.js" defer></script>
+<script src="./session.js" defer></script>
 <!-- The backend. Inert while supabase-config.js holds no project: with it
      empty every page below falls back to localStorage, which is how the app
      worked before there was a server. Order matters — each file depends on
@@ -41,6 +42,20 @@
 <script src="./setup/setup-store.js"></script>
 <script src="./setup/setup-content.js"></script>
 <script src="./setup/setup-service.js"></script>
+<script>
+  // An account with no notebooks that has neither finished nor skipped the
+  // guide is sent to it, whichever door it came in by — signing up, signing
+  // in after confirming an email, or reopening the app. Asked here, before
+  // the page boots, so the empty shelf is never drawn. The mark left on
+  // window is what stops readStore (below) writing the example notebooks in
+  // the moment between this line and the page actually leaving.
+  try {
+    if (window.notivloSetup && localStorage.getItem('folio_session') && window.notivloSetup.shouldOffer()) {
+      window.notivloLeavingForSetup = true;
+      location.replace('Setup.dc.html');
+    }
+  } catch (e) {}
+</script>
 </head>
 <body>
 <x-dc>
@@ -152,7 +167,7 @@
       <span class="nav-btn-label">New notebook</span>
     </button>
     <sc-if value="{{ guideVisible }}" hint-placeholder-val="{{ false }}">
-      <a href="Setup.dc.html?step=3" class="btn btn-ghost btn-icon glass-btn-ghost" aria-label="Setup guide" title="Setup guide" style="border-radius:50%;width:36px;height:36px;background:var(--color-surface)">
+      <a href="Setup.dc.html?step=4" class="btn btn-ghost btn-icon glass-btn-ghost" aria-label="Setup guide" title="Setup guide" style="border-radius:50%;width:36px;height:36px;background:var(--color-surface)">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
       </a>
     </sc-if>
@@ -175,9 +190,9 @@
     <div style="max-width:1180px;margin:var(--space-4) auto 0;padding:0 var(--space-6)">
       <div class="su-gs">
         <div class="su-gs-top">
-          <h2 class="su-gs-title">Getting started</h2>
+          <h2 class="su-gs-title">{{ gsTitle }}</h2>
           <span class="su-gs-count">{{ gsCount }}</span>
-          <a href="Setup.dc.html?step=3" class="su-gs-link">Open the guide →</a>
+          <a href="Setup.dc.html?step=4" class="su-gs-link">Open the guide →</a>
           <button type="button" class="btn btn-ghost btn-icon" onClick="{{ dismissGs }}" aria-label="Hide getting started" title="Hide getting started" style="flex:none;width:26px;height:26px;border-radius:50%;background:var(--color-surface)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
@@ -543,6 +558,9 @@ function readStore(key, seed) {
   let raw = null;
   try { raw = localStorage.getItem(key); } catch (e) { return seed; }
   if (raw == null) {
+    // On its way to the setup guide: the examples are not this reader's to
+    // be given yet. See the guard in <head>.
+    if (window.notivloLeavingForSetup) return Array.isArray(seed) ? [] : {};
     try { localStorage.setItem(key, JSON.stringify(seed)); } catch (e) {}
     return seed;
   }
@@ -658,11 +676,14 @@ function readPrefs() {
 function setupVals(hidden, onDismiss) {
   const setup = window.notivloSetup;
   if (!setup || hidden || !setup.showChecklist()) {
-    return { showGettingStarted: false, gsCount: '', gsItems: [], dismissGs: () => {} };
+    return { showGettingStarted: false, gsTitle: '', gsCount: '', gsItems: [], dismissGs: () => {} };
   }
   const list = setup.checklist();
   return {
     showGettingStarted: true,
+    // The goal named in the guide, when one was: the card is the same four
+    // things either way, but it says whose they are.
+    gsTitle: 'Getting started' + (setup.goal && setup.goal() ? ' \u00b7 ' + setup.goal().card : ''),
     gsCount: list.done + ' of ' + list.total + ' done',
     gsItems: list.items.map(item => ({
       label: item.label,

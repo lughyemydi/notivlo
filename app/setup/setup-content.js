@@ -8,9 +8,6 @@
 }(typeof window !== 'undefined' ? window : this, function () {
   'use strict';
 
-  // Tapped to add a notebook in one go. Grouped only so the list reads in a
-  // sensible order; the group name is never shown. Nothing here is required —
-  // the free-text field does the same job for anything not listed.
   // Subjects offered at international A level, named as the syllabuses name
   // them — "Mathematics" rather than "Maths", so a notebook made here matches
   // the subject line on a past paper and finds its lessons in lessons.js. The
@@ -27,6 +24,58 @@
     'Art & Design', 'Music', 'Drama', 'Media Studies',
     'Environmental Management', 'Marine Science', 'Physical Education',
     'Travel & Tourism', 'Thinking Skills',
+  ];
+
+  // Step 1: what the reader is here for. One answer, optional. Each goal has
+  // to earn its place by changing something the reader can see:
+  //   `does`      said under the cards the moment it is chosen
+  //   `subjects`  the line above the subject list in step 2
+  //   `technique` the study technique (by id, below) moved to the top of
+  //               the look round and marked as theirs
+  //   `start`     the "start here" on the last screen
+  //   `card`      the few words beside "Getting started" on the home page
+  // No goal is a promise. They are directions, not outcomes.
+  var GOALS = [
+    {
+      id: 'exams',
+      label: 'Prepare for my exams',
+      note: 'Revision that builds up to exam season',
+      does: 'The guide will lead with timed practice, and suggest which chapter to start revising.',
+      subjects: 'Tap the subjects you are sitting papers in. Each one becomes a notebook to revise from.',
+      technique: 'clock',
+      start: 'Pick the chapter you would least like to be asked about. Write what you remember of it, then answer questions on it against a timer.',
+      card: 'Preparing for exams',
+    },
+    {
+      id: 'keep-up',
+      label: 'Keep on top of my lessons',
+      note: 'Notes written up as the course goes',
+      does: 'The guide will lead with short, regular study blocks, so each lesson is written up while it is fresh.',
+      subjects: 'Tap the subjects you have lessons in. Each one becomes a notebook to write them up in.',
+      technique: 'blocks',
+      start: 'After your next lesson, write it up as a chapter the same day. Half an hour is enough.',
+      card: 'Keeping on top of lessons',
+    },
+    {
+      id: 'catch-up',
+      label: 'Catch up on what I missed',
+      note: 'Fill the gaps, one topic at a time',
+      does: 'The guide will lead with writing from memory, which is the quickest way to find where the gaps are.',
+      subjects: 'Tap the subjects you want to catch up in. Start with one or two; more can be added any time.',
+      technique: 'memory',
+      start: 'Make the topic you are least sure of your first chapter. Write what you do know, and the gaps become the list to work through.',
+      card: 'Catching up',
+    },
+    {
+      id: 'organised',
+      label: 'Get organised',
+      note: 'One place for notes and deadlines',
+      does: 'The guide will lead with keeping things where you can see them: notes beside the text, deadlines in the agenda.',
+      subjects: 'Tap everything you study. Each one becomes a notebook, so nothing lives in a loose file again.',
+      technique: 'visible',
+      start: 'Put this week\u2019s deadlines in the agenda and point each one at its notebook.',
+      card: 'Getting organised',
+    },
   ];
 
   // The categories Home's own "New notebook" form offers. Kept identical so a
@@ -107,22 +156,27 @@
   // teacher, no claim about what any of it is worth.
   var TECHNIQUES = [
     {
+      id: 'memory',
       title: 'Write it from memory first',
       body: 'Close the notebook and write down what you remember of a chapter. Then open it and fill the gaps in a different colour. The gaps are the revision list.',
     },
     {
+      id: 'spacing',
       title: 'Come back to it on a widening gap',
       body: 'A chapter read once fades. Revisit it the next day, then three days later, then a week later. Short visits, spaced out, beat one long one.',
     },
     {
+      id: 'blocks',
       title: 'Work in blocks you will actually finish',
       body: '30 to 45 minutes on one chapter, then a real break. Put the block in the agenda before the day starts, so the decision is already made.',
     },
     {
+      id: 'clock',
       title: 'Answer questions under the clock',
       body: 'Past questions with a timer tell you what reading cannot: whether you can produce the answer, in the time, without the book open.',
     },
     {
+      id: 'visible',
       title: 'Keep the hard things visible',
       body: 'A definition you keep forgetting belongs in a note on the chapter, not in your head. Anything you cannot explain out loud is not learned yet.',
     },
@@ -143,16 +197,32 @@
     // Step 0
     introKicker: 'First time here',
     introHeading: 'Shall we set it up together?',
-    introBody: 'Three short steps: your subjects, your week, and a look round the app. Nothing here is permanent — everything can be renamed, moved or deleted afterwards.',
+    introBody: 'Four short steps, about two minutes. You finish with your own notebooks on the shelf and your own week in the agenda. Nothing here is permanent — everything can be renamed, moved or deleted afterwards.',
+    // The four steps, said before they are asked for.
+    introPlan: [
+      { title: 'Your goal', note: 'What you are here to do' },
+      { title: 'Your subjects', note: 'Each one becomes a notebook' },
+      { title: 'Your week', note: 'When you can study, and what is due' },
+      { title: 'A look round', note: 'What is where, and how to use it' },
+    ],
     introGo: 'Set it up with me',
     introSkip: 'Skip — fill it with examples',
     introSkipNote: 'Skipping leaves the example A level notebooks and agenda in place, so there is something to poke at. Delete them whenever you like.',
+
+    // The goal
+    goalKicker: 'Your goal',
+    goalHeading: 'What are you here to do?',
+    goalBody: 'Pick the one closest to why you signed up. It shapes what the guide shows you first; it does not lock anything, and you can skip it.',
+    goalNone: 'Not sure? Skip this one — the guide works the same without it.',
 
     // Step 1
     step1Kicker: 'Your subjects',
     step1Heading: 'What are you studying?',
     step1Body: 'Tap the A level subjects you take, or type anything that is not listed. Each one becomes a notebook with its first chapter ready to write in \u2014 and the ones with lessons behind them will offer those too.',
-    step1Empty: 'No subjects yet — type one above, or tap one from the list below.',
+    step1Empty: 'Your notebooks will appear here as you pick subjects.',
+    shelfHeading: 'Your shelf',
+    lessonsTag: 'Lessons included',
+    plainTag: 'Blank, ready to write in',
     step1Skip: 'I will add them later',
 
     // Step 2
@@ -175,9 +245,12 @@
     doneHeading: 'That is everything',
     doneBody: 'Your notebooks and your week are waiting on the home page. The getting-started card there tracks the first few things worth doing, and it goes away once they are done.',
     doneGo: 'Take me in',
+    startHeading: 'A good place to start',
+    startFallback: 'Open one notebook and write what you covered most recently. A first chapter does not need to be tidy.',
   };
 
   return {
+    GOALS: GOALS,
     SUBJECTS: SUBJECTS,
     CATEGORIES: CATEGORIES,
     WEEKDAYS: WEEKDAYS,

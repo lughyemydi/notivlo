@@ -40,6 +40,9 @@
 <script src="./setup/setup-store.js"></script>
 <script src="./setup/setup-content.js"></script>
 <script src="./setup/setup-service.js"></script>
+<!-- Only asked one question: does this subject have lessons behind it. The
+     shelf preview in the subjects step says so before the notebook exists. -->
+<script src="./lessons.js"></script>
 </head>
 <body>
 <x-dc>
@@ -78,21 +81,33 @@
 
     <sc-if value="{{ showRail }}" hint-placeholder-val="{{ true }}">
       <div class="su-rail">
-        <sc-for list="{{ railPips }}" as="p" hint-placeholder-count="3">
+        <sc-for list="{{ railPips }}" as="p" hint-placeholder-count="4">
           <span class="su-pip {{ p.cls }}"></span>
         </sc-for>
         <span class="su-step-of">{{ stepOf }}</span>
+        <sc-if value="{{ canSkip }}" hint-placeholder-val="{{ true }}">
+          <button type="button" class="su-skip" onClick="{{ introSkip }}" title="{{ introSkipNote }}">Skip setup</button>
+        </sc-if>
       </div>
     </sc-if>
 
     <!-- Step 0 — the offer -->
     <sc-if value="{{ isStep0 }}" hint-placeholder-val="{{ false }}">
-      <div class="su-section">
+      <div class="su-section su-step">
         <div class="su-head">
           <div class="card-kicker">{{ introKicker }}</div>
-          <h1 class="su-h1">{{ introHeading }}</h1>
+          <h1 class="su-h1" tabindex="-1">{{ introHeading }}</h1>
         </div>
         <p class="su-body">{{ introBody }}</p>
+        <ol class="su-plan">
+          <sc-for list="{{ introPlan }}" as="ip" hint-placeholder-count="4">
+            <li class="su-plan-row">
+              <span class="su-plan-n" aria-hidden="true">{{ ip.n }}</span>
+              <span class="su-plan-title">{{ ip.title }}</span>
+              <span class="su-plan-note">{{ ip.note }}</span>
+            </li>
+          </sc-for>
+        </ol>
         <div class="su-foot" style="border-top:0;padding-top:var(--space-2)">
           <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ introGo }}" style="border-radius:999px;padding-inline:var(--space-6);background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .35)">{{ introGoLabel }}</button>
           <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ introSkip }}" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">{{ introSkipLabel }}</button>
@@ -102,45 +117,86 @@
       </div>
     </sc-if>
 
-    <!-- Step 1 — notebooks -->
-    <sc-if value="{{ isStep1 }}" hint-placeholder-val="{{ false }}">
-      <div class="su-section">
+    <!-- The goal -->
+    <sc-if value="{{ isGoal }}" hint-placeholder-val="{{ false }}">
+      <div class="su-section su-step">
+        <div class="su-head">
+          <div class="card-kicker">{{ goalKicker }}</div>
+          <h1 class="su-h1" tabindex="-1">{{ goalHeading }}</h1>
+          <p class="su-body">{{ goalBody }}</p>
+        </div>
+
+        <div class="su-goals" role="group" aria-label="Your goal">
+          <sc-for list="{{ goalCards }}" as="gc" hint-placeholder-count="4">
+            <button type="button" class="su-goal {{ gc.cls }}" onClick="{{ gc.pick }}" aria-pressed="{{ gc.pressed }}">
+              <span class="su-goal-mark" aria-hidden="true">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              </span>
+              <span class="su-goal-text">
+                <span class="su-goal-title">{{ gc.label }}</span>
+                <span class="su-goal-note">{{ gc.note }}</span>
+              </span>
+            </button>
+          </sc-for>
+        </div>
+
+        <p class="su-effect" aria-live="polite">{{ goalEffect }}</p>
+
+        <div class="su-foot">
+          <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ goalBack }}" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">Back</button>
+          <div class="su-foot-spacer"></div>
+          <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ goalNext }}" style="border-radius:999px;padding-inline:var(--space-6);background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .35)">{{ goalNextLabel }}</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- Subjects, each of which becomes a notebook -->
+    <sc-if value="{{ isSubjects }}" hint-placeholder-val="{{ false }}">
+      <div class="su-section su-step">
         <div class="su-head">
           <div class="card-kicker">{{ s1Kicker }}</div>
-          <h1 class="su-h1">{{ s1Heading }}</h1>
+          <h1 class="su-h1" tabindex="-1">{{ s1Heading }}</h1>
           <p class="su-body">{{ s1Body }}</p>
         </div>
 
-        <sc-if value="{{ hasPicked }}" hint-placeholder-val="{{ true }}">
-          <div class="su-picked">
-            <sc-for list="{{ picked }}" as="pk" hint-placeholder-count="3">
-              <span class="su-pick">
-                <span>{{ pk.label }}</span>
+        <div class="su-build">
+          <div class="su-col">
+            <div class="su-row">
+              <div class="field su-grow">
+                <label for="su-own">Search, or type your own</label>
+                <input id="su-own" class="input" placeholder="e.g. Physics, or Classical Civilisation" maxlength="80" autocomplete="off" value="{{ typed }}" onChange="{{ onTyped }}" onKeyDown="{{ onTypedKey }}" style="border-radius:14px;background:var(--color-surface)"/>
+              </div>
+              <sc-if value="{{ canAddTyped }}" hint-placeholder-val="{{ false }}">
+                <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ addTyped }}" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">{{ addTypedLabel }}</button>
+              </sc-if>
+            </div>
+            <div class="su-chips">
+              <sc-for list="{{ subjectChips }}" as="sc" hint-placeholder-count="12">
+                <button type="button" class="su-chip {{ sc.cls }}" onClick="{{ sc.toggle }}" aria-pressed="{{ sc.pressed }}">{{ sc.label }}</button>
+              </sc-for>
+            </div>
+            <sc-if value="{{ noChipMatch }}" hint-placeholder-val="{{ false }}">
+              <p class="su-hint">{{ noChipMatchText }}</p>
+            </sc-if>
+          </div>
+
+          <div class="su-col su-shelf" aria-live="polite">
+            <div class="su-col-head">{{ shelfHeading }}</div>
+            <sc-for list="{{ picked }}" as="pk" hint-placeholder-count="2">
+              <div class="su-nb">
+                <span class="su-nb-spine" aria-hidden="true"></span>
+                <span class="su-nb-main">
+                  <span class="su-nb-title">{{ pk.label }}</span>
+                  <span class="su-nb-sub">{{ pk.sub }}</span>
+                </span>
                 <button type="button" class="su-pick-x" onClick="{{ pk.remove }}" aria-label="{{ pk.removeLabel }}" title="{{ pk.removeLabel }}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
-              </span>
+              </div>
             </sc-for>
-          </div>
-        </sc-if>
-        <sc-if value="{{ noPicked }}" hint-placeholder-val="{{ false }}">
-          <p class="su-empty">{{ s1Empty }}</p>
-        </sc-if>
-
-        <div class="su-row">
-          <div class="field su-grow">
-            <label for="su-own">Add your own</label>
-            <input id="su-own" class="input" placeholder="e.g. Classical Civilisation" maxlength="80" value="{{ typed }}" onChange="{{ onTyped }}" onKeyDown="{{ onTypedKey }}" style="border-radius:14px;background:var(--color-surface)"/>
-          </div>
-          <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ addTyped }}" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">Add</button>
-        </div>
-
-        <div class="su-section">
-          <div class="su-col-head">Or tap a subject</div>
-          <div class="su-chips">
-            <sc-for list="{{ subjectChips }}" as="sc" hint-placeholder-count="12">
-              <button type="button" class="su-chip {{ sc.cls }}" onClick="{{ sc.toggle }}" aria-pressed="{{ sc.pressed }}">{{ sc.label }}</button>
-            </sc-for>
+            <sc-if value="{{ noPicked }}" hint-placeholder-val="{{ false }}">
+              <p class="su-empty">{{ s1Empty }}</p>
+            </sc-if>
           </div>
         </div>
 
@@ -154,11 +210,11 @@
     </sc-if>
 
     <!-- Step 2 — the week -->
-    <sc-if value="{{ isStep2 }}" hint-placeholder-val="{{ false }}">
-      <div class="su-section">
+    <sc-if value="{{ isWeek }}" hint-placeholder-val="{{ false }}">
+      <div class="su-section su-step">
         <div class="su-head">
           <div class="card-kicker">{{ s2Kicker }}</div>
-          <h1 class="su-h1">{{ s2Heading }}</h1>
+          <h1 class="su-h1" tabindex="-1">{{ s2Heading }}</h1>
           <p class="su-body">{{ s2Body }}</p>
         </div>
 
@@ -259,11 +315,11 @@
     </sc-if>
 
     <!-- Step 3 — how it works, and what to do with it -->
-    <sc-if value="{{ isStep3 }}" hint-placeholder-val="{{ false }}">
-      <div class="su-section">
+    <sc-if value="{{ isLook }}" hint-placeholder-val="{{ false }}">
+      <div class="su-section su-step">
         <div class="su-head">
           <div class="card-kicker">{{ s3Kicker }}</div>
-          <h1 class="su-h1">{{ s3Heading }}</h1>
+          <h1 class="su-h1" tabindex="-1">{{ s3Heading }}</h1>
           <p class="su-body">{{ s3Body }}</p>
         </div>
 
@@ -283,7 +339,10 @@
           <div class="su-col">
             <div class="su-col-head">Studying</div>
             <sc-for list="{{ techniques }}" as="tq" hint-placeholder-count="5">
-              <div class="su-tile">
+              <div class="su-tile {{ tq.cls }}">
+                <sc-if value="{{ tq.lead }}" hint-placeholder-val="{{ false }}">
+                  <span class="su-tile-flag">{{ tq.flag }}</span>
+                </sc-if>
                 <h2 class="su-tile-title">{{ tq.title }}</h2>
                 <p class="su-tile-body">{{ tq.body }}</p>
               </div>
@@ -302,11 +361,11 @@
     </sc-if>
 
     <!-- Step 4 — what just happened -->
-    <sc-if value="{{ isStep4 }}" hint-placeholder-val="{{ false }}">
-      <div class="su-section">
+    <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+      <div class="su-section su-step">
         <div class="su-head">
           <div class="card-kicker">{{ doneKicker }}</div>
-          <h1 class="su-h1">{{ doneHeading }}</h1>
+          <h1 class="su-h1" tabindex="-1">{{ doneHeading }}</h1>
           <p class="su-body">{{ doneBody }}</p>
         </div>
 
@@ -319,11 +378,20 @@
           </sc-for>
         </div>
 
+        <div class="su-tile su-tile-lead">
+          <span class="su-tile-flag">{{ startFlag }}</span>
+          <h2 class="su-tile-title">{{ startHeading }}</h2>
+          <p class="su-tile-body">{{ startBody }}</p>
+        </div>
+
         <p class="su-hint">{{ doneNote }}</p>
 
         <div class="su-foot">
           <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ doneBack }}" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">Back</button>
           <div class="su-foot-spacer"></div>
+          <sc-if value="{{ hasFirstBook }}" hint-placeholder-val="{{ false }}">
+            <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ openFirstBook }}" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">{{ openFirstBookLabel }}</button>
+          </sc-if>
           <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ finish }}" style="border-radius:999px;padding-inline:var(--space-6);background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .35)">{{ doneGo }}</button>
         </div>
       </div>
@@ -338,7 +406,9 @@ const SETUP = window.notivloSetup;
 const COPY = SETUP.content.COPY;
 const STORE = SETUP.store;
 
-// ?step=3 is how the guide button in the top bar reopens this at the part
+const STEPS = SETUP.STEPS;
+
+// ?step=4 is how the guide button in the top bar reopens this at the part
 // worth re-reading. Clamped, so a hand-typed number cannot land the page on
 // a step that does not exist.
 function urlStep() {
@@ -360,11 +430,23 @@ class Component extends DCLogic {
     // Someone who has already finished and come back for the tour lands on
     // step 3 and is shown the way out rather than being walked through
     // creation a second time.
-    const reviewing = saved.status !== 'new';
-    const step = asked != null ? asked : (reviewing ? 3 : saved.step);
+    //
+    // So does an account the guide was never for: one with notebooks already
+    // on its shelf that opened this from Home's guide button. It has nothing
+    // to set up, and walking it back into the week step would write a second
+    // plan over the one it has.
+    const reviewing = saved.status !== 'new' || (!saved.applied && !SETUP.shouldOffer());
+    let step = asked != null ? asked : saved.step;
+    // A reader looking round only ever sees the look-round. And once the
+    // notebooks exist the earlier steps are closed, however the page was
+    // reached: their answers have been used, and changing them would do
+    // nothing.
+    if (reviewing) step = STEPS.LOOK;
+    else if (saved.applied && step < STEPS.LOOK) step = STEPS.LOOK;
     return {
       step,
       reviewing,
+      goal: saved.goal,
       subjects: saved.subjects,
       days: saved.days,
       slot: saved.slot,
@@ -384,19 +466,54 @@ class Component extends DCLogic {
   componentDidMount() {
     // Theme and text size were chosen on the page before this one, on a brand
     // new account, so there is usually something waiting to go up.
-    if (window.notivloSync && window.notivloSync.enabled()) window.notivloSync.sync();
+    if (!window.notivloSync || !window.notivloSync.enabled()) return;
+    window.notivloSync.sync().then((res) => {
+      // The account turned out to have notebooks after all — made on another
+      // device, and only now come down. The guide is for an empty shelf, so
+      // it gets out of the way rather than adding to a full one.
+      if (res && res.pulled && !SETUP.state().applied && !SETUP.shouldOffer() && !this.state.reviewing) {
+        window.location.replace('Home.dc.html');
+      }
+    });
   }
 
   // --- navigation -------------------------------------------------------
   go(step) {
     SETUP.goTo(step);
     this.setState({ step });
+    this.arrive();
+  }
+
+  // A new step is a new page as far as anyone not looking at it can tell:
+  // back to the top, and focus on its heading so a screen reader says where
+  // it is and Tab starts from the right place.
+  arrive() {
     try { window.scrollTo(0, 0); } catch (e) {}
+    setTimeout(() => {
+      try {
+        const h = document.querySelector('.su-step .su-h1');
+        if (h) h.focus({ preventScroll: true });
+      } catch (e) {}
+    }, 60);
   }
 
   begin() {
     SETUP.begin();
-    this.setState({ step: 1 });
+    this.setState({ step: STEPS.GOAL });
+    this.arrive();
+  }
+
+  pickGoal(id) {
+    SETUP.setGoal(this.state.goal === id ? '' : id);
+    this.setState({ goal: SETUP.state().goal });
+  }
+
+  openFirstBook() {
+    const nb = SETUP.firstNotebook();
+    SETUP.complete();
+    window.location.href = nb
+      ? 'Notebook.dc.html?nb=' + nb.slug + '&title=' + encodeURIComponent(nb.title)
+      : 'Home.dc.html';
   }
 
   skipAll() {
@@ -424,10 +541,27 @@ class Component extends DCLogic {
       : this.state.subjects.concat([name]));
   }
 
-  addTyped() {
+  // What the field would add, which is also what its button says. A listed
+  // subject is added under its listed name — "phys" and Enter makes the
+  // notebook "Physics", the one that finds its lessons — and the best match
+  // is one that starts with what was typed. Only something matching nothing
+  // on the list is taken as written.
+  typedSubject() {
     const t = this.state.typed.trim();
+    if (!t) return '';
+    const q = t.toLowerCase();
+    const all = SETUP.content.SUBJECTS;
+    return all.filter(n => n.toLowerCase() === q)[0]
+      || all.filter(n => n.toLowerCase().indexOf(q) === 0)[0]
+      || all.filter(n => n.toLowerCase().indexOf(q) !== -1)[0]
+      || t;
+  }
+
+  addTyped() {
+    const t = this.typedSubject();
     if (!t) return;
-    this.commitSubjects(this.state.subjects.concat([t]));
+    const has = this.state.subjects.some(x => x.toLowerCase() === t.toLowerCase());
+    if (!has) this.commitSubjects(this.state.subjects.concat([t]));
     this.setState({ typed: '' });
   }
 
@@ -464,9 +598,11 @@ class Component extends DCLogic {
 
   createIt() {
     const created = SETUP.apply();
-    this.setState({ created, applied: true, step: 3 });
-    SETUP.goTo(3);
-    try { window.scrollTo(0, 0); } catch (e) {}
+    // Read back: nothing chosen means nothing written, and then the way back
+    // to the earlier steps stays open.
+    this.setState({ created, applied: SETUP.state().applied, step: STEPS.LOOK });
+    SETUP.goTo(STEPS.LOOK);
+    this.arrive();
   }
 
   renderVals() {
@@ -475,7 +611,23 @@ class Component extends DCLogic {
     const pv = SETUP.preview();
     const lower = s.subjects.map(x => x.toLowerCase());
 
-    const railPips = [1, 2, 3].map(n => ({
+    const goal = SETUP.goal();
+    const name = (STORE.sessionName() || '').split(/\s+/)[0];
+    const query = s.typed.trim().toLowerCase();
+    const shownSubjects = query
+      ? C.SUBJECTS.filter(n => n.toLowerCase().indexOf(query) !== -1)
+      : C.SUBJECTS;
+    const toAdd = this.typedSubject();
+    const toAddIsNew = !!toAdd && lower.indexOf(toAdd.toLowerCase()) === -1;
+    const hasLessons = (title) => {
+      try {
+        return !!(window.notivloLessons &&
+          window.notivloLessons.forNotebook(STORE.slugify(title), title).length);
+      } catch (e) { return false; }
+    };
+    const firstBook = s.step === STEPS.DONE ? SETUP.firstNotebook() : null;
+
+    const railPips = [1, 2, 3, 4].map(n => ({
       cls: n < s.step ? 'su-pip-on' : n === s.step ? 'su-pip-now' : '',
     }));
 
@@ -487,18 +639,40 @@ class Component extends DCLogic {
 
     return {
       // --- frame
-      showRail: !s.reviewing && s.step >= 1 && s.step <= 3,
+      showRail: !s.reviewing && s.step >= STEPS.GOAL && s.step <= STEPS.LOOK,
       railPips,
-      stepOf: 'Step ' + Math.min(3, Math.max(1, s.step)) + ' of 3',
-      isStep0: s.step === 0,
-      isStep1: s.step === 1,
-      isStep2: s.step === 2,
-      isStep3: s.step === 3,
-      isStep4: s.step === 4,
+      stepOf: 'Step ' + Math.min(4, Math.max(1, s.step)) + ' of 4',
+      // Until something has been made, leaving is always one tap away. After
+      // that there is nothing left to skip — only a tour to read or not.
+      canSkip: !s.applied,
+      isStep0: s.step === STEPS.INTRO,
+      isGoal: s.step === STEPS.GOAL,
+      isSubjects: s.step === STEPS.SUBJECTS,
+      isWeek: s.step === STEPS.WEEK,
+      isLook: s.step === STEPS.LOOK,
+      isDone: s.step === STEPS.DONE,
 
-      // --- step 0
+      // --- the offer
       introKicker: COPY.introKicker,
-      introHeading: COPY.introHeading,
+      introHeading: name ? 'Welcome, ' + name + '. ' + COPY.introHeading : COPY.introHeading,
+      introPlan: COPY.introPlan.map((p, i) => ({ n: i + 1, title: p.title, note: p.note })),
+
+      // --- the goal
+      goalKicker: COPY.goalKicker,
+      goalHeading: COPY.goalHeading,
+      goalBody: COPY.goalBody,
+      goalCards: C.GOALS.map(g => ({
+        label: g.label,
+        note: g.note,
+        cls: s.goal === g.id ? 'su-goal-on' : '',
+        pressed: s.goal === g.id,
+        pick: () => this.pickGoal(g.id),
+      })),
+      goalEffect: goal ? goal.does : COPY.goalNone,
+      goalNextLabel: goal ? 'Next' : 'Skip for now',
+      goalBack: () => this.go(STEPS.INTRO),
+      goalNext: () => this.go(STEPS.SUBJECTS),
+
       introBody: COPY.introBody,
       introGoLabel: COPY.introGo,
       introSkipLabel: COPY.introSkip,
@@ -509,20 +683,27 @@ class Component extends DCLogic {
       // --- step 1
       s1Kicker: COPY.step1Kicker,
       s1Heading: COPY.step1Heading,
-      s1Body: COPY.step1Body,
+      s1Body: goal ? goal.subjects : COPY.step1Body,
       s1Empty: COPY.step1Empty,
-      hasPicked: s.subjects.length > 0,
+      shelfHeading: COPY.shelfHeading + (s.subjects.length ? ' \u00b7 ' + s.subjects.length : ''),
       noPicked: s.subjects.length === 0,
       picked: s.subjects.map(name => ({
         label: name,
+        sub: hasLessons(name) ? COPY.lessonsTag : COPY.plainTag,
         removeLabel: 'Remove ' + name,
         remove: () => this.toggleSubject(name),
       })),
+      canAddTyped: toAddIsNew,
+      addTypedLabel: 'Add \u201c' + toAdd + '\u201d',
+      noChipMatch: !!query && shownSubjects.length === 0,
+      noChipMatchText: toAddIsNew
+        ? 'Not on the list, which is fine. Press Enter to add it as your own.'
+        : 'Already on your shelf.',
       typed: s.typed,
       onTyped: (e) => this.setState({ typed: e.target.value }),
       onTypedKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addTyped(); } },
       addTyped: () => this.addTyped(),
-      subjectChips: C.SUBJECTS.map(name => {
+      subjectChips: shownSubjects.map(name => {
         const on = lower.indexOf(name.toLowerCase()) !== -1;
         return {
           label: name,
@@ -535,8 +716,8 @@ class Component extends DCLogic {
         ? plural(s.subjects.length, 'notebook', 'notebooks') + ' to make'
         : 'You can add them any time',
       s1NextLabel: s.subjects.length ? 'Next' : 'Skip for now',
-      s1Back: () => this.go(0),
-      s1Next: () => this.go(2),
+      s1Back: () => this.go(STEPS.GOAL),
+      s1Next: () => this.go(STEPS.WEEK),
 
       // --- step 2
       s2Kicker: COPY.step2Kicker,
@@ -599,7 +780,7 @@ class Component extends DCLogic {
         ? 'Written into the next ' + pv.weeks + ' weeks'
         : 'Nothing to write yet',
       s2NextLabel: (pv.notebooks + pv.total) ? 'Create it' : 'Skip for now',
-      s2Back: () => this.go(1),
+      s2Back: () => this.go(STEPS.SUBJECTS),
       s2Next: () => this.createIt(),
 
       // --- step 3
@@ -613,11 +794,18 @@ class Component extends DCLogic {
         href: t.href || 'Home.dc.html',
         cta: t.cta || '',
       })),
-      techniques: C.TECHNIQUES.map(t => ({ title: t.title, body: t.body })),
-      s3ShowBack: !s.reviewing,
-      s3Back: () => this.go(2),
+      techniques: SETUP.techniques().map(t => ({
+        title: t.title,
+        body: t.body,
+        lead: t.lead,
+        cls: t.lead ? 'su-tile-lead' : '',
+        flag: 'For your goal',
+      })),
+      // Once the notebooks exist there is no going back to un-make them.
+      s3ShowBack: !s.reviewing && !s.applied,
+      s3Back: () => this.go(STEPS.WEEK),
       s3NextLabel: s.reviewing ? 'Back to home' : 'Nearly done',
-      s3Next: () => (s.reviewing ? (window.location.href = 'Home.dc.html') : this.go(4)),
+      s3Next: () => (s.reviewing ? (window.location.href = 'Home.dc.html') : this.go(STEPS.DONE)),
 
       // --- step 4
       doneKicker: COPY.doneKicker,
@@ -631,7 +819,13 @@ class Component extends DCLogic {
       doneNote: s.created.notebooks || s.created.blocks
         ? 'Everything here is an ordinary notebook and ordinary agenda entry. Rename, move or delete any of it.'
         : 'Nothing was created, which is fine — the home page has a New notebook button and the agenda has an Add button.',
-      doneBack: () => this.go(3),
+      startFlag: goal ? goal.label : 'Start here',
+      startHeading: COPY.startHeading,
+      startBody: goal ? goal.start : COPY.startFallback,
+      hasFirstBook: !!firstBook,
+      openFirstBookLabel: firstBook ? 'Open ' + firstBook.title : '',
+      openFirstBook: () => this.openFirstBook(),
+      doneBack: () => this.go(STEPS.LOOK),
       doneGo: COPY.doneGo,
       finish: () => this.finish(),
     };

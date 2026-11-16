@@ -111,6 +111,16 @@
       { label: 'New notebook', hint: 'Start a subject', href: 'Home.dc.html?new=1', kind: 'Do', keys: 'create add subject' },
       { label: 'Add a deadline or event', hint: 'Agenda', href: 'Planner.dc.html?add=1', kind: 'Do', keys: 'create new task class exam study assignment' },
     ];
+    // Sessions live in session.js; the palette only offers the way in.
+    if (window.notivloSession) {
+      var running = window.notivloSession.current();
+      out.act.unshift({
+        label: running ? 'End the study session' : 'Start a study session',
+        hint: running ? (running.intent || running.nbTitle || 'Running now') : 'A timer that follows you',
+        kind: 'Do', keys: 'focus timer pomodoro session study block stop finish wrap',
+        run: function () { window.notivloSession.open(); },
+      });
+    }
     if (theme && window.saveTheme) {
       var to = theme === 'dark' ? 'light' : 'dark';
       out.act.push({

@@ -25,6 +25,10 @@
   padding: var(--space-8);
   display: flex;
   flex-direction: column;
+  /* Said out loud because soft-clay.css has a .su-card of its own — the sign
+   * up page's — whose align-items: start reaches this one too, and shrinks
+   * every step to the width of its text and the rail's pips to nothing. */
+  align-items: stretch;
   gap: var(--space-6);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -63,7 +67,7 @@
 .su-rule { height: 1px; background: var(--color-border); border: 0; margin: 0; }
 
 /* --- the step rail -------------------------------------------------- */
-.su-rail { display: flex; align-items: center; gap: var(--space-2); }
+.su-rail { display: flex; align-items: center; gap: var(--space-2); margin-bottom: 0; }
 .su-pip {
   height: 5px;
   flex: 1;
@@ -79,6 +83,116 @@
   color: var(--color-neutral-500);
   white-space: nowrap;
 }
+
+/* Quiet on purpose: it is the way out, not a second call to action. */
+.su-skip {
+  margin-left: var(--space-2);
+  padding: 4px 2px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--color-neutral-600);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.su-skip:hover { color: var(--color-text); }
+
+/* Each step arrives rather than appearing. The heading takes focus when it
+ * does, for a screen reader's sake, and is not a control — so no ring. */
+.su-step { animation: su-arrive .22s ease both; }
+@keyframes su-arrive { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.su-h1:focus { outline: none; }
+
+/* --- the offer: the four steps, said before they are asked for ------ */
+.su-plan { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; max-width: 560px; }
+.su-plan-row {
+  display: grid;
+  grid-template-columns: 28px minmax(120px, 160px) 1fr;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-border);
+  font-size: 14px;
+}
+.su-plan-row:last-child { border-bottom: 1px solid var(--color-border); }
+.su-plan-n { font-variant-numeric: tabular-nums; color: var(--color-neutral-500); font-size: 12px; }
+.su-plan-title { font-weight: 600; }
+.su-plan-note { color: var(--color-neutral-600); font-size: 13px; }
+
+/* --- the goal -------------------------------------------------------- */
+.su-goals { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.su-goal {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  font: inherit;
+  text-align: left;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 18px;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, transform .1s ease;
+}
+.su-goal:hover { border-color: var(--color-accent-700); }
+.su-goal:active { transform: scale(.99); }
+.su-goal-on { border-color: var(--color-primary); background: var(--color-bg); }
+.su-goal-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-neutral-500);
+  color: var(--color-surface);
+}
+.su-goal-mark svg { opacity: 0; }
+.su-goal-on .su-goal-mark { background: var(--color-primary); border-color: var(--color-primary); }
+.su-goal-on .su-goal-mark svg { opacity: 1; }
+.su-goal-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.su-goal-title { font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-size: 16px; line-height: 1.25; }
+.su-goal-note { font-size: 13px; line-height: 1.45; color: var(--color-neutral-600); }
+/* What the choice changes, said the moment it is made. The height is held
+ * so the footer does not jump as the sentence changes length. */
+.su-effect { margin: 0; min-height: 2.9em; font-size: 13px; line-height: 1.45; color: var(--color-neutral-700); max-width: 68ch; }
+
+/* --- subjects: the picker beside the shelf it is filling ------------ */
+/* .su-nb, not .su-book: soft-clay.css already has one of those, for the
+ * sign up page's miniature, and it hides the third one on a phone. */
+.su-build { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-6); align-items: start; }
+.su-shelf {
+  position: sticky;
+  top: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  max-height: calc(100vh - 2 * var(--space-4));
+  overflow-y: auto;
+}
+.su-shelf .su-empty { background: transparent; }
+.su-nb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2) var(--space-2) 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  animation: su-arrive .18s ease both;
+}
+.su-nb-spine { align-self: stretch; flex: none; width: 6px; margin: calc(-1 * var(--space-2)) 0; background: var(--color-primary); }
+.su-nb-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.su-nb-title { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.su-nb-sub { font-size: 12px; color: var(--color-neutral-600); }
 
 /* --- chips (subjects, days) ----------------------------------------- */
 .su-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
@@ -219,6 +333,15 @@
   font-size: 15px;
   margin: 0;
 }
+/* The one that is theirs: the technique for their goal, the place to start. */
+.su-tile-lead { border-color: var(--color-primary); }
+.su-tile-flag {
+  align-self: flex-start;
+  font-size: 11px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
 .su-tile-body { margin: 0; font-size: 13px; line-height: 1.55; color: var(--color-neutral-700); }
 .su-tile-link {
   align-self: flex-start;
@@ -331,6 +454,11 @@
   .su-card { padding: var(--space-6); border-radius: 22px; }
   .su-h1 { font-size: 24px; }
   .su-cols { grid-template-columns: 1fr; }
+  .su-goals { grid-template-columns: 1fr; }
+  .su-build { grid-template-columns: 1fr; }
+  .su-shelf { position: static; max-height: none; }
+  .su-plan-row { grid-template-columns: 24px 1fr; }
+  .su-plan-note { grid-column: 2; }
   .su-narrow { flex: 1 1 140px; }
   /* The footer's buttons go full width and stack, so the primary action is
    * never a thumb-width target wedged against a secondary one. */
@@ -354,6 +482,8 @@
 }
 
 /* --- accessibility -------------------------------------------------- */
+.su-goal:focus-visible,
+.su-skip:focus-visible,
 .su-chip:focus-visible,
 .su-pick-x:focus-visible,
 .su-gs-item:focus-visible {
@@ -361,6 +491,8 @@
   outline-offset: 2px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .su-chip { transition: none; }
+  .su-chip, .su-goal { transition: none; }
+  .su-step, .su-nb { animation: none; }
+  .su-goal:active { transform: none; }
   .su-chip:active { transform: none; }
 }

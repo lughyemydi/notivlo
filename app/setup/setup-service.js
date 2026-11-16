@@ -1,5 +1,5 @@
-// The guide's single door. Setup.dc.html, Home.dc.html and Welcome.dc.html
-// talk to this and nothing else — no page reads a storage key or builds a
+// The guide's single door. Setup.dc.html, Home.dc.html, Welcome.dc.html and
+// SignUp.dc.html talk to this and nothing else — no page reads a storage key or builds a
 // record of its own, so the shapes the app depends on are all written in one
 // place (setup-store.js) and decided in one place (here).
 (function (root, factory) {
@@ -12,7 +12,11 @@
 }(typeof window !== 'undefined' ? window : this, function (store, content) {
   'use strict';
 
-  var LAST_STEP = 4;
+  // The steps, by name, so no page counts on its fingers. The rail shows the
+  // four in the middle; the offer before them and the summary after are not
+  // steps the reader is asked to do anything in.
+  var STEPS = { INTRO: 0, GOAL: 1, SUBJECTS: 2, WEEK: 3, LOOK: 4, DONE: 5 };
+  var LAST_STEP = STEPS.DONE;
 
   function flagOn() {
     try {
@@ -24,15 +28,24 @@
   // --- reading ----------------------------------------------------------
   function state() { return store.readState(); }
 
-  // Welcome asks this to decide where Continue goes. 'new' means the guide
-  // has never been finished or skipped on this device; an account that was
-  // using notivlo before the guide existed has app data already and is left
-  // alone.
+  // Welcome, Sign in and Home all ask this to decide where a signed-in
+  // reader goes. The answer is yes for an account that has neither finished
+  // nor skipped the guide AND has no notebooks: the second half is what
+  // leaves alone an account that was using notivlo before the guide existed,
+  // or one whose notebooks have just come down from another device.
   function shouldOffer() {
     if (!flagOn()) return false;
     var s = store.readState();
     if (s.status !== 'new') return false;
-    return true;
+    return store.readNotebooks().length === 0;
+  }
+
+  // Sign up calls this the moment an account is created. A new account has
+  // by definition not been through the guide, whatever the last person to
+  // use this device did.
+  function startFresh() {
+    if (!flagOn()) return;
+    store.clearModule();
   }
 
   function isDone() {
@@ -52,6 +65,46 @@
   function goTo(step) {
     var n = Math.max(0, Math.min(LAST_STEP, Number(step) || 0));
     return store.writeState({ step: n });
+  }
+
+  function goalById(id) {
+    var found = null;
+    content.GOALS.forEach(function (g) { if (g.id === id) found = g; });
+    return found;
+  }
+
+  // '' is an answer too: the question is optional, and tapping the chosen
+  // goal again takes it back.
+  function setGoal(id) {
+    return store.writeState({ goal: goalById(id) ? id : '' });
+  }
+
+  // The chosen goal's entry from content.GOALS, or null.
+  function goal() { return goalById(store.readState().goal); }
+
+  // The study techniques with the one that suits the goal moved to the
+  // front and marked. Nothing is added or removed, only reordered.
+  function techniques() {
+    var g = goal();
+    var list = content.TECHNIQUES.map(function (t) {
+      return { id: t.id, title: t.title, body: t.body, lead: !!(g && g.technique === t.id) };
+    });
+    return list.filter(function (t) { return t.lead; })
+      .concat(list.filter(function (t) { return !t.lead; }));
+  }
+
+  // The first notebook the guide made, for the "open it" button on the last
+  // screen. Looked up on the shelf rather than remembered, so a notebook
+  // deleted in the meantime is not offered.
+  function firstNotebook() {
+    var s = store.readState();
+    if (!s.applied || !s.subjects.length) return null;
+    var want = s.subjects[0].toLowerCase();
+    var found = null;
+    store.readNotebooks().forEach(function (nb) {
+      if (!found && nb && nb.userCreated && String(nb.title || '').toLowerCase() === want) found = nb;
+    });
+    return found;
   }
 
   function setSubjects(list) {
@@ -208,14 +261,17 @@
     };
   }
 
-  // Writes the notebooks and the agenda. Runs once: coming back to step 2 and
-  // going forward again must not double everything, so the state carries a
-  // flag and this returns the counts it recorded the first time.
+  // Writes the notebooks and the agenda. Writes once: coming back to the week
+  // step and going forward again must not double everything, so the state
+  // carries a flag and this returns the counts it recorded the first time.
   function apply() {
     var s = store.readState();
     if (s.applied) return s.created;
 
-    var made = store.addNotebooks(s.subjects, 'School');
+    // Nothing chosen means the stores are not touched at all — not even
+    // claimed — so "Skip setup" from here still leaves the examples it
+    // promises.
+    var made = s.subjects.length ? store.addNotebooks(s.subjects, 'School') : [];
     var entries = planEntries({
       todayIso: store.toIso(store.today()),
       days: s.days,
@@ -225,7 +281,7 @@
       fixed: s.fixed,
       due: s.due,
     });
-    var written = store.addAgenda(entries);
+    var written = entries.length ? store.addAgenda(entries) : [];
 
     var tally = function (kind) {
       // Matched on the draft list, not the written one: addAgenda drops the
@@ -239,12 +295,22 @@
       classes: written.length ? tally('class') : 0,
       deadlines: written.length ? tally('deadline') : 0,
     };
-    store.writeState({ applied: true, created: created });
+    // Only something actually written closes the door behind it. Someone who
+    // skipped both steps — or whose write failed — has made nothing, and must
+    // still be able to go back and pick subjects after all.
+    var wrote = made.length > 0 || written.length > 0;
+    if (wrote) {
+      // Claimed now, not at the end: someone who closes the app on the tour
+      // comes back to Home with their notebooks, and a store still absent
+      // then would be filled with the examples alongside them.
+      store.claimStores();
+    }
+    store.writeState({ applied: wrote, created: created });
     return created;
   }
 
-  // Finishing, either way. Both claim the three stores the app would
-  // otherwise seed with examples — except a skip, which is a reader asking
+  // Finishing. Completing claims the three stores the app would otherwise
+  // seed with examples; skipping does not, because a skip is a reader asking
   // for the examples.
   function complete() {
     store.claimStores();
@@ -289,7 +355,9 @@
   function showChecklist() {
     if (!flagOn()) return false;
     var s = store.readState();
-    if (s.status === 'new') return false;
+    // Someone who made their notebooks and then closed the tab before the
+    // last screen has met the guide as surely as someone who finished it.
+    if (s.status === 'new' && !s.applied) return false;
     if (s.checklistDismissed) return false;
     return !checklist().allDone;
   }
@@ -298,6 +366,12 @@
 
   return {
     LAST_STEP: LAST_STEP,
+    STEPS: STEPS,
+    startFresh: startFresh,
+    setGoal: setGoal,
+    goal: goal,
+    techniques: techniques,
+    firstNotebook: firstNotebook,
     content: content,
     store: store,
     state: state,

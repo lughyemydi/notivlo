@@ -32,6 +32,12 @@
 <script src="./supabase-client.js"></script>
 <script src="./supabase-auth.js"></script>
 <script src="./supabase-sync.js"></script>
+<!-- The setup guide, for one call: a new account starts the guide from the
+     beginning, whatever the last person to use this device did with it. -->
+<script src="./setup/setup-flag.js"></script>
+<script src="./setup/setup-store.js"></script>
+<script src="./setup/setup-content.js"></script>
+<script src="./setup/setup-service.js"></script>
 </head>
 <body>
 <x-dc>
@@ -238,6 +244,7 @@ class Component extends DCLogic {
       this.setState({ error: '', notice: '', submitting: true });
       const res = await window.notivloAuth.signUp({ name, email, password });
       if (!res.ok) return this.setState({ submitting: false, error: res.error });
+      if (window.notivloSetup) window.notivloSetup.startFresh();
 
       // With email confirmation turned on there is no session yet, so there
       // is nowhere to send them — saying so beats bouncing off the Welcome
@@ -264,6 +271,7 @@ class Component extends DCLogic {
     this.setState({ error: '', submitting: true });
     const user = { name, email, ...(await createCredential(password)) };
     writeUsers([...users, user]);
+    if (window.notivloSetup) window.notivloSetup.startFresh();
     setSession({ email, name });
     // A brand new account picks its appearance and text size first.
     window.location.href = 'Welcome.dc.html';
