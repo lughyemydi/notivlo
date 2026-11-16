@@ -42,7 +42,19 @@
 
   // Classes the editor itself assigns. Anything else is dropped, so pasted
   // content can't borrow the app's own styles to dress itself up as UI.
-  var CLASS_ALLOW = new Set(['nb-formula', 'nb-formula-block', 'nb-drawing']);
+  var CLASS_ALLOW = new Set([
+    'nb-formula', 'nb-formula-block', 'nb-drawing',
+    // A lesson worksheet written into a chapter (lessons.js worksheetHtml):
+    // its wrapper, each question, the gaps to fill, the answer boxes, and the
+    // fold that hides a model answer until it is asked for.
+    'nb-lesson', 'nb-q', 'nb-blank-wrap', 'nb-blank', 'nb-blank-ok', 'nb-blank-miss',
+    'nb-answer', 'nb-check', 'nb-reveal-toggle', 'nb-reveal', 'nb-reveal-open', 'nb-marked',
+  ]);
+  // Worksheet attributes. Ids are the lesson's own slug-like id, question keys
+  // are "ex-3" / "test-1", and a gap's answer is short plain text — none of it
+  // is ever put back into markup, only compared against what was typed.
+  var LESSON_ID_RE = /^[a-z0-9][a-z0-9_-]{0,119}$/i;
+  var QUESTION_RE = /^(ex|test)-\d{1,3}$/;
   var STYLE_ALLOW = new Set([
     'text-align', 'background-color', 'color', 'font-weight', 'font-style',
     'text-decoration', 'text-decoration-line',
@@ -95,9 +107,33 @@
       else if (tag === 'IMG' && (name === 'width' || name === 'height')) keep = /^\d{1,5}$/.test(value);
       else if (tag === 'OL' && name === 'start') keep = /^\d{1,6}$/.test(value);
       else if (tag === 'FONT' && name === 'color') keep = COLOR_RE.test(value);
+      else if (tag === 'DIV' && name === 'data-lesson') keep = LESSON_ID_RE.test(value);
+      else if (tag === 'DIV' && name === 'data-q') keep = QUESTION_RE.test(value);
+      else if (tag === 'SPAN' && name === 'data-answer') keep = value.length <= 200;
       if (!keep) el.removeAttribute(attrs[i].name);
     }
     if (tag === 'A' && el.hasAttribute('href')) el.setAttribute('rel', 'noopener noreferrer');
+    lessonBehaviour(el, tag);
+  }
+
+  function hasClass(el, c) {
+    return (' ' + (el.getAttribute('class') || '') + ' ').indexOf(' ' + c + ' ') >= 0;
+  }
+
+  // Set from the class, never read from the stored markup. A gap is its own
+  // small editing area inside a wrapper that is not editable: otherwise
+  // deleting its last letter lets the browser delete the gap too, and the
+  // buttons are not editable so a click on them is a click, not a caret.
+  function lessonBehaviour(el, tag) {
+    if (tag !== 'SPAN') return;
+    if (hasClass(el, 'nb-blank-wrap')) el.setAttribute('contenteditable', 'false');
+    else if (hasClass(el, 'nb-blank')) {
+      el.setAttribute('contenteditable', 'true');
+      el.setAttribute('spellcheck', 'false');
+    } else if (hasClass(el, 'nb-check') || hasClass(el, 'nb-reveal-toggle')) {
+      el.setAttribute('contenteditable', 'false');
+      el.setAttribute('role', 'button');
+    }
   }
 
   function unwrap(el) {

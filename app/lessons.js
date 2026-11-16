@@ -25,6 +25,8 @@
  *   topic      syllabus section
  *   minutes    rough sitting time, shown before starting
  *   objectives what they should be able to do afterwards
+ *   blanks     optional [string] — fill-in sentences, one [[gap]] each; the
+ *              worksheet in the chapter turns each gap into a box to type in
  *   terms      [{ term, meaning }] — written into the chapter as Definition
  *              notes, which is what makes them turn up in Recall afterwards
  *   teach      [{ heading, body: [para], example: { prompt, steps: [line] } }]
@@ -1099,6 +1101,7 @@
     push(l.title); push(l.topic); push(l.paper);
     (l.objectives || []).forEach(push);
     (l.terms || []).forEach(function (t) { if (t) { push(t.term); push(t.meaning); } });
+    (l.blanks || []).forEach(push);
     (l.teach || []).forEach(function (t) {
       if (!t) return;
       push(t.heading);
@@ -1275,7 +1278,211 @@
     return h.join('');
   }
 
+  /* ---- The lesson as a page of the notebook --------------------------- */
+  // A lesson lives in the chapter it is about. When one is made or opened it
+  // is written into that chapter as a worksheet: the teaching, a set of gaps
+  // to fill from its key terms, and every question with a box to answer in
+  // and its model answer folded away underneath. The student can do it all
+  // there, in the notebook, or sit it in the lesson panel, whose marked
+  // answers are written back into the same boxes (markWorksheet).
+
+  var STOP = { a: 1, an: 1, and: 1, the: 1, of: 1, in: 1, on: 1, to: 1, for: 1, with: 1, by: 1, at: 1, or: 1 };
+
+  function stem(w) {
+    if (w.length > 5 && /ities$/.test(w)) return w.slice(0, -5);
+    if (w.length > 4 && /ity$/.test(w)) return w.slice(0, -3);
+    if (w.length > 4 && /ies$/.test(w)) return w.slice(0, -3) + 'y';
+    if (w.length > 3 && /s$/.test(w) && !/ss$/.test(w)) return w.slice(0, -1);
+    return w;
+  }
+
+  function words(s) {
+    return String(s || '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/).filter(function (w) { return w && !STOP[w] && !/^\d+$/.test(w); }).map(stem);
+  }
+
+  // "1.1 Quadratics" → "Quadratics"; a topic with no name of its own falls
+  // back to the lesson's title.
+  function topicName(lesson) {
+    var t = String((lesson && lesson.topic) || '').replace(/^[\d.\s]+/, '').trim();
+    return (t || String((lesson && lesson.title) || 'Lesson').split(':')[0]).slice(0, 80);
+  }
+
+  // The chapter this lesson belongs in, or -1. Its topic is matched against
+  // chapter titles word by word, ignoring syllabus numbers and small words,
+  // so "2.4 Price, income and cross elasticities of demand" finds "Price
+  // Elasticity of Demand". Most of the shorter side's words have to match: a
+  // single shared word like "Data" is not enough to call two chapters one.
+  function homeChapter(lesson, chapters) {
+    var topic = words(topicName(lesson));
+    var title = words(lesson && lesson.title);
+    var best = -1, bestScore = 0;
+    (chapters || []).forEach(function (c, i) {
+      if (!c || typeof c.title !== 'string') return;
+      var cw = words(c.title);
+      if (!cw.length) return;
+      [topic, title].forEach(function (tw) {
+        if (!tw.length) return;
+        var hit = cw.filter(function (w) { return tw.indexOf(w) >= 0; }).length;
+        var score = hit / Math.min(cw.length, tw.length);
+        if (hit && score >= 0.6 && score > bestScore) { best = i; bestScore = score; }
+      });
+    });
+    return best;
+  }
+
+  // Which volume a new chapter for this lesson joins: the one whose name
+  // covers its paper ("Paper 2" → "AS · Papers 1–2"), else none.
+  function homeUnit(lesson, chapters) {
+    var m = String((lesson && lesson.paper) || '').match(/\d/);
+    if (!m) return null;
+    var n = +m[0];
+    var found = null;
+    (chapters || []).forEach(function (c) {
+      if (found != null || !c || c.unit == null || typeof c.unitName !== 'string') return;
+      var r = c.unitName.match(/(\d)\s*[–-]\s*(\d)/);
+      if ((r && n >= +r[1] && n <= +r[2]) || (!r && new RegExp('\\b' + n + '\\b').test(c.unitName))) {
+        found = { unit: c.unit, unitName: c.unitName };
+      }
+    });
+    return found;
+  }
+
+  function questionHtml(item, key, num) {
+    var t = textToEditorHtml;
+    var h = ['<div class="nb-q" data-q="' + key + '">'];
+    h.push('<p><strong>' + num + '. ' + t(item.ask) + '</strong> [' + (item.marks || 0) + ']</p>');
+    if (item.hint) h.push('<p><em>Hint: ' + t(item.hint) + '</em></p>');
+    h.push('<div class="nb-answer"><p><br></p></div>');
+    h.push('<p><span class="nb-reveal-toggle">Show model answer</span></p>');
+    h.push('<div class="nb-reveal"><p><strong>Model answer:</strong> ' + t(item.answer) + '</p>');
+    if (item.scheme && item.scheme.length) {
+      h.push('<p><em>Mark scheme</em></p><ul>');
+      item.scheme.forEach(function (line) { h.push('<li>' + t(line) + '</li>'); });
+      h.push('</ul>');
+    }
+    if (item.why) h.push('<p><em>Why: ' + t(item.why) + '</em></p>');
+    h.push('</div></div>');
+    return h.join('');
+  }
+
+  // A gap the student types into. `[[answer]]` in a lesson's optional
+  // `blanks` sentences marks one; key terms make one each regardless.
+  function gapHtml(answer) {
+    return '<span class="nb-blank-wrap"><span class="nb-blank" data-answer="'
+      + escapeHtml(plainText(answer).slice(0, 200)) + '"></span></span>';
+  }
+
+  function clozeHtml(sentence) {
+    var out = [];
+    var s = String(sentence || '');
+    var re = /\[\[([^\]]{1,200})\]\]/g, last = 0, m;
+    while ((m = re.exec(s))) {
+      out.push(textToEditorHtml(s.slice(last, m.index)), gapHtml(m[1]));
+      last = re.lastIndex;
+    }
+    out.push(textToEditorHtml(s.slice(last)));
+    return out.join('');
+  }
+
+  function worksheetHtml(lesson) {
+    var t = textToEditorHtml;
+    var h = ['<div class="nb-lesson" data-lesson="' + escapeHtml(lesson.id) + '">'];
+    h.push('<h2>Lesson: ' + escapeHtml(lesson.title) + '</h2>');
+    var meta = [lesson.board, lesson.code, lesson.paper, lesson.topic].filter(Boolean).join(' · ');
+    h.push('<p><em>' + escapeHtml(meta + (lesson.minutes ? ' · ' + lesson.minutes + ' min' : '')) + '</em></p>');
+
+    if (lesson.objectives && lesson.objectives.length) {
+      h.push('<h3>By the end of this lesson</h3><ul>');
+      lesson.objectives.forEach(function (o) { h.push('<li>' + t(o) + '</li>'); });
+      h.push('</ul>');
+    }
+
+    (lesson.teach || []).forEach(function (page) {
+      h.push('<h3>' + escapeHtml(page.heading) + '</h3>');
+      (page.body || []).forEach(function (p) { h.push('<p>' + t(p) + '</p>'); });
+      if (page.example) {
+        h.push('<p><strong>Worked example.</strong> ' + t(page.example.prompt) + '</p><ol>');
+        (page.example.steps || []).forEach(function (st) { h.push('<li>' + t(st) + '</li>'); });
+        h.push('</ol>');
+      }
+    });
+
+    var gaps = (lesson.blanks || []).filter(function (b) { return /\[\[[^\]]+\]\]/.test(b); });
+    var terms = lesson.terms || [];
+    if (gaps.length || terms.length) {
+      h.push('<h3>Fill in the blanks</h3>');
+      h.push('<p><em>Type the missing words into the gaps, then check them.</em></p><ol>');
+      terms.forEach(function (term) { h.push('<li>' + gapHtml(term.term) + ' — ' + t(term.meaning) + '</li>'); });
+      gaps.forEach(function (b) { h.push('<li>' + clozeHtml(b) + '</li>'); });
+      h.push('</ol><p><span class="nb-check">Check my blanks</span></p>');
+    }
+
+    var exercises = lesson.exercises || [];
+    if (exercises.length) {
+      h.push('<h3>Exercises</h3>');
+      exercises.forEach(function (ex, i) { h.push(questionHtml(ex, 'ex-' + i, i + 1)); });
+    }
+    var questions = (lesson.test && lesson.test.questions) || [];
+    if (questions.length) {
+      h.push('<h3>' + escapeHtml((lesson.test && lesson.test.heading) || 'Exam-style check') + '</h3>');
+      questions.forEach(function (q, i) { h.push(questionHtml(q, 'test-' + i, i + 1)); });
+    }
+    h.push('</div>');
+    return h.join('');
+  }
+
+  // A blank's typed text against its answer: case, spacing and a trailing
+  // full stop don't count.
+  function blankMatches(typed, answer) {
+    var norm = function (s) {
+      return String(s || '').replace(/ /g, ' ').toLowerCase().replace(/\s+/g, ' ').replace(/[.\s]+$/, '').trim();
+    };
+    return !!norm(typed) && norm(typed) === norm(answer);
+  }
+
+  // Writes one marked answer from the lesson panel into the worksheet's box.
+  // `html` is the chapter's stored (sanitised) markup; DOMParser keeps it
+  // inert. Returns the new markup, or null when the worksheet isn't there —
+  // the student deleted it, say.
+  function markWorksheet(html, lessonId, key, entry) {
+    var doc;
+    try { doc = new DOMParser().parseFromString('<!doctype html><body>' + (html || '') + '</body>', 'text/html'); }
+    catch (e) { return null; }
+    var sheet = Array.prototype.filter.call(doc.querySelectorAll('div.nb-lesson'), function (d) {
+      return d.getAttribute('data-lesson') === lessonId;
+    })[0];
+    if (!sheet) return null;
+    var q = Array.prototype.filter.call(sheet.querySelectorAll('div.nb-q'), function (d) {
+      return d.getAttribute('data-q') === key;
+    })[0];
+    if (!q) return null;
+    var box = q.querySelector('.nb-answer');
+    if (box && entry.text) {
+      box.innerHTML = String(entry.text).split(/\n+/).map(function (line) {
+        return '<p>' + (textToEditorHtml(line) || '<br>') + '</p>';
+      }).join('');
+    }
+    var old = q.querySelector('.nb-marked');
+    if (old) old.parentNode.removeChild(old);
+    var marked = doc.createElement('p');
+    marked.className = 'nb-marked';
+    marked.innerHTML = '<em>Self-marked ' + (+entry.awarded || 0) + ' of ' + (+entry.marks || 0) + '</em>';
+    if (box && box.nextSibling) q.insertBefore(marked, box.nextSibling); else q.appendChild(marked);
+    var reveal = q.querySelector('.nb-reveal');
+    if (reveal) reveal.classList.add('nb-reveal-open');
+    var toggle = q.querySelector('.nb-reveal-toggle');
+    if (toggle) toggle.textContent = 'Hide model answer';
+    return doc.body.innerHTML;
+  }
+
   window.notivloLessons = {
+    worksheetHtml: worksheetHtml,
+    markWorksheet: markWorksheet,
+    homeChapter: homeChapter,
+    homeUnit: homeUnit,
+    topicName: topicName,
+    blankMatches: blankMatches,
     forNotebook: forNotebook,
     subjectFor: subjectFor,
     byId: byId,

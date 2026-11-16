@@ -75,6 +75,24 @@
   .unit-head{transition:color .15s ease}
   .editor:focus{outline:none}
   .editor p{margin:0}
+  /* A lesson worksheet inside a chapter (lessons.js worksheetHtml). */
+  .editor .nb-lesson h2{margin:var(--space-4) 0 var(--space-1)}
+  .editor .nb-lesson h3{margin:var(--space-5) 0 var(--space-2)}
+  .editor .nb-lesson ol,.editor .nb-lesson ul{margin:var(--space-1) 0 var(--space-2);padding-left:1.4em}
+  .editor .nb-q{margin:var(--space-3) 0 var(--space-4);padding:var(--space-3) var(--space-4);border:1px solid var(--color-border);border-radius:16px;background:rgb(var(--clay-white) / .35)}
+  .editor .nb-answer{margin:var(--space-2) 0;padding:var(--space-2) var(--space-3);min-height:3.4em;border-radius:12px;border:1px dashed var(--color-neutral-400);background:var(--color-surface);text-align:left}
+  .editor .nb-answer:empty::before,.editor .nb-answer:has(> p:only-child > br:only-child)::before{content:'Your answer';color:var(--color-neutral-400);position:absolute;pointer-events:none}
+  .editor .nb-blank-wrap{display:inline-block;vertical-align:baseline;padding:2px 4px;margin:0 2px;cursor:text}
+  .editor .nb-blank{display:inline-block;min-width:7em;padding:0 .35em;border-bottom:2px solid var(--color-neutral-500);outline:none;text-align:left;transition:border-color .15s ease,background .15s ease}
+  .editor .nb-blank:focus{border-bottom-color:var(--color-accent-700);background:var(--color-primary-soft)}
+  .editor .nb-blank.nb-blank-ok{border-bottom-color:#2f8f6b;background:rgba(108,205,177,.18)}
+  .editor .nb-blank.nb-blank-miss{border-bottom-color:var(--color-danger-strong);background:rgba(182,60,53,.10)}
+  .editor .nb-check,.editor .nb-reveal-toggle{display:inline-block;cursor:pointer;user-select:none;-webkit-user-select:none;font-size:.85em;font-weight:600;padding:2px 12px;border-radius:999px;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-accent-700)}
+  .editor .nb-check:hover,.editor .nb-reveal-toggle:hover{background:var(--color-primary-soft)}
+  .editor .nb-reveal{display:none;margin-top:var(--space-2);padding-top:var(--space-2);border-top:1px solid var(--color-border)}
+  .editor .nb-reveal.nb-reveal-open{display:block}
+  .editor .nb-marked{color:var(--color-neutral-600);font-size:.9em}
+  @media print{.editor .nb-reveal{display:block}.editor .nb-check,.editor .nb-reveal-toggle{display:none}}
   /* Placeholder prompt for an empty chapter. It sits underneath the caret as
      painted text rather than real content, so the first keystroke replaces it
      and nothing has to be deleted first. */
@@ -2271,6 +2289,16 @@ function normalizeChapter(c) {
   return out;
 }
 
+// A chapter's body as editor HTML: its saved markup, or, for a seeded chapter
+// never edited, its paragraphs — escaped, because the editor shows them as
+// text and something appended after them must not change how they read.
+function chapterMarkup(c) {
+  if (!c) return '';
+  if (typeof c.contentHtml === 'string' && c.contentHtml) return c.contentHtml;
+  const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return (c.paragraphs || []).filter(p => typeof p === 'string' && p.trim()).map(p => '<p>' + esc(p) + '</p>').join('');
+}
+
 // Formulas are rebuilt from their LaTeX whenever editor HTML is sanitised.
 const EDITOR_SANITIZE_OPTS = { renderFormula: (latex, block) => latexToMathML(latex, block) };
 const EDITOR_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif'];
@@ -2842,7 +2870,7 @@ class Component extends DCLogic {
       lessonOpen: false, lessonId: null, lessonPhase: 'list', lessonStep: 0,
       lessonAnswer: '', lessonChecked: false, lessonAwarded: null,
       lessonWork: { answers: {}, test: {} },
-      lessonChapterIdx: null, lessonChapterPrefix: '',
+      lessonChapterIdx: null,
       lessonMade: [], lessonMaking: false, lessonMakeError: '',
       // Lesson credits. `lessonCredits` is null until billing.js has read a
       // balance, which is a different thing from zero: null means "not known
@@ -3119,7 +3147,7 @@ class Component extends DCLogic {
       lessonOpen: true, lessonPhase: 'list', lessonId: null, lessonStep: 0,
       lessonAnswer: '', lessonChecked: false, lessonAwarded: null,
       lessonWork: { answers: {}, test: {} },
-      lessonChapterIdx: null, lessonChapterPrefix: '',
+      lessonChapterIdx: null,
     });
   }
 
@@ -3137,8 +3165,9 @@ class Component extends DCLogic {
       lessonPhase: hasTeach ? 'teach' : 'exercise',
       lessonStep: 0, lessonAnswer: '', lessonChecked: false, lessonAwarded: null,
       lessonWork: { answers: {}, test: {} },
-      lessonChapterIdx: null, lessonChapterPrefix: '',
+      lessonChapterIdx: null,
     });
+    this.placeLesson(lesson);
   }
 
   lessonCheck() {
@@ -3241,49 +3270,102 @@ class Component extends DCLogic {
     }
   }
 
-  // The sitting's page in the notebook. Created on the first marked answer, so
-  // opening a lesson and closing it again leaves nothing behind. A lesson sat
-  // before has a page already: this sitting is added under a rule rather than
-  // written over the top of it. The lesson's key terms go in as Definition
-  // notes, which is what makes them turn up in Recall afterwards.
-  writeLessonChapter(work) {
+  // A lesson's home is the chapter it is about. When one is opened or made
+  // it is written into that chapter as a worksheet (lessons.js worksheetHtml)
+  // — the teaching, gaps to fill from its key terms, and every question with
+  // a box to answer in — so it can be done right there in the notebook. A
+  // notebook with no chapter on the topic gets one, named after it, in the
+  // volume its paper belongs to. Opening the same lesson again finds the
+  // worksheet already there and writes nothing twice. The key terms go in as
+  // Definition notes, which is what makes them turn up in Recall afterwards.
+  placeLesson(lesson) {
     const api = window.notivloLessons;
-    const lesson = this.activeLesson();
-    if (!api || !lesson) return;
-    let html = '';
-    try { html = api.chapterHtml(lesson, work); } catch (e) { return; }
-    const notes = (lesson.terms || []).map(t => ({
+    if (!api || !lesson || typeof api.worksheetHtml !== 'function') return;
+    const marker = 'data-lesson="' + lesson.id + '"';
+    const already = this.state.chapters.findIndex(c => c && typeof c.contentHtml === 'string' && c.contentHtml.indexOf(marker) >= 0);
+    if (already >= 0) { this.setState({ lessonChapterIdx: already }); return; }
+
+    let sheet = '';
+    try { sheet = sanitizeEditorHtml(api.worksheetHtml(lesson), EDITOR_SANITIZE_OPTS); } catch (e) { return; }
+    const terms = (lesson.terms || []).map(t => ({
       type: 'def', label: 'Definition',
       text: api.plainText(t.term + ' — ' + t.meaning),
     }));
-    const title = ('Lesson — ' + lesson.title).slice(0, CHAPTER_TITLE_MAX);
+    // The open chapter's latest typing may still be waiting on the debounced
+    // save; it is read off the page so this does not write over it.
+    const live = this.editorNode ? sanitizeEditorHtml(this.editorNode.innerHTML, EDITOR_SANITIZE_OPTS) : null;
+    clearTimeout(this._saveTimer);
 
     this.setState(s => {
       const chapters = s.chapters.slice();
-      let idx = s.lessonChapterIdx;
-      let prefix = s.lessonChapterPrefix || '';
-      if (idx == null || !chapters[idx]) {
-        idx = chapters.findIndex(c => c && c.title === title);
-        if (idx >= 0) {
-          prefix = (chapters[idx].contentHtml || '') + '<hr>';
-        } else {
+      let idx = api.homeChapter(lesson, chapters);
+      if (idx >= 0) {
+        const c = chapters[idx];
+        const base = idx === s.activeIdx && live != null ? live : chapterMarkup(c);
+        // A term the chapter already defines keeps its own wording.
+        const termOf = (n) => String(n.text || '').split(/\s[—–-]\s/)[0].trim().toLowerCase();
+        const have = new Set((c.notes || []).filter(n => n.type === 'def').map(termOf));
+        chapters[idx] = Object.assign({}, c, {
+          contentHtml: (base && base.replace(/<[^>]*>|\s|&nbsp;/g, '') ? base + '<hr>' : '') + sheet,
+          notes: (c.notes || []).concat(terms.filter(n => !have.has(termOf(n)))),
+        });
+      } else {
+        let home = api.homeUnit(lesson, chapters);
+        if (!home) {
           const units = chapterUnits(chapters);
-          let unit = null;
-          chapters.forEach((c, i) => { if (unit == null && c && c.unitName === 'Lessons') unit = units[i]; });
-          if (unit == null) unit = (units.length ? Math.max(...units) : 0) + 1;
-          chapters.push({ title, unit, unitName: 'Lessons', paragraphs: [''], notes, contentHtml: '' });
-          idx = chapters.length - 1;
-          prefix = '';
+          chapters.forEach((c, i) => { if (!home && c && c.unitName === 'Lessons') home = { unit: units[i], unitName: 'Lessons' }; });
+          if (!home) home = { unit: (units.length ? Math.max(...units) : 0) + 1, unitName: 'Lessons' };
         }
+        chapters.push({
+          title: api.topicName(lesson).slice(0, CHAPTER_TITLE_MAX),
+          unit: home.unit, unitName: home.unitName,
+          paragraphs: [''], notes: terms, contentHtml: sheet,
+        });
+        idx = chapters.length - 1;
       }
-      chapters[idx] = Object.assign({}, chapters[idx], { title, notes, contentHtml: prefix + html });
+      if (live != null && idx !== s.activeIdx && chapters[s.activeIdx]) {
+        chapters[s.activeIdx] = Object.assign({}, chapters[s.activeIdx], { contentHtml: live });
+      }
       this.persistChapters(chapters);
-      return { chapters, lessonChapterIdx: idx, lessonChapterPrefix: prefix, lastSavedAt: Date.now() };
+      return { chapters, lessonChapterIdx: idx, saving: false, lastSavedAt: Date.now() };
     });
+    this.refreshEditorIfLessonChapter();
+  }
 
-    // If that chapter is the one open behind the lesson, the editor is now
-    // showing a stale copy of it. Any pending debounced save is dropped first,
-    // or it would write the old DOM back over what was just stored.
+  // One marked answer from the lesson panel, written into its box on the
+  // worksheet. A worksheet the student has since deleted is put back first.
+  writeLessonChapter(work) {
+    const api = window.notivloLessons;
+    const lesson = this.activeLesson();
+    if (!api || !lesson || typeof api.markWorksheet !== 'function') return;
+    if (this.state.lessonChapterIdx == null || !this.state.chapters[this.state.lessonChapterIdx]
+        || String(this.state.chapters[this.state.lessonChapterIdx].contentHtml || '').indexOf('data-lesson="' + lesson.id + '"') < 0) {
+      this.placeLesson(lesson);
+    }
+    const keys = [];
+    Object.keys(work.answers || {}).forEach(i => keys.push(['ex-' + i, work.answers[i]]));
+    Object.keys(work.test || {}).forEach(i => keys.push(['test-' + i, work.test[i]]));
+    this.setState(s => {
+      const idx = s.lessonChapterIdx;
+      const c = idx == null ? null : s.chapters[idx];
+      if (!c) return null;
+      let html = c.contentHtml || '';
+      keys.forEach(([key, entry]) => {
+        const next = api.markWorksheet(html, lesson.id, key, entry);
+        if (next != null) html = next;
+      });
+      html = sanitizeEditorHtml(html, EDITOR_SANITIZE_OPTS);
+      const chapters = s.chapters.map((ch, i) => i !== idx ? ch : Object.assign({}, ch, { contentHtml: html }));
+      this.persistChapters(chapters);
+      return { chapters, lastSavedAt: Date.now() };
+    });
+    this.refreshEditorIfLessonChapter();
+  }
+
+  // If the lesson's chapter is the one open behind the panel, the editor is
+  // now showing a stale copy of it. Any pending debounced save is dropped
+  // first, or it would write the old DOM back over what was just stored.
+  refreshEditorIfLessonChapter() {
     Promise.resolve().then(() => {
       if (this.state.lessonChapterIdx != null && this.state.lessonChapterIdx === this.state.activeIdx) {
         clearTimeout(this._saveTimer);
@@ -3291,6 +3373,66 @@ class Component extends DCLogic {
         this.restoreEditorContent();
       }
     });
+  }
+
+  // Inside a worksheet: the fold over a model answer, and checking the gaps.
+  // Both are plain spans the sanitiser marks non-editable, so a click on one
+  // is a click rather than a caret.
+  onWorksheetClick(e) {
+    const t = e.target;
+    if (!t || !t.closest || !this.editorNode) return false;
+    // A click on a gap's frame rather than inside it still means the gap.
+    const wrap = t.closest('.nb-blank-wrap');
+    if (wrap && this.editorNode.contains(wrap)) {
+      const gap = wrap.querySelector('.nb-blank');
+      if (gap && document.activeElement !== gap) {
+        gap.focus();
+        try {
+          const r = document.createRange();
+          r.selectNodeContents(gap); r.collapse(false);
+          const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+        } catch (err) {}
+      }
+      return true;
+    }
+    const toggle = t.closest('.nb-reveal-toggle');
+    if (toggle && this.editorNode.contains(toggle)) {
+      const q = toggle.closest('.nb-q');
+      const reveal = q && q.querySelector('.nb-reveal');
+      if (reveal) {
+        const open = reveal.classList.toggle('nb-reveal-open');
+        toggle.textContent = open ? 'Hide model answer' : 'Show model answer';
+        this.markDirty();
+      }
+      return true;
+    }
+    const check = t.closest('.nb-check');
+    if (check && this.editorNode.contains(check)) {
+      const sheet = check.closest('.nb-lesson') || this.editorNode;
+      const api = window.notivloLessons;
+      let right = 0, all = 0;
+      sheet.querySelectorAll('.nb-blank').forEach(b => {
+        all++;
+        const ok = api && api.blankMatches(b.textContent, b.getAttribute('data-answer'));
+        if (ok) right++;
+        b.classList.toggle('nb-blank-ok', !!ok);
+        b.classList.toggle('nb-blank-miss', !ok);
+      });
+      check.textContent = 'Check my blanks · ' + right + ' of ' + all + (right === all ? ' ✓' : '');
+      this.markDirty();
+      return true;
+    }
+    return false;
+  }
+
+  // Typing in a gap clears its old mark, and marks it right the moment it is.
+  onWorksheetInput(e) {
+    const b = e && e.target && e.target.closest && e.target.closest('.nb-blank');
+    if (!b) return;
+    const api = window.notivloLessons;
+    const ok = api && api.blankMatches(b.textContent, b.getAttribute('data-answer'));
+    b.classList.toggle('nb-blank-ok', !!ok);
+    b.classList.remove('nb-blank-miss');
   }
 
   lessonOpenChapter() {
@@ -4997,9 +5139,9 @@ class Component extends DCLogic {
         ? lsPct + '% of the marks you reached, by your own marking against the scheme.'
         : 'No answer was marked this sitting, so there is no score to report.',
       lessonWrittenNote: this.state.lessonChapterIdx != null
-        ? 'Your answers, the model answers and the mark schemes are in “' + lsChapterName
-          + '”. Its definitions will come up in Recall from now on.'
-        : 'Nothing was written to the notebook — no answer was marked this sitting.',
+        ? 'This lesson is a worksheet in “' + lsChapterName
+          + '”, with your marked answers in its boxes. Its definitions will come up in Recall from now on.'
+        : 'Nothing was written to the notebook.',
       lessonHasWeak: lsWeak.length > 0,
       lessonWeak: lsHtmlList(lsWeak),
       lessonOpenChapter: () => this.lessonOpenChapter(),
@@ -5073,8 +5215,9 @@ class Component extends DCLogic {
       onEditorDrop: (e) => this.handleEditorDrop(e),
       onEditorDragStart: () => { this._internalDrag = true; },
       onEditorDragEnd: () => { this._internalDrag = false; },
-      onEditorInput: () => { this.updateEditorPlaceholder(); this.markDirty(); },
+      onEditorInput: (e) => { this.onWorksheetInput(e); this.updateEditorPlaceholder(); this.markDirty(); },
       onEditorClick: (e) => {
+        if (this.onWorksheetClick(e)) return;
         const formula = e.target.closest && e.target.closest('.nb-formula');
         if (formula && this.editorNode.contains(formula)) this.editFormula(formula);
       },
