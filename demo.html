@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>notivlo — live demo</title>
+<meta name="description" content="A working copy of notivlo to try, with nothing to install and no account. Nothing you do here is saved.">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex">
+<style>
+  html,body{margin:0;height:100%;background:#e6e3dc}
+  @media (prefers-color-scheme: dark){html,body{background:#14161b}}
+  iframe{display:block;width:100%;height:100%;border:0}
+</style>
+</head>
+<!--
+  The demo, full screen.
+
+  This exists so that "open the demo" is the same isolated thing everywhere —
+  in the hero, in its own tab, and on a phone, where the app has no room
+  inside a panel but all the room it needs in a tab of its own.
+
+  It is a frame rather than a link straight to the app because being framed
+  by a demo host is precisely what app/demo.js looks for: it is what gives
+  the copy inside its own in-memory storage, and, unlike a query string, it
+  survives every link the visitor clicks once they are in there. The page
+  itself is deliberately nothing but the marker and the frame.
+-->
+<body>
+<script>
+  // Read before the frame is created, so the app inside comes up in the same
+  // mode as the site the visitor came from rather than asking the device.
+  window.notivloDemoHost = true;
+  try {
+    var t = localStorage.getItem('notivlo-site-theme');
+    if (t === 'light' || t === 'dark') window.notivloDemoTheme = t;
+  } catch (e) {}
+</script>
+<iframe src="app/Home.dc.html" title="A live, working copy of notivlo to try"></iframe>
+</body>
+</html>

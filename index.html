@@ -281,6 +281,58 @@ a:hover{text-decoration:underline}
 .hero-field .shot{max-width:1000px;margin:0 auto}
 
 /* --------------------------------------------------------------------------
+   The live demo
+   --------------------------------------------------------------------------
+   The hero is not a picture of the app, it is the app. The frame holds a real
+   copy running on its own in-memory storage (app/demo.js), so a visitor can
+   use it before deciding anything, and nothing they do there touches the
+   notebooks of someone who already uses notivlo on this browser.
+
+   The screenshot stays underneath as the poster: it paints instantly, the
+   frame is only loaded once the page is otherwise done, and the swap happens
+   on the frame's own ready message rather than on a timer. If scripts are off
+   or the frame never reports in, the poster is simply what stays — which is
+   the page as it was before the demo existed.
+   -------------------------------------------------------------------------- */
+.demo{max-width:1000px;margin:0 auto}
+.demo-bar{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:12px;color:var(--on-field);margin:0 0 14px;
+}
+.demo-live{display:inline-flex;align-items:center;gap:8px;font-weight:700}
+/* The one dot on the page. It is a status light, and the system allows a
+   circle only for its lettered markers — but this is the same device the app
+   uses for "live", and a square would read as a bullet. */
+.demo-dot{width:8px;height:8px;border-radius:50%;background:var(--art);flex:none}
+.demo-say{color:var(--on-field)}
+.demo-full{margin-left:auto;color:var(--on-field);text-decoration:underline}
+.demo-full:hover{color:var(--on-field)}
+
+.demo-stage{
+  position:relative;aspect-ratio:1760/1100;
+  border:var(--hair) solid var(--art);background:var(--surface-raised);
+}
+.demo-stage>img{display:block;width:100%;height:100%;object-fit:cover}
+.demo-frame{
+  position:absolute;inset:0;width:100%;height:100%;border:0;display:block;
+  background:var(--surface);
+}
+/* Until the frame says it has painted, it is not shown at all: a half-drawn
+   app under a finished screenshot looks worse than either. */
+.demo:not(.is-live) .demo-frame{visibility:hidden}
+.demo.is-live>.demo-stage>img{visibility:hidden}
+
+/* A phone cannot usefully show a desktop app in a 335px-wide box, so there it
+   keeps the screenshot and the demo opens full screen in its own tab. */
+.demo-open{display:none}
+@media(max-width:900px){
+  .demo-frame{display:none}
+  .demo-say{display:none}
+  .demo-full{display:none}
+  .demo-open{display:inline-flex;margin-left:auto}
+}
+
+/* --------------------------------------------------------------------------
    Split sections: a full-height field on one side, an anchored text column on
    the other, with the key list and spec line pinned to its bottom.
    -------------------------------------------------------------------------- */
@@ -404,7 +456,7 @@ footer a:hover{color:var(--ink)}
       <a href="#what">What it does</a>
       <a href="#download">Download</a>
       <a href="#feedback">Feedback</a>
-      <a class="nav-cta" href="app/Home.dc.html">Open notivlo</a>
+      <a class="nav-cta" href="app/SignUp.dc.html">Open notivlo</a>
       <button type="button" class="theme-btn" id="theme-btn" aria-label="Switch theme" title="Switch between light and dark">
         <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
         <svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.3M12 19.3v2.3M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.4 12h2.3M19.3 12h2.3M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
@@ -432,9 +484,19 @@ footer a:hover{color:var(--ink)}
   </div>
 
   <div class="field field-signal hero-field">
-    <div class="shot">
-      <img class="shot-light" src="shots/home-light.webp" alt="The notivlo home screen: a greeting, what is due today, and a grid of subject notebooks." width="1760" height="1100">
-      <img class="shot-dark" src="shots/home.webp" alt="The notivlo home screen in dark mode: a greeting, what is due today, and a grid of subject notebooks." width="1760" height="1100">
+    <div class="demo" id="demo">
+      <p class="demo-bar">
+        <span class="demo-live"><span class="demo-dot"></span>Live</span>
+        <span class="demo-say">Not a screenshot — the real app, running in this page. Click anything; nothing here is saved.</span>
+        <a class="demo-full" href="demo.html" target="_blank" rel="noopener">Open it full screen ↗</a>
+        <a class="btn btn-ghost demo-open" href="demo.html" target="_blank" rel="noopener"
+           style="border-color:var(--art);color:var(--on-field)">Try the live demo ↗</a>
+      </p>
+      <div class="demo-stage">
+        <img class="shot-light" src="shots/home-light.webp" alt="The notivlo home screen: a greeting, what is due today, and a grid of subject notebooks." width="1760" height="1100">
+        <img class="shot-dark" src="shots/home.webp" alt="The notivlo home screen in dark mode: a greeting, what is due today, and a grid of subject notebooks." width="1760" height="1100">
+        <iframe class="demo-frame" id="demo-frame" title="A live, working copy of notivlo to try"></iframe>
+      </div>
     </div>
   </div>
 </header>
@@ -613,7 +675,7 @@ footer a:hover{color:var(--ink)}
     <span class="logo">notivlo</span>
     <span>An early beta. Built for A level.</span>
     <span class="foot-links">
-      <a href="app/Home.dc.html">Open the app</a>
+      <a href="app/SignUp.dc.html">Open the app</a>
       <a href="#download">Download</a>
       <a href="#feedback">Feedback</a>
     </span>
@@ -655,6 +717,7 @@ footer a:hover{color:var(--ink)}
     root.setAttribute('data-theme', next);
     try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
     describe();
+    pointDemo();
   });
 
   // Someone who has not chosen keeps following the device, including when it
@@ -667,6 +730,70 @@ footer a:hover{color:var(--ink)}
   } catch (e) {}
 
   describe();
+
+  /* ---- The live demo -------------------------------------------------- */
+  /* The hero frame holds a real copy of the app. app/demo.js gives that copy
+     its own in-memory storage, so it can neither read nor write what is on
+     this browser for someone who already uses notivlo — the demo and the
+     real thing share an origin, and that isolation is the whole reason the
+     frame can be here at all.
+
+     The frame is loaded only once the rest of the page has finished, and the
+     screenshot underneath is not taken away until the frame reports that it
+     has painted. Nothing here is required for the page to work: with scripts
+     off, or if the frame never reports in, the screenshot is what stays. */
+  var demo = document.getElementById('demo');
+  var frame = document.getElementById('demo-frame');
+  var EMBED_MIN = 900;   // below this the app has no room; see the CSS
+
+  /* This marks the page as the demo's host. app/demo.js looks for exactly
+     this on its parent and gives itself in-memory storage when it finds it,
+     which is what keeps the demo out of the real notebooks on this browser.
+     Being a property of the frame rather than of the URL, it still holds
+     after the visitor clicks through to a notebook or the planner. */
+  window.notivloDemoHost = true;
+
+  function pointDemo() {
+    if (!frame || innerWidth < EMBED_MIN) return;
+    // The demo runs in the mode the page is in rather than asking the device
+    // and disagreeing with everything around it.
+    window.notivloDemoTheme = resolvedTheme();
+    if (frame.getAttribute('src')) {
+      // Already running: the theme is read on each load, so a reload is all
+      // it takes. Cheap, and the demo keeps its place because the store
+      // lives on this page rather than in the frame.
+      frame.contentWindow.location.reload();
+      return;
+    }
+    frame.setAttribute('src', 'app/Home.dc.html');
+  }
+
+  window.addEventListener('message', function (e) {
+    if (e.origin !== window.location.origin) return;
+    if (!e.data || e.data.notivlo !== 'demo-ready') return;
+    if (e.source !== frame.contentWindow) return;
+    demo.classList.add('is-live');
+  });
+
+  if (frame) {
+    // After load, and out of the way of anything else the browser still has
+    // to do: the app is a few hundred kilobytes and the hero has to paint
+    // first.
+    var start = function () {
+      if (window.requestIdleCallback) requestIdleCallback(pointDemo, { timeout: 2000 });
+      else setTimeout(pointDemo, 400);
+    };
+    if (document.readyState === 'complete') start();
+    else window.addEventListener('load', start);
+
+    // Turning a phone sideways, or dragging a window wider, can cross the
+    // threshold where the demo fits.
+    var sized = null;
+    window.addEventListener('resize', function () {
+      clearTimeout(sized);
+      sized = setTimeout(pointDemo, 250);
+    });
+  }
 
   /* ---- Mac download -------------------------------------------------- */
   /* Points at the latest GitHub release asset, so a new build does not
