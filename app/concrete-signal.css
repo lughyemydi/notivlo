@@ -417,6 +417,12 @@ html :focus-visible {
   outline-offset: 2px;
 }
 
+/* Text being edited shows a caret, not a ring. */
+html [contenteditable="true"]:focus-visible,
+html [contenteditable="true"]:focus {
+  outline: none !important;
+}
+
 /* --------------------------------------------------------------------------
    9. The ground
    --------------------------------------------------------------------------

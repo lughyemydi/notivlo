@@ -174,7 +174,7 @@ body {
    Focus — one visible treatment on every interactive element
    ========================================================================== */
 
-:where(a, button, input, select, textarea, [tabindex], [contenteditable="true"]):focus-visible {
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
   outline: 3px solid var(--color-focus-ring);
   outline-offset: 3px;
 }
