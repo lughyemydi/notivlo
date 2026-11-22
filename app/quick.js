@@ -121,6 +121,14 @@
         run: function () { window.notivloSession.open(); },
       });
     }
+    // Only on a notebook page with something written in the open chapter.
+    if (window.notivloBlurt && window.notivloBlurt.available()) {
+      out.act.unshift({
+        label: 'Blurt this chapter', hint: 'Write what you remember, then compare', kind: 'Do',
+        keys: 'blurt recall memory revise revision test myself blank page free recall',
+        run: function () { window.notivloBlurt.open(); },
+      });
+    }
     if (theme && window.saveTheme) {
       var to = theme === 'dark' ? 'light' : 'dark';
       out.act.push({
