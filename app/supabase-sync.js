@@ -441,6 +441,23 @@
 
   /* ---------- pull ------------------------------------------------------ */
 
+  // What a chapter would look like on the server, with its place in the list
+  // left out and keys in a fixed order — so a local chapter and the copy of
+  // it that came back down compare equal however each was built.
+  function chapterKey(ch) {
+    return stableJson(chapterToRow(ch, null, null, 0));
+  }
+
+  function stableJson(v) {
+    if (Array.isArray(v)) return '[' + v.map(stableJson).join(',') + ']';
+    if (v && typeof v === 'object') {
+      return '{' + Object.keys(v).sort().map(function (k) {
+        return JSON.stringify(k) + ':' + stableJson(v[k]);
+      }).join(',') + '}';
+    }
+    return JSON.stringify(v === undefined ? null : v);
+  }
+
   function pullAll(user, options) {
     var userId = user.id;
     var opts = options || {};
@@ -526,6 +543,21 @@
         }).then(function (r) {
           if (r.error) return { ok: false, error: r.error };
           var chapters = (r.data || []).map(chapterFromRow);
+          // A device with unsent work keeps it. Chapters carry no ids, so
+          // there is no telling an edit from a new chapter; anything here the
+          // server does not already hold, word for word, goes after the
+          // server's chapters rather than under them. The worst case is an
+          // edited chapter showing up twice — never a chapter gone.
+          if (opts.keepLocal && chapters.length) {
+            var local = readObject(KEYS.chapterPrefix + row.slug).chapters;
+            if (Array.isArray(local) && local.length) {
+              var held = {};
+              chapters.forEach(function (ch) { held[chapterKey(ch)] = true; });
+              local.forEach(function (ch) {
+                if (ch && typeof ch === 'object' && !held[chapterKey(ch)]) chapters.push(ch);
+              });
+            }
+          }
           // An empty remote notebook does not blank out a local one that has
           // chapters: there is nothing here to prefer over them.
           if (chapters.length) write(KEYS.chapterPrefix + row.slug, { chapters: chapters });
@@ -587,7 +619,13 @@
     // is typing, and what they typed is the newest thing anywhere.
     var pulling = firstTimeHere || opts.pull === true || (!dirty && stale);
 
-    running = (pulling ? pullAll(user, { replace: otherAccount }) : Promise.resolve({ ok: true, skipped: 'no-pull' }))
+    // When a pull does happen on a dirty device — its first sync here never
+    // finished, or a caller forced one — the pull must not overwrite what is
+    // waiting to go up, and what it merges must still be sent afterwards.
+    // (A dirty device under another account never gets this far.)
+    var unsent = dirty && !otherAccount;
+
+    running = (pulling ? pullAll(user, { replace: otherAccount, keepLocal: unsent }) : Promise.resolve({ ok: true, skipped: 'no-pull' }))
       .then(function (res) {
         if (res.ok === false) return res;
         // Re-read: a pull merges into the stores and moves the fingerprint.
@@ -598,7 +636,7 @@
         // A first sync normally pushes as well, to send anything this device
         // had before it signed in. After a handover there is nothing of this
         // account's to send that did not just come down.
-        if (!changed && !opts.force && (!firstTimeHere || otherAccount)) {
+        if (!changed && !opts.force && !unsent && (!firstTimeHere || otherAccount)) {
           return { ok: true, pulled: pulled, skipped: pulled ? 'pulled' : 'unchanged' };
         }
         return pushAll(user).then(function (r) {

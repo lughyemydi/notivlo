@@ -115,6 +115,7 @@
   /* The colour a click on the Highlight button will apply, under its icon. */
   .hl-swatch{position:absolute;left:50%;bottom:6px;width:14px;height:3px;border-radius:2px;transform:translateX(-50%);box-shadow:0 0 0 1px rgb(0 0 0 / .18);pointer-events:none}
   .ctx-danger{color:var(--color-danger-strong)}
+  .nb-save-failed{color:var(--color-danger-strong)!important;font-weight:600}
   .ctx-danger:hover{background:rgba(182,60,53,.14)}
   /* Drawing and formula composers. */
   .nb-modal-backdrop{position:fixed;inset:0;z-index:1200;background:rgba(60,45,20,.28);}
@@ -565,7 +566,7 @@
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
       {{ studiedTodayLabel }}
     </span>
-    <span class="nb-status-text" style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-neutral-600)">
+    <span class="nb-status-text {{ saveClass }}" title="{{ saveTitle }}" style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-neutral-600)">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
       {{ saveLabel }}
     </span>
@@ -3805,9 +3806,20 @@ class Component extends DCLogic {
     });
   }
 
+  // A write that fails is almost always storage being full — pasted images
+  // are kept inline, and a few photos fill the browser's ~5MB. Swallowing it
+  // would leave the header saying "Saved" while every later keystroke is lost
+  // on reload, so the failure is remembered and the save label says so. The
+  // next successful write clears it.
   persistChapters(chapters) {
     const clean = chapters.map(normalizeChapter).filter(Boolean);
-    try { localStorage.setItem('folio_nb_state:' + this.state.slug, JSON.stringify({ chapters: clean })); } catch (e) {}
+    try {
+      localStorage.setItem('folio_nb_state:' + this.state.slug, JSON.stringify({ chapters: clean }));
+      this._saveFailed = false;
+    } catch (e) {
+      this._saveFailed = true;
+    }
+    return !this._saveFailed;
   }
 
   restoreEditorContent() {
@@ -4527,7 +4539,10 @@ class Component extends DCLogic {
       });
     }
 
-    const saveLabel = this.state.saving
+    const saveFailed = !!this._saveFailed && !this.state.saving;
+    const saveLabel = saveFailed
+      ? 'Not saved — storage full'
+      : this.state.saving
       ? 'Saving…'
       : this.state.lastSavedAt
         ? 'Saved ' + Math.max(0, Math.round((Date.now() - this.state.lastSavedAt) / 1000)) + 's ago'
@@ -5208,6 +5223,10 @@ class Component extends DCLogic {
       closeMobileDrawer: () => this.closeMobileDrawer(),
 
       saveLabel,
+      saveClass: saveFailed ? 'nb-save-failed' : '',
+      saveTitle: saveFailed
+        ? 'This browser has run out of room for notes. Remove some images, or free space in Settings → Storage & backup, and keep this tab open until it says Saved.'
+        : '',
       studiedTodayLabel,
 
       editorRef: (el) => { this.editorNode = el; },

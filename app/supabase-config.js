@@ -45,6 +45,27 @@
   // failures deep in a request, so it is treated as "no backend" here.
   var configured = /^https:\/\/[^\s/]+$/.test(url) && key.length > 20;
 
+  // A page served from a development host — the dev server on localhost, a
+  // .localhost or .test name — runs with no backend, as if the values above
+  // were empty. The project above is the live one, and without this a sign-up
+  // made while testing locally is a real account on it, and the notebooks
+  // typed afterwards sync into production. (That happened, 22 Nov 2026.)
+  //
+  // The Mac and iOS apps load from file:// and the beta from github.io, so
+  // neither is affected. To test sync against the live project on purpose,
+  // run `localStorage.notivloLiveBackend = '1'` on the dev host and reload;
+  // remove it to switch back. This only turns the project above back on — it
+  // cannot point the app anywhere else, which the note at the top rules out.
+  var devHost = false;
+  var liveOptIn = false;
+  try {
+    var host = String(window.location.hostname || '').toLowerCase();
+    devHost = host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || host === '::1'
+      || /\.localhost$/.test(host) || /\.test$/.test(host);
+    liveOptIn = devHost && window.localStorage.getItem('notivloLiveBackend') === '1';
+  } catch (e) { /* storage blocked: stay off on a dev host */ }
+  if (devHost && !liveOptIn) configured = false;
+
   window.notivloBackend = {
     url: configured ? url : '',
     anonKey: configured ? key : '',
@@ -52,6 +73,9 @@
     // Every caller asks this first; the sync and auth modules are inert
     // without it and the pages fall back to their localStorage paths.
     configured: function () { return configured; },
+
+    // True when the live project was switched off because this is a dev host.
+    devOffline: devHost && !liveOptIn,
 
     // Where an email link (password reset, email confirmation) should land.
     // Must also be listed in the project's Auth → URL Configuration, or
