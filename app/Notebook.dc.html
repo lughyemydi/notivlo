@@ -995,6 +995,15 @@
                  fails is the thing the comment above rules out. The seven
                  written lessons are listed above either way, free, and the
                  note says so. -->
+            <sc-if value="{{ lessonComingSoon }}" hint-placeholder-val="{{ false }}">
+              <div class="ls-panel ls-soon" style="display:flex;flex-direction:column;gap:var(--space-2)">
+                <div style="display:flex;align-items:center;gap:var(--space-2)">
+                  <div class="card-kicker">Written for you</div>
+                  <span class="ls-chip ls-chip-done">Coming soon</span>
+                </div>
+                <p style="margin:0;font-size:14px;line-height:1.55;color:var(--color-neutral-700)">Soon notivlo will write you new lessons on what this notebook hasn't covered yet, aimed at what you keep getting wrong. The written lessons above are ready now, and free.</p>
+              </div>
+            </sc-if>
             <sc-if value="{{ lessonCanMake }}" hint-placeholder-val="{{ false }}">
               <div class="ls-panel" style="display:flex;flex-direction:column;gap:var(--space-3)">
                 <div>
@@ -5160,7 +5169,10 @@ class Component extends DCLogic {
       // sees the panel and is told what it costs, because hiding a feature is
       // not the same as explaining it. The seven written lessons are in the
       // list above either way, and free.
-      lessonCanMake: !!(lsApi && typeof lsApi.generate === 'function'),
+      lessonCanMake: !!(lsApi && typeof lsApi.generate === 'function' && !lsApi.comingSoon),
+      // Switched off in lessons-ai.js until the model host is paid for: the
+      // panel still says what is coming, with no button and no credit talk.
+      lessonComingSoon: !!(lsApi && lsApi.comingSoon),
       // A balance of null is "not read yet", not "none" — so the button stays
       // until a read comes back, rather than flickering to "buy credits" on
       // every page load. The server decides this for real on every call; this

@@ -54,6 +54,14 @@
 
   var PATH = '/functions/v1/generate-lesson';
 
+  // The one switch for lessons written to order. Off, the notebook shows the
+  // panel tagged "Coming soon" and this file never calls the function or reads
+  // a balance. Turn LIVE_BY_DEFAULT on once the model host's account is funded
+  // (the user set DeepInfra up on 2026-11-23 and will add payment later).
+  // `window.notivloLessonsLive = true` before this file loads is for tests.
+  var LIVE_BY_DEFAULT = false;
+  var LIVE = LIVE_BY_DEFAULT || window.notivloLessonsLive === true;
+
   // A generated lesson is kept for the session that asked for it, so stepping
   // back to the lesson list and into it again does not pay for it twice. Not
   // stored: it has not been sat yet, and a lesson nobody opened is not worth
@@ -64,7 +72,7 @@
 
   function ready() {
     var sb = window.notivloSupabase;
-    return !!(api() && sb && sb.ready() && sb.isSignedIn());
+    return !!(LIVE && api() && sb && sb.ready() && sb.isSignedIn());
   }
 
   /* ---- What the student has been getting wrong ------------------------- */
@@ -203,6 +211,7 @@
   // does not offer to write a lesson at all, which is the right thing on a
   // build with no backend — an offer that always fails is worse than no offer.
   if (api()) {
+    api().comingSoon = !LIVE;
     api().generate = ready() ? generate : null;
 
     // Signing in is what makes this possible, and it happens after this file
