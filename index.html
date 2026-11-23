@@ -22,44 +22,24 @@
   } catch (e) {}
 })();
 </script>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- Google Sans Flex and Google Sans Code are the design system's own two
-     faces, loaded from Google's CDN as it asks. Unbounded stays for the
-     wordmark: that is the brand, not the theme. -->
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400..700&family=Google+Sans+Code:wght@400..700&family=Unbounded:wght@600&display=swap" rel="stylesheet">
 <style>
 /* ==========================================================================
-   Concrete & Signal, on the landing page
+   notivlo — landing page
    --------------------------------------------------------------------------
-   The same design system the app moved to in beta 3: a warm concrete ground,
-   one loud colour field per section, ink hairlines instead of cards, and
-   small monospaced labels. The values are the system's own tokens, so the
-   page and the product are one look rather than a resemblance.
+   One idea per screen, said plainly. The page answers three questions in
+   order — what is it, how does it work, how do I start — and gets out of the
+   way. Concrete & Signal tokens; signal orange only on things you can press.
 
-   Four of its rules drive almost everything here:
-
-   1. Hairlines, not boxes. Nothing is filled, raised or rounded; regions are
-      separated by a 2px rule. There are no cards and no shadows.
-   2. One colour field per section, rotated so no two neighbours share it —
-      signal, then cobalt, then lime. The screenshot sits on the field the way
-      the system puts its line art on one.
-   3. signal and lime are never text on the light ground, and never carry ink
-      text in dark. Text on a field uses that field's on- token, which is why
-      each field sets --on-field and --art rather than inheriting them.
-   4. No motion. No transitions, no hover lift, no smooth scrolling. What
-      replaces the lift is inversion: a control fills with ink on hover.
+   Motion is text-led and tied to scroll: headings rise word by word as they
+   arrive, one sentence inks in as you read it, and the step words stay put
+   while their pictures change. All of it sits behind prefers-reduced-motion,
+   hidden states are only ever set by script (html.motion), and the pinned
+   effects are desktop only — phones scroll a plain, fast column.
    ========================================================================== */
 
-/* --------------------------------------------------------------------------
-   The palette, straight from the system's tokens.json
-   --------------------------------------------------------------------------
-   Light is the base and dark is the override, applied either because the
-   device asks for it or because the toggle set data-theme. The
-   :not([data-theme="light"]) guard is what lets an explicit Light choice win
-   over a device that prefers dark.
-   -------------------------------------------------------------------------- */
 :root{
   --surface:#e6e3dc;
   --surface-raised:#f6f4ef;
@@ -83,7 +63,8 @@
      the only one that may be text on the dark. Hence one token, two values. */
   --accent-text:#2b4bff;
 
-  --hair:2px;
+  --hair:1px;
+  --ease:cubic-bezier(.16,1,.3,1);
   --maxw:1240px;
   --gutter:64px;
 
@@ -118,145 +99,136 @@
   color-scheme:dark;
 }
 
-/* --------------------------------------------------------------------------
-   Ground and type
-   --------------------------------------------------------------------------
-   The system's sizes are authored for a 1920 by 1080 canvas, and it asks for
-   the whole scale to be divided by one factor on the web, keeping the ratios.
-   That factor is 0.5 here: display-xl 160 → 80, title 72 → 36, lead 44 → 22,
-   body 32 → 16, small 28 → 14, mono-tag 28 → 14, mono-spec 24 → 12. The
-   clamps hold those ratios down to a phone.
-   -------------------------------------------------------------------------- */
+
+:root{--ease:cubic-bezier(.16,1,.3,1);--maxw:1180px;--gutter:40px;--navh:67px}
+@media(max-width:700px){:root{--gutter:20px}}
+
+/* Big screens. The page was set for a laptop; on a monitor the 1180px column
+   left everything small in a sea of margin. Above 1600px the column widens
+   and the type, controls and sketches step up with it, in two stages. */
+@media(min-width:1600px){
+  :root{--maxw:1480px;--gutter:56px;--navh:76px}
+  body{font-size:19px}
+  h1{font-size:clamp(76px,4.6vw,96px)}
+  h2{font-size:clamp(56px,3.4vw,70px)}
+  h3{font-size:25px}
+  .kicker{font-size:14px}
+  .lead{font-size:22px}
+  .say p{font-size:clamp(50px,3.2vw,62px)}
+  .step-word{font-size:clamp(104px,6.4vw,128px)}
+  .vig{max-width:640px;padding:28px 30px}
+  .vig-h{font-size:26px}.vig-l{font-size:17px}.vig-k{font-size:13px}
+  .wk{height:250px}.wk i{font-size:13px}
+  .face{font-size:21px}.flip{height:172px}
+  .btn{padding:17px 26px;font-size:14px}
+  .nav-in{padding:18px var(--gutter)}
+  .logo{font-size:22px}
+  .nav-links a:not(.btn){font-size:16px}
+  .nav .btn{padding:13px 18px;font-size:13px}
+  .theme-btn{width:42px;height:42px}
+  .ex{padding:28px;min-height:250px}.ex-t{font-size:21px}
+  .tab{font-size:16px;padding:12px 18px}
+  .inside h3{font-size:22px}.inside p{font-size:17px}
+  .end h2{font-size:clamp(84px,5vw,104px)}
+}
+@media(min-width:2200px){
+  :root{--maxw:1840px;--gutter:72px;--navh:84px}
+  body{font-size:21px}
+  h1{font-size:118px}
+  h2{font-size:84px}
+  .lead{font-size:25px}
+  .say p{font-size:76px}
+  .step-word{font-size:152px}
+  .vig{max-width:760px}
+  .vig-h{font-size:30px}.vig-l{font-size:19px}
+  .wk{height:290px}.wk i{font-size:14px}
+  .face{font-size:24px}.flip{height:196px}
+  .btn{padding:19px 30px;font-size:15px}
+  .logo{font-size:24px}
+  .nav-links a:not(.btn){font-size:17px}
+  .end h2{font-size:128px}
+  h3{font-size:28px}
+  .kicker{font-size:15px}
+  .tab{font-size:18px;padding:14px 22px}
+  .ex{padding:34px;min-height:290px}.ex-t{font-size:25px}.ex-a{font-size:17px}.ex-k{font-size:14px}
+  .inside h3{font-size:26px}.inside p{font-size:19px}
+  .nav .btn{padding:15px 22px;font-size:15px}
+  .theme-btn{width:48px;height:48px}
+  .vig-k{font-size:15px}.score b{font-size:26px}.rate span{font-size:14px}
+}
+
 *{box-sizing:border-box}
 html{background:var(--surface)}
-body{
-  margin:0;background:var(--surface);color:var(--ink);
-  font-family:var(--sans);font-size:16px;line-height:1.42;
-  -webkit-font-smoothing:antialiased;
-}
+body{margin:0;background:var(--surface);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+p{margin:0}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+:focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
 .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)}
 
-h1{
-  font-size:clamp(40px,7.4vw,80px);line-height:.95;letter-spacing:-.03em;
-  font-weight:700;margin:0 0 24px;
-}
-h2{
-  font-size:clamp(27px,3.6vw,36px);line-height:1;letter-spacing:-.03em;
-  font-weight:700;margin:0 0 16px;
-}
-h3{font-size:20px;line-height:1.1;letter-spacing:-.025em;font-weight:700;margin:0 0 8px}
-p{margin:0}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.035em}
+h1{font-size:clamp(40px,5.6vw,76px);line-height:1.02}
+h2{font-size:clamp(32px,4.2vw,56px);line-height:1.04}
+h3{font-size:22px;line-height:1.2;letter-spacing:-.02em}
+.kicker{font-family:var(--mono);font-size:13px;color:var(--ink-soft);margin:0 0 18px}
+.lead{font-size:clamp(18px,1.5vw,20px);line-height:1.55;color:var(--ink-soft);max-width:46ch}
+.soft{color:var(--ink-soft)}
+section{padding:clamp(88px,12vw,160px) 0}
 
-/* Labels are Google Sans Code, sentence case, no tracking games. Counters
-   are written in the system's own 01 / 03 form. */
-.tag{
-  font-family:var(--mono);font-size:14px;line-height:1.3;font-weight:400;
-  color:var(--ink-soft);margin:0 0 20px;
-}
-.spec{
-  font-family:var(--mono);font-size:12px;line-height:1.3;color:var(--ink-soft);
-  border-top:var(--hair) solid var(--rule);padding-top:10px;margin:24px 0 0;
-}
-.body{color:var(--ink-soft);max-width:58ch}
-
-a{color:var(--accent-text);text-decoration:none}
-a:hover{text-decoration:underline}
-
-/* Square, and in the accent that is legible on the ground of each theme. */
-:focus-visible{outline:var(--hair) solid var(--accent-text);outline-offset:2px}
-
-/* No motion, anywhere — the scroll included. */
-*,*::before,*::after{transition:none!important;animation:none!important}
-
-/* --------------------------------------------------------------------------
-   Which screenshot shows
-   --------------------------------------------------------------------------
-   Light is the default pair; dark swaps them. Both are in the markup rather
-   than swapped by script, so the right one is correct on the first paint.
-   -------------------------------------------------------------------------- */
-.shot-dark{display:none}
-.shot-light{display:block}
+/* Light/dark screenshot swap, correct on the first paint. */
+.shot-dark{display:none!important}.shot-light{display:block!important}
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]) .shot-dark{display:block}
-  :root:not([data-theme="light"]) .shot-light{display:none}
+  :root:not([data-theme="light"]) .shot-dark{display:block!important}
+  :root:not([data-theme="light"]) .shot-light{display:none!important}
 }
-:root[data-theme="dark"] .shot-dark{display:block}
-:root[data-theme="dark"] .shot-light{display:none}
-:root[data-theme="light"] .shot-dark{display:none}
-:root[data-theme="light"] .shot-light{display:block}
+:root[data-theme="dark"] .shot-dark{display:block!important}
+:root[data-theme="dark"] .shot-light{display:none!important}
+:root[data-theme="light"] .shot-dark{display:none!important}
+:root[data-theme="light"] .shot-light{display:block!important}
 
-/* --------------------------------------------------------------------------
-   Colour fields
-   --------------------------------------------------------------------------
-   One per section. Each sets the tokens for whatever sits on it, because ink
-   on a field is wrong in dark and the art has to read the same in both
-   themes: night strokes on signal and lime, paper on cobalt.
-   -------------------------------------------------------------------------- */
-.field{background:var(--fill);padding:48px}
-.field-signal{--fill:var(--signal);--on-field:var(--on-signal);--art:var(--night)}
-.field-cobalt{--fill:var(--cobalt);--on-field:var(--on-cobalt);--art:var(--paper)}
-.field-lime{--fill:var(--lime);--on-field:var(--on-lime);--art:var(--night)}
-.field .shot{border-color:var(--art)}
-.field-tag{font-family:var(--mono);font-size:12px;color:var(--on-field);margin:0 0 14px}
+/* Ink drawings: their paper is lifted to white and multiplied onto the page,
+   so only the lines remain. In dark they are printed in reverse; the hue
+   turn brings the one orange tab back round to orange. */
+.ink{mix-blend-mode:multiply;filter:url(#paper)}
+:root[data-theme="dark"] .ink{mix-blend-mode:screen;filter:url(#paper) invert(1) hue-rotate(180deg) brightness(.9) contrast(1.1)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .ink{mix-blend-mode:screen;filter:url(#paper) invert(1) hue-rotate(180deg) brightness(.9) contrast(1.1)}}
 
-/* A screenshot is the art on the field: outlined, square, nothing behind it.
-   No window chrome — a fake title bar is a box, and the system has none. */
-.shot{display:block;border:var(--hair) solid var(--rule);background:var(--surface-raised)}
-.shot img{display:block;width:100%;height:auto}
-
-/* --------------------------------------------------------------------------
-   Top bar: full width, held by one rule
-   -------------------------------------------------------------------------- */
-.nav{
-  position:sticky;top:0;z-index:50;
-  background:var(--surface);border-bottom:var(--hair) solid var(--rule);
-}
-.nav-in{
-  max-width:var(--maxw);margin:0 auto;
-  padding:16px var(--gutter);display:flex;align-items:center;gap:24px;
-}
-.logo{font-family:var(--logo);font-weight:600;font-size:19px;letter-spacing:-.03em;color:var(--ink)}
-.logo:hover{text-decoration:none}
-.nav-links{margin-left:auto;display:flex;align-items:center;gap:22px}
-.nav-links a:not(.nav-cta){font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
-.nav-links a:not(.nav-cta):hover{color:var(--ink);text-decoration:none}
-@media(max-width:780px){.nav-links a:not(.nav-cta){display:none}}
-
-/* --------------------------------------------------------------------------
-   Controls: flat, square, monospaced. Hover inverts rather than lifts.
-   -------------------------------------------------------------------------- */
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:10px;
-  padding:14px 22px;border:var(--hair) solid transparent;cursor:pointer;
-  font-family:var(--mono);font-size:12px;font-weight:700;line-height:1;
-  text-decoration:none;
-}
-.btn:hover{text-decoration:none}
-.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2;
-  stroke-linecap:round;stroke-linejoin:round}
+/* ---- Buttons ---------------------------------------------------------- */
+.btn{display:inline-flex;align-items:center;gap:10px;padding:15px 22px;border:1px solid var(--rule);
+  font-family:var(--mono);font-size:13px;font-weight:600;line-height:1;cursor:pointer;background:transparent;color:var(--ink)}
+.btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .btn-primary{background:var(--signal);border-color:var(--signal);color:var(--on-signal)}
-.btn-ghost{background:transparent;border-color:var(--rule);color:var(--ink)}
-.nav-cta{
-  background:var(--signal);color:var(--on-signal);border:var(--hair) solid var(--signal);
-  padding:10px 16px;font-family:var(--mono);font-size:12px;font-weight:700;
-}
+/* Hover: the ink fill grows out of the point where the cursor came in and
+   shrinks back towards where it left, so the button answers the hand
+   rather than just changing colour. The arrow runs out to the right and
+   back in from the left. Square clip, one ease, nothing bounces. */
+.btn{position:relative;isolation:isolate;overflow:hidden}
+.btn::before{content:"";position:absolute;inset:-1px;z-index:-1;background:var(--ink);
+  clip-path:circle(0 at var(--bx,50%) var(--by,50%))}
+.btn-primary::before{background:var(--ink)}
+.btn .ico{display:inline-flex;overflow:hidden;width:16px;height:16px}
+.btn:active{transform:scale(.985)}
 @media (hover:hover){
-  .btn-primary:hover,.nav-cta:hover{background:var(--ink);border-color:var(--ink);color:var(--surface)}
-  .btn-ghost:hover{background:var(--ink);color:var(--surface)}
+  .btn:hover{border-color:var(--ink);color:var(--surface)}
+  .btn:hover::before{clip-path:circle(150% at var(--bx,50%) var(--by,50%))}
 }
-.btn:active{opacity:.75}
+.btn[disabled]{opacity:.5;cursor:default}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap}
 
-.theme-btn{
-  flex:none;width:34px;height:34px;padding:0;cursor:pointer;
-  border:var(--hair) solid var(--rule);background:transparent;color:var(--ink);
-  display:grid;place-items:center;
-}
-@media (hover:hover){.theme-btn:hover{background:var(--ink);color:var(--surface)}}
-.theme-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;
-  stroke-linecap:round;stroke-linejoin:round}
-/* Each glyph shows only in the mode where it is the thing you can switch to. */
-.ico-sun{display:none}
-.ico-moon{display:block}
+/* ---- Nav ---------------------------------------------------------------- */
+.nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--surface) 88%,transparent);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid transparent}
+.nav.scrolled{border-bottom-color:var(--rule-faint)}
+.nav-in{max-width:var(--maxw);margin:0 auto;padding:14px var(--gutter);display:flex;align-items:center;gap:28px}
+.logo{font-family:var(--logo);font-weight:600;font-size:19px;letter-spacing:-.03em}
+.nav-links{margin-left:auto;display:flex;align-items:center;gap:26px}
+.nav-links a:not(.btn){font-size:15px;color:var(--ink-soft)}
+.nav-links a:not(.btn):hover{color:var(--ink)}
+.nav .btn{padding:11px 16px;font-size:12px}
+.theme-btn{width:38px;height:38px;padding:0;cursor:pointer;border:1px solid var(--rule-faint);background:transparent;color:var(--ink);display:grid;place-items:center}
+.theme-btn:hover{border-color:var(--rule)}
+.theme-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ico-sun{display:none}.ico-moon{display:block}
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]) .ico-sun{display:block}
   :root:not([data-theme="light"]) .ico-moon{display:none}
@@ -265,199 +237,279 @@ a:hover{text-decoration:underline}
 :root[data-theme="dark"] .ico-moon{display:none}
 :root[data-theme="light"] .ico-sun{display:none}
 :root[data-theme="light"] .ico-moon{display:block}
+@media(max-width:820px){.nav-links a:not(.btn){display:none}}
 
-/* --------------------------------------------------------------------------
-   Hero
-   --------------------------------------------------------------------------
-   Asymmetric and anchored: the copy hangs from the top-left margin instead of
-   sitting centred in the middle of the page, which is the system's layout
-   rule. The signal field below it carries the screenshot.
-   -------------------------------------------------------------------------- */
-.hero{padding:72px 0 0}
-.hero-copy{max-width:900px}
-.hero .body{font-size:18px;max-width:52ch;margin-bottom:28px}
-.cta-row{display:flex;gap:12px;flex-wrap:wrap}
-.cta-note{font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin:16px 0 0}
-.hero-field{margin-top:48px}
-.hero-field .shot{max-width:1000px;margin:0 auto}
-
-/* --------------------------------------------------------------------------
-   The live demo
-   --------------------------------------------------------------------------
-   The hero is not a picture of the app, it is the app. The frame holds a real
-   copy running on its own in-memory storage (app/demo.js), so a visitor can
-   use it before deciding anything, and nothing they do there touches the
-   notebooks of someone who already uses notivlo on this browser.
-
-   The screenshot stays underneath as the poster: it paints instantly, the
-   frame is only loaded once the page is otherwise done, and the swap happens
-   on the frame's own ready message rather than on a timer. If scripts are off
-   or the frame never reports in, the poster is simply what stays — which is
-   the page as it was before the demo existed.
-   -------------------------------------------------------------------------- */
-.demo{max-width:1000px;margin:0 auto}
-.demo-bar{
-  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-  font-family:var(--mono);font-size:12px;color:var(--on-field);margin:0 0 14px;
+/* ---- 1 · Hero ------------------------------------------------------------ */
+.hero{padding:clamp(40px,7vh,88px) 0 clamp(64px,9vh,110px)}
+.hero-in{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:48px;align-items:center;min-height:calc(100svh - 200px)}
+.hero h1{margin-bottom:24px}
+.hero .lead{margin-bottom:34px}
+.hero-note{font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin-top:18px}
+.hero-art{position:relative}
+.hero-art img{width:100%;height:auto}
+@media(max-width:900px){
+  .hero-in{grid-template-columns:1fr;min-height:0;gap:28px}
+  .hero-art{max-width:440px;margin:0 auto}
 }
-.demo-live{display:inline-flex;align-items:center;gap:8px;font-weight:700}
-/* The one dot on the page. It is a status light, and the system allows a
-   circle only for its lettered markers — but this is the same device the app
-   uses for "live", and a square would read as a bullet. */
-.demo-dot{width:8px;height:8px;border-radius:50%;background:var(--art);flex:none}
-.demo-say{color:var(--on-field)}
-.demo-full{margin-left:auto;color:var(--on-field);text-decoration:underline}
-.demo-full:hover{color:var(--on-field)}
 
-.demo-stage{
-  position:relative;aspect-ratio:1760/1100;
-  border:var(--hair) solid var(--art);background:var(--surface-raised);
+/* ---- 2 · The sentence ----------------------------------------------------- */
+.say{padding:0}
+.say-track{position:relative}
+.say-sticky{display:flex;align-items:center;min-height:70vh;padding:80px 0}
+.say p{font-size:clamp(28px,3.6vw,50px);line-height:1.18;letter-spacing:-.03em;font-weight:500;max-width:22ch}
+.say p em{font-style:normal;color:var(--accent-text)}
+@media(min-width:900px){
+  .say-track{height:200vh}
+  .say-sticky{position:sticky;top:0;height:100vh;min-height:0}
 }
-.demo-stage>img{display:block;width:100%;height:100%;object-fit:cover}
-.demo-frame{
-  position:absolute;inset:0;width:100%;height:100%;border:0;display:block;
-  background:var(--surface);
+.motion .say .w{opacity:.14;transition:opacity .4s var(--ease)}
+.motion .say .w.on{opacity:1}
+
+/* ---- 3 · How it works ---------------------------------------------------- */
+.how-head{max-width:640px;margin-bottom:56px}
+.how-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:64px}
+/* The pin is a full-height sticky column under the nav, so the picture
+   sits centred in what is left of the screen however tall it is. */
+.how-pin{position:sticky;top:var(--navh);height:calc(100vh - var(--navh));align-self:start;display:flex;flex-direction:column;justify-content:center}
+.how-stage{position:relative;aspect-ratio:1760/1100;border:1px solid var(--rule-faint);background:var(--surface-raised);overflow:hidden}
+.how-stage figure{position:absolute;inset:0;margin:0;opacity:0;clip-path:inset(18% 0 0 0);transform:translateY(14px);
+  transition:opacity .7s var(--ease),clip-path .9s var(--ease),transform .9s var(--ease)}
+.how-stage figure.on{opacity:1;clip-path:inset(0 0 0 0);transform:none;z-index:1}
+.how-stage img{width:100%;height:100%;object-fit:cover}
+.how-progress{display:flex;gap:8px;margin-top:18px}
+.how-progress span{flex:1;height:2px;background:var(--rule-faint);position:relative;overflow:hidden}
+.how-progress span i{position:absolute;inset:0;background:var(--ink);transform:scaleX(var(--p,0));transform-origin:left}
+.how-progress-lbl{display:flex;justify-content:space-between;margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.step{min-height:72vh;display:flex;flex-direction:column;justify-content:center;gap:18px;padding:24px 0}
+.step-word{font-size:clamp(56px,7vw,104px);font-weight:600;letter-spacing:-.05em;line-height:.95;color:var(--ink);opacity:.18;transition:opacity .6s var(--ease)}
+.step.on .step-word{opacity:1}
+.step>p:not(.step-word){color:var(--ink-soft);max-width:38ch}
+/* Each step shows the app doing that step, as a small live sketch. They
+   play once, when the step comes into view; with motion reduced (or no
+   script) they simply show their finished state. */
+.vig{width:100%;max-width:540px;background:var(--surface-raised);border:1px solid var(--rule-faint);padding:22px 24px;margin-bottom:12px}
+.vig-k{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin-bottom:14px}
+.vig-h{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:10px}
+.vig-l{font-size:15px;line-height:1.55;color:var(--ink-soft);min-height:1.55em}
+.vig-l mark{background:color-mix(in srgb,var(--signal) 30%,transparent);color:var(--ink);padding:0 2px}
+.vig-def{margin-top:16px;padding:12px 14px;border-left:2px solid var(--signal);background:var(--surface);font-size:14px;color:var(--ink-soft)}
+.vig-def b{display:block;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.vig-saved{color:var(--accent-text)}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;height:210px}
+.wk>div{position:relative;border-top:1px solid var(--rule-faint)}
+.wk b{display:block;font-family:var(--mono);font-size:11px;font-weight:400;color:var(--ink-soft);padding:6px 0 0}
+.wk i{position:absolute;left:0;right:0;top:calc(22px + var(--t) * .8);height:calc(var(--h) * .8);font-style:normal;
+  font-size:11px;line-height:1.2;padding:5px 6px;background:var(--surface);border:1px solid var(--rule-faint);color:var(--ink);overflow:hidden}
+.wk i.due{background:var(--signal);border-color:var(--signal);color:var(--on-signal)}
+.vig-plan.ticked .wk i.due{text-decoration:line-through;text-decoration-thickness:1.5px}
+.vig-free{color:var(--ink)}
+@media(max-width:560px){.vig{padding:18px}.wk{gap:4px}.wk i{font-size:9.5px;padding:3px 4px;word-break:break-word}}
+.flip{perspective:900px;height:150px}
+.flip-in{position:relative;height:100%;transform-style:preserve-3d}
+.face{position:absolute;inset:0;margin:0;display:flex;align-items:center;padding:18px 20px;border:1px solid var(--rule-faint);
+  background:var(--surface);font-size:18px;font-weight:500;letter-spacing:-.01em;line-height:1.35;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.face.back{transform:rotateY(180deg);color:var(--accent-text)}
+.vig-rec.flipped .flip-in{transform:rotateY(180deg)}
+.rate{display:flex;gap:6px;margin-top:12px}
+.rate span{flex:1;text-align:center;padding:9px 0;border:1px solid var(--rule-faint);font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.vig-rec.rated .rate .pick{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.score{margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.score b{font-family:var(--sans);font-size:20px;font-weight:600;color:var(--ink)}
+.step-shot{display:none}
+@media(max-width:899px){
+  .how-grid{grid-template-columns:1fr;gap:0}
+  .how-pin{display:none}
+  .step{min-height:0;padding:40px 0;border-top:1px solid var(--rule-faint)}
+  .step-word{opacity:1}
+  .step-shot{display:block;border:1px solid var(--rule-faint)}
+  .step-shot img{width:100%;height:auto}
 }
-/* Until the frame says it has painted, it is not shown at all: a half-drawn
-   app under a finished screenshot looks worse than either. */
+
+/* ---- 4 · Live demo --------------------------------------------------------- */
+.demo-head{display:flex;justify-content:space-between;align-items:flex-end;gap:32px;flex-wrap:wrap;margin-bottom:36px}
+.demo-head .lead{max-width:40ch}
+.demo{max-width:1180px;margin:0 auto}
+.demo-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 12px;font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.demo-live{display:inline-flex;align-items:center;gap:8px;color:var(--ink);font-weight:600}
+.demo-dot{width:8px;height:8px;border-radius:50%;background:var(--signal);flex:none}
+.demo-full{margin-left:auto;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.demo-stage{position:relative;aspect-ratio:1760/1100;border:1px solid var(--rule-faint);background:var(--surface-raised)}
+.demo-stage>img{width:100%;height:100%;object-fit:cover}
+.demo-frame{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:var(--surface)}
 .demo:not(.is-live) .demo-frame{visibility:hidden}
 .demo.is-live>.demo-stage>img{visibility:hidden}
-
-/* A phone cannot usefully show a desktop app in a 335px-wide box, so there it
-   keeps the screenshot and the demo opens full screen in its own tab. */
-.demo-open{display:none}
+.demo-open{display:none!important}
 @media(max-width:900px){
-  .demo-frame{display:none}
-  .demo-say{display:none}
-  .demo-full{display:none}
-  .demo-open{display:inline-flex;margin-left:auto}
+  .demo-frame,.demo-say,.demo-full{display:none}
+  .demo-open{display:inline-flex!important;margin-left:auto}
 }
 
-/* --------------------------------------------------------------------------
-   Split sections: a full-height field on one side, an anchored text column on
-   the other, with the key list and spec line pinned to its bottom.
-   -------------------------------------------------------------------------- */
-.split{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;
-  border-bottom:var(--hair) solid var(--rule)}
-.split-copy{
-  display:flex;flex-direction:column;justify-content:space-between;
-  padding:48px var(--gutter);min-height:420px;
-}
-.split.flip .split-field{order:2}
-@media(max-width:900px){
-  .split{grid-template-columns:1fr}
-  .split.flip .split-field{order:0}
-  .split-copy{min-height:0;padding:36px var(--gutter)}
-}
+/* ---- 5 · What's inside ----------------------------------------------------- */
+.inside-head{max-width:640px;margin-bottom:48px}
+.inside{display:grid;grid-template-columns:1fr 1fr;column-gap:64px}
+.inside div{display:grid;grid-template-columns:44px 1fr;gap:4px 0;padding:24px 0;border-top:1px solid var(--rule-faint)}
+.inside .n{font-family:var(--mono);font-size:13px;color:var(--ink-soft);padding-top:4px;grid-row:span 2}
+.inside h3{font-size:20px}
+.inside p{color:var(--ink-soft);font-size:16px}
+@media(max-width:760px){.inside{grid-template-columns:1fr}}
 
-/* Key rows, the system's lettered key: each row is a small line with a
-   hairline above it, the letter in mono bold in a fixed 28px column. */
-.keys{list-style:none;padding:0;margin:28px 0 0}
-.keys li{
-  display:flex;gap:12px;align-items:baseline;
-  border-top:var(--hair) solid var(--rule);padding:10px 0;
-  font-size:14px;line-height:1.2;color:var(--ink-soft);
-}
-.key-letter{
-  flex:none;width:28px;font-family:var(--mono);font-weight:700;font-size:14px;
-  color:var(--ink);
-}
+/* ---- 6 · Subjects ----------------------------------------------------------- */
+.subj-head{max-width:640px;margin-bottom:36px}
+.tabs{position:relative;display:flex;gap:6px;flex-wrap:wrap;margin-bottom:28px;isolation:isolate}
+/* One ink block glides to whichever subject is chosen. */
+.tab-ind{position:absolute;z-index:-1;left:0;top:0;width:0;height:0;background:var(--ink);pointer-events:none}
+.tab{all:unset;box-sizing:border-box;cursor:pointer;padding:10px 16px;border:1px solid var(--rule-faint);font-size:15px;color:var(--ink-soft)}
+.tab:hover{border-color:var(--rule);color:var(--ink)}
+.tab[aria-selected="true"]{border-color:var(--ink);color:var(--surface)}
+.tabs:not(.has-ind) .tab[aria-selected="true"]{background:var(--ink)}
+.tab:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+.example{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.ex{background:var(--surface-raised);border:1px solid var(--rule-faint);padding:24px;display:flex;flex-direction:column;gap:12px;min-height:220px}
+.ex-k{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.ex-t{font-size:19px;font-weight:600;letter-spacing:-.015em;line-height:1.3}
+.ex-a{color:var(--ink-soft);font-size:15px;border-top:1px dashed var(--rule-faint);padding-top:12px;margin-top:auto}
+.ex-a b{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--ink);margin-right:6px}
+.ex-marks{font-family:var(--mono);font-size:12px;color:var(--ink-soft);white-space:nowrap}
+.ex{position:relative;overflow:hidden}
+/* A signal line draws across the top of each card as a subject arrives. */
+.ex-line{position:absolute;left:0;top:0;height:2px;width:100%;background:var(--signal);transform:scaleX(0);transform-origin:left}
+@media(max-width:860px){.example{grid-template-columns:1fr}.ex{min-height:0}}
 
-/* --------------------------------------------------------------------------
-   Plain sections and the ruled grid
-   -------------------------------------------------------------------------- */
-section{padding:72px 0}
-.sec-head{max-width:58ch;margin-bottom:8px}
+/* ---- 7 · Quote (shown only once a real one is filled in) ----------------- */
+.quote{padding-bottom:0}
+.quote blockquote{margin:0;font-size:clamp(24px,2.8vw,36px);line-height:1.3;letter-spacing:-.02em;font-weight:500;max-width:30ch}
+.quote cite{display:block;margin-top:18px;font-style:normal;font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
 
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0 40px}
-@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:620px){.grid{grid-template-columns:1fr}}
-/* A region, not an object: no fill, no outline, one hairline on top. */
-.cell{border-top:var(--hair) solid var(--rule);padding:20px 0 28px}
-.cell-no{font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin:0 0 14px}
-.cell p{color:var(--ink-soft);font-size:14px;line-height:1.42}
-.cell svg{width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:2;
-  stroke-linecap:round;stroke-linejoin:round;margin-bottom:14px;display:block}
-
-/* --------------------------------------------------------------------------
-   Download and feedback: ruled regions on the ground, not panels
-   -------------------------------------------------------------------------- */
-.dl-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 40px;margin-top:40px}
-@media(max-width:760px){.dl-grid{grid-template-columns:1fr}}
-.dl-opt{border-top:var(--hair) solid var(--rule);padding:20px 0 0;display:flex;flex-direction:column}
-.dl-opt p{color:var(--ink-soft);font-size:14px;margin:0 0 22px;flex:1}
-.dl-opt .btn{align-self:flex-start}
-.dl-meta{font-family:var(--mono);font-size:12px;color:var(--ink-soft);
-  border-top:var(--hair) solid var(--rule);padding-top:10px;margin-top:20px}
-
-details{margin-top:40px;border-top:var(--hair) solid var(--rule);padding-top:20px}
-summary{
-  cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:10px;
-  font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink);
-}
+/* ---- 8 · Get it ----------------------------------------------------------- */
+.get-head{max-width:640px;margin-bottom:44px}
+.ways{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.way{border:1px solid var(--rule-faint);padding:32px;display:flex;flex-direction:column;gap:14px}
+.way .soft{font-size:16px}
+.way .btn{align-self:flex-start;margin-top:10px}
+.way-meta{font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin-top:auto;padding-top:14px}
+@media(max-width:760px){.ways{grid-template-columns:1fr}}
+details{margin-top:28px;border-top:1px solid var(--rule-faint);padding-top:20px}
+summary{cursor:pointer;list-style:none;display:flex;gap:12px;align-items:baseline;font-size:15px;color:var(--ink)}
 summary::-webkit-details-marker{display:none}
-summary::before{content:"+";font-family:var(--mono);color:var(--ink)}
+summary::before{content:"+";font-family:var(--mono)}
 details[open] summary::before{content:"−"}
-.note{color:var(--ink-soft);font-size:14px;line-height:1.42;max-width:70ch;margin:18px 0 0}
-.steps{margin:18px 0 0;padding-left:20px;color:var(--ink-soft);font-size:14px;line-height:1.7;max-width:70ch}
-.steps li{margin-bottom:8px}
-code{font-family:var(--mono);font-size:12px;color:var(--ink);
-  border-bottom:var(--hair) solid var(--rule-faint)}
-.code-block{
-  display:block;font-family:var(--mono);font-size:12px;color:var(--ink);
-  background:var(--surface-raised);border:var(--hair) solid var(--rule-faint);
-  padding:12px 14px;margin:14px 0 0;overflow-x:auto;
-}
+.det{max-width:72ch;margin-top:16px}
+.note{color:var(--ink-soft);font-size:15px;line-height:1.6;margin:0 0 14px}
+.steps{margin:0 0 14px;padding-left:20px;color:var(--ink-soft);font-size:15px;line-height:1.7}
+.steps li{margin-bottom:6px}
+code{font-family:var(--mono);font-size:13px;color:var(--ink)}
+.code-block{display:block;background:var(--surface-raised);border:1px solid var(--rule-faint);padding:12px 14px;overflow-x:auto}
 
-/* An input is a line to write on, not a pill. */
-form{margin-top:36px;max-width:640px}
-.field-row{display:flex;flex-direction:column;gap:6px;margin-bottom:24px}
-label{font-family:var(--mono);font-size:12px;color:var(--ink)}
+/* ---- 9 · Feedback ----------------------------------------------------------- */
+.fb{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:64px}
+.fb .soft{margin-top:18px}
+.priv{font-family:var(--mono);font-size:12px;color:var(--ink-soft);line-height:1.6;margin-top:28px;max-width:52ch}
+form{display:flex;flex-direction:column;gap:22px}
+.field-row{display:flex;flex-direction:column;gap:8px}
+label{font-size:15px;color:var(--ink)}
 .opt{color:var(--ink-soft)}
-textarea,input[type=email]{
-  width:100%;background:transparent;color:var(--ink);
-  border:0;border-bottom:var(--hair) solid var(--rule-faint);
-  padding:8px 0;font-family:var(--mono);font-size:14px;line-height:1.5;resize:vertical;
-}
-textarea:focus,input[type=email]:focus{outline:none;border-bottom-color:var(--rule)}
-textarea::placeholder,input::placeholder{color:var(--ink-soft);opacity:.7}
+textarea,input[type=email]{width:100%;background:var(--surface-raised);color:var(--ink);border:1px solid var(--rule-faint);
+  padding:14px 16px;font-family:var(--sans);font-size:17px;line-height:1.5;resize:vertical}
+textarea:focus,input[type=email]:focus{outline:none;border-color:var(--rule)}
+textarea::placeholder,input::placeholder{color:var(--ink-soft);opacity:.6}
 .fb-foot{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.status{font-family:var(--mono);font-size:12px;min-height:18px;color:var(--ink-soft)}
-/* The words carry the status, which is the system's rule; the colour only
-   agrees with them. Cobalt is legible on the light ground and lime on the
-   dark, so both go through the one accent token. */
+.status{font-family:var(--mono);font-size:12px;min-height:16px;color:var(--ink-soft)}
 .status.ok{color:var(--accent-text)}
 .status.err{color:var(--ink);font-weight:700}
-.priv{font-family:var(--mono);color:var(--ink-soft);font-size:12px;line-height:1.5;
-  max-width:70ch;margin:28px 0 0}
+@media(max-width:860px){.fb{grid-template-columns:1fr;gap:36px}}
 
-/* --------------------------------------------------------------------------
-   Footer
-   -------------------------------------------------------------------------- */
-footer{border-top:var(--hair) solid var(--rule);padding:32px 0}
-.foot-in{display:flex;gap:20px;align-items:baseline;flex-wrap:wrap;
-  font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
-.foot-in .logo{font-size:15px}
-.foot-links{margin-left:auto;display:flex;gap:20px}
-footer a{color:var(--ink-soft)}
-footer a:hover{color:var(--ink)}
+/* ---- 10 · Closing and footer ---------------------------------------------- */
+.end{text-align:center}
+.end h2{font-size:clamp(40px,6vw,84px)}
+.end .lead{margin:20px auto 34px}
+.end .cta-row{justify-content:center}
+footer{border-top:1px solid var(--rule-faint);padding:28px 0}
+.foot-in{display:flex;gap:24px;align-items:baseline;flex-wrap:wrap;font-size:14px;color:var(--ink-soft)}
+.foot-in .logo{font-size:16px;color:var(--ink)}
+.foot-links{margin-left:auto;display:flex;gap:22px}
+.foot-links a:hover{color:var(--ink)}
 
-@media(max-width:620px){
-  :root{--gutter:20px}
-  .field{padding:24px 20px}
+/* ======================================================================
+   Motion
+   ====================================================================== */
+@media (prefers-reduced-motion: no-preference){
+  html{scroll-behavior:smooth}
+  @keyframes rise{from{transform:translateY(105%)}to{transform:none}}
+  @keyframes fade-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+  /* Words rise out of their own line, one after another. */
+  .split .wm{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.08em;margin-bottom:-.08em}
+  .split .wi{display:inline-block}
+  .motion .split .wi{transform:translateY(105%)}
+  .motion .split.seen .wi{animation:rise 1s var(--ease) both;animation-delay:calc(var(--k) * 45ms)}
+
+  .motion .reveal{opacity:0;transform:translateY(20px);transition:opacity 1s var(--ease),transform 1s var(--ease);transition-delay:calc(var(--d,0) * 70ms)}
+  .motion .reveal.seen{opacity:1;transform:none}
+
+  .hero .kicker,.hero .lead,.hero .cta-row,.hero-note{animation:fade-up 1s var(--ease) both}
+  .hero .kicker{animation-delay:.05s}
+  .hero .lead{animation-delay:.45s}
+  .hero .cta-row{animation-delay:.55s}
+  .hero-note{animation-delay:.65s}
+  /* Opacity only, and on the image itself: animating the wrapper would
+     isolate it, and the drawing's multiply blend would show a white box. */
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .hero-art img{animation:fade 1.4s var(--ease) .3s both}
+
+  .btn::before{transition:clip-path .55s var(--ease)}
+  .btn{transition:color .35s var(--ease),border-color .35s var(--ease),transform .2s var(--ease)}
+  .btn:hover .ico svg{animation:relay .6s var(--ease)}
+  @keyframes relay{0%{transform:none}40%{transform:translateX(130%)}41%{transform:translateX(-130%)}100%{transform:none}}
+  .tab-ind{transition:left .55s var(--ease),top .55s var(--ease),width .55s var(--ease),height .55s var(--ease)}
+  .tab{transition:color .55s var(--ease),border-color .55s var(--ease)}
+  /* Nav links: a line draws in from the left and leaves to the right. */
+  .nav-links a:not(.btn){position:relative}
+  .nav-links a:not(.btn)::after{content:"";position:absolute;left:0;right:0;bottom:-5px;height:1px;background:currentColor;
+    transform:scaleX(0);transform-origin:right;transition:transform .45s var(--ease)}
+  .nav-links a:not(.btn):hover::after{transform:scaleX(1);transform-origin:left}
+  .theme-btn svg{transition:transform .6s var(--ease)}
+  .theme-btn:hover svg{transform:rotate(-24deg)}
+
+  /* Vignettes: what they look like before they play. */
+  .motion .vig-write:not([data-played]) .type{visibility:hidden}
+  .motion .vig-saved{opacity:0;transition:opacity .4s}
+  .motion .vig-write.done .vig-saved{opacity:1}
+  .motion .vig-def{opacity:0;transform:translateX(-10px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
+  .motion .vig-write.done .vig-def{opacity:1;transform:none}
+  .vig-l .caret{display:inline-block;width:2px;height:1em;background:var(--ink);vertical-align:-2px;margin-left:1px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .motion .wk i{opacity:0;transform:translateY(8px) scale(.96);transition:opacity .5s var(--ease),transform .6s var(--ease);transition-delay:calc(var(--n) * 110ms)}
+  .motion .vig-plan.play .wk i{opacity:1;transform:none}
+  .motion .vig-free{opacity:0;transition:opacity .6s var(--ease) 1.1s}
+  .motion .vig-plan.play .vig-free{opacity:1}
+  .flip-in{transition:transform .9s var(--ease)}
+  .rate .pick{transition:background-color .35s var(--ease),color .35s var(--ease)}
+  .theme-btn{transition:border-color .3s var(--ease)}
+  .nav{transition:border-color .3s}
 }
 </style>
 </head>
 <body>
+<!-- Lifts the drawings' warm paper (about #E8E3D9) to pure white, channel by
+     channel, so that multiplying them onto the page leaves only ink. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="paper" color-interpolation-filters="sRGB">
+    <feComponentTransfer>
+      <feFuncR type="linear" slope="1.125"/>
+      <feFuncG type="linear" slope="1.15"/>
+      <feFuncB type="linear" slope="1.21"/>
+    </feComponentTransfer>
+  </filter>
+</svg>
 
-<nav class="nav">
+<nav class="nav" id="nav" aria-label="Main">
   <div class="nav-in">
     <a class="logo" href="#top">notivlo</a>
     <div class="nav-links">
-      <a href="#what">What it does</a>
+      <a href="#how">How it works</a>
       <a href="#download">Download</a>
       <a href="#feedback">Feedback</a>
-      <a class="nav-cta" href="app/SignUp.dc.html">Open notivlo</a>
+      <a class="btn btn-primary" href="app/SignUp.dc.html">Open notivlo</a>
       <button type="button" class="theme-btn" id="theme-btn" aria-label="Switch theme" title="Switch between light and dark">
         <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
         <svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.3M12 19.3v2.3M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.4 12h2.3M19.3 12h2.3M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
@@ -466,172 +518,201 @@ footer a:hover{color:var(--ink)}
   </div>
 </nav>
 
-<header class="hero" id="top">
-  <div class="wrap hero-copy">
-    <p class="tag">Early beta · looking for testers</p>
-    <h1>Every subject, every deadline, in one quiet place.</h1>
-    <p class="body">A notebook for each class, a week built around what is actually due, and a home page that opens on the next thing to do.</p>
-    <div class="cta-row">
-      <a class="btn btn-primary" href="app/SignUp.dc.html">
-        Open it in your browser
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </a>
-      <a class="btn btn-ghost" href="#download">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>
-        Download for Mac
-      </a>
-    </div>
-    <p class="cta-note">Nothing to install. An account is three fields — no card, no ads, no feed.</p>
-  </div>
+<main>
 
-  <div class="field field-signal hero-field">
-    <div class="demo" id="demo">
-      <p class="demo-bar">
-        <span class="demo-live"><span class="demo-dot"></span>Live</span>
-        <span class="demo-say">Not a screenshot — the real app, running in this page. Click anything; nothing here is saved.</span>
-        <a class="demo-full" href="demo.html" target="_blank" rel="noopener">Open it full screen ↗</a>
-        <a class="btn btn-ghost demo-open" href="demo.html" target="_blank" rel="noopener"
-           style="border-color:var(--art);color:var(--on-field)">Try the live demo ↗</a>
-      </p>
-      <div class="demo-stage">
-        <img class="shot-light" src="shots/home-light.webp" alt="The notivlo home screen: a greeting, what is due today, and a grid of subject notebooks." width="1760" height="1100">
-        <img class="shot-dark" src="shots/home.webp" alt="The notivlo home screen in dark mode: a greeting, what is due today, and a grid of subject notebooks." width="1760" height="1100">
-        <iframe class="demo-frame" id="demo-frame" title="A live, working copy of notivlo to try"></iframe>
+<!-- 1 · What it is -->
+<header class="hero" id="top">
+  <div class="wrap hero-in">
+    <div>
+      <p class="kicker">For A-level students · free beta</p>
+      <h1 class="split">Your notes, deadlines and revision — all in one calm place.</h1>
+      <p class="lead">notivlo gives every subject its own notebook, puts everything that's due on one week, and quizzes you on what you wrote.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="app/SignUp.dc.html">Open it in your browser
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn" href="#download">Download for Mac</a>
       </div>
+      <p class="hero-note">Free · no card · takes about a minute</p>
+    </div>
+    <div class="hero-art">
+      <img class="ink" id="hero-img" src="shots/kit.webp" width="1024" height="1024" fetchpriority="high" decoding="async"
+           alt="A drawing of a study kit laid out in layers: an open notebook with subject tabs, a weekly planner, a stack of revision cards and a pencil.">
     </div>
   </div>
 </header>
 
-<div class="split" id="what">
-  <div class="split-field field field-cobalt">
-    <p class="field-tag">The week</p>
-    <div class="shot">
-      <img class="shot-light" src="shots/planner-light.webp" alt="The weekly agenda: a seven-day time grid with classes, a study block and a deadline." width="1760" height="1100" loading="lazy">
-      <img class="shot-dark" src="shots/planner.webp" alt="The weekly agenda in dark mode: a seven-day time grid with classes, a study block and a deadline." width="1760" height="1100" loading="lazy">
-    </div>
-  </div>
-  <div class="split-copy">
-    <div>
-      <p class="tag">Part 01 / 03</p>
-      <h2>Built around what is actually due</h2>
-      <p class="body">Deadlines, classes and study blocks on one grid, so an essay due Sunday stops being a surprise on Saturday night.</p>
-    </div>
-    <div>
-      <ul class="keys">
-        <li><span class="key-letter">A</span><span>Deadlines, classes, events and study blocks, each marked differently</span></li>
-        <li><span class="key-letter">B</span><span>Free time between commitments worked out for you</span></li>
-        <li><span class="key-letter">C</span><span>Tick a deadline off and it strikes through where it sits</span></li>
-        <li><span class="key-letter">D</span><span>Tasks link back to the notebook chapter they belong to</span></li>
-      </ul>
-      <p class="spec">Seven days · 15-minute blocks · click an empty hour to fill it</p>
-    </div>
-  </div>
-</div>
-
-<div class="split flip">
-  <div class="split-field field field-lime">
-    <p class="field-tag">The notebooks</p>
-    <div class="shot">
-      <img class="shot-light" src="shots/notebook-light.webp" alt="A Mathematics notebook open on the Quadratics chapter, with chapters listed by volume and a definition note." width="1760" height="1100" loading="lazy">
-      <img class="shot-dark" src="shots/notebook.webp" alt="A Mathematics notebook in dark mode, open on the Quadratics chapter." width="1760" height="1100" loading="lazy">
-    </div>
-  </div>
-  <div class="split-copy">
-    <div>
-      <p class="tag">Part 02 / 03</p>
-      <h2>One notebook per class, in volumes and chapters</h2>
-      <p class="body">Organised the way a syllabus actually is — not one endless document, and not a folder of loose files.</p>
-    </div>
-    <div>
-      <ul class="keys">
-        <li><span class="key-letter">A</span><span>Volumes and chapters that match the specification</span></li>
-        <li><span class="key-letter">B</span><span>A proper editor: formatting, highlights, images and equations</span></li>
-        <li><span class="key-letter">C</span><span>Definition cards pinned alongside what you are reading</span></li>
-        <li><span class="key-letter">D</span><span>Focus mode, printing, and sharing a chapter</span></li>
-      </ul>
-      <p class="spec">Volumes · chapters · four text sizes</p>
-    </div>
-  </div>
-</div>
-
-<section id="everything">
-  <div class="wrap">
-    <div class="sec-head">
-      <p class="tag">Part 03 / 03</p>
-      <h2>What is actually in it</h2>
-      <p class="body">Built for A level — Cambridge syllabuses including 9709, 9702, 9701, 9700, 9708 and 9618.</p>
-    </div>
-
-    <div class="grid">
-      <div class="cell">
-        <p class="cell-no">01</p>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18M3 12h18M3 19h12"/></svg>
-        <h3>Recall</h3>
-        <p>Cards made from your own chapters. What you keep missing comes back round sooner than what you know.</p>
-      </div>
-      <div class="cell">
-        <p class="cell-no">02</p>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l2 2 4-4"/><rect x="3" y="4" width="18" height="17"/><path d="M8 2v4M16 2v4"/></svg>
-        <h3>Practice that follows the real thing</h3>
-        <p>Short papers whenever you want one, and a full mock on a schedule. Questions are written for the app — never scraped past papers.</p>
-      </div>
-      <div class="cell">
-        <p class="cell-no">03</p>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7a3 3 0 013 3v13a2.5 2.5 0 00-2.5-2.5H4zM20 4h-3a3 3 0 00-3 3v13a2.5 2.5 0 012.5-2.5H20z"/></svg>
-        <h3>Written lessons</h3>
-        <p>Seven lessons on the topics that trip people up — the discriminant, projectiles, titration, enzymes, elasticity, unseen poetry, two's complement.</p>
-      </div>
-      <div class="cell">
-        <p class="cell-no">04</p>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
-        <h3>Mark schemes, not just answers</h3>
-        <p>One mark-scheme line per mark, so you can see where the marks actually went rather than guessing.</p>
-      </div>
-      <div class="cell">
-        <p class="cell-no">05</p>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 11-6.2-8.6"/><path d="M21 4v5h-5"/></svg>
-        <h3>Syncs to your account</h3>
-        <p>Sign in on another device and your notebooks, agenda and progress are there. Or skip the account and keep it on one device.</p>
-      </div>
-      <div class="cell">
-        <p class="cell-no">06</p>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4"/></svg>
-        <h3>Light, dark and bigger text</h3>
-        <p>Follows your system or stays where you put it. Four text sizes that scale the whole app, not just the words.</p>
+<!-- 2 · The idea, in one sentence -->
+<section class="say" aria-label="The idea">
+  <div class="say-track">
+    <div class="say-sticky">
+      <div class="wrap">
+        <p id="say">Most study apps give you more to manage. <em>notivlo gives you less</em> — one notebook for each subject, one week with everything that's due, and a home page that tells you what to do next.</p>
       </div>
     </div>
   </div>
 </section>
 
-<section id="download" style="padding-top:0">
+<!-- 3 · How it works -->
+<section id="how" aria-labelledby="how-h">
   <div class="wrap">
-    <div class="sec-head">
-      <p class="tag">Get it</p>
-      <h2>Two ways in</h2>
-      <p class="body">The browser version and the Mac app are the same app. Start in the browser; install it if you like it.</p>
+    <div class="how-head">
+      <p class="kicker">How it works</p>
+      <h2 class="split" id="how-h">Three things, in the order you need them.</h2>
     </div>
-
-    <div class="dl-grid">
-      <div class="dl-opt">
-        <p class="cell-no">Quickest</p>
-        <h3>Open it in your browser</h3>
-        <p>Works on any computer, phone or tablet. Nothing to install, nothing to get past.</p>
-        <a class="btn btn-primary" href="app/SignUp.dc.html">Open notivlo</a>
-        <div class="dl-meta">Chrome, Safari, Firefox or Edge</div>
+    <div class="how-grid">
+      <div class="how-pin" aria-hidden="true">
+        <div class="how-stage">
+          <figure class="on" data-k="write"><img class="shot-light" src="shots/notebook-light.webp" alt="" loading="lazy"><img class="shot-dark" src="shots/notebook.webp" alt="" loading="lazy"></figure>
+          <figure data-k="plan"><img class="shot-light" src="shots/planner-light.webp" alt="" loading="lazy"><img class="shot-dark" src="shots/planner.webp" alt="" loading="lazy"></figure>
+          <figure data-k="practise"><img class="shot-light" src="shots/home-light.webp" alt="" loading="lazy"><img class="shot-dark" src="shots/home.webp" alt="" loading="lazy"></figure>
+        </div>
+        <div class="how-progress"><span><i></i></span><span><i></i></span><span><i></i></span></div>
+        <p class="how-progress-lbl"><span id="how-cap">Your notebook</span><span id="how-n">1 of 3</span></p>
       </div>
-
-      <div class="dl-opt">
-        <p class="cell-no">For Mac</p>
-        <h3>Download the Mac app</h3>
-        <p>A real app in your Dock, in its own window, with the whole app bundled inside it.</p>
-        <a class="btn btn-ghost" id="dmg-link" href="#">Download .dmg</a>
-        <div class="dl-meta">Universal · Intel &amp; Apple Silicon · macOS 13+ · 1.8 MB</div>
+      <div class="how-steps">
+        <div class="step" data-k="write" data-cap="Your notebook">
+          <div class="vig vig-write" aria-hidden="true">
+            <p class="vig-k"><span>Mathematics · Chapter 1.2</span><span class="vig-saved">Saved</span></p>
+            <p class="vig-h">The discriminant</p>
+            <p class="vig-l"><span class="type">For ax² + bx + c = 0, the discriminant is <mark>b² − 4ac</mark>.</span></p>
+            <p class="vig-l"><span class="type">Positive: two real roots. Zero: one repeated root.</span></p>
+            <p class="vig-l"><span class="type">Negative: the curve never meets the x-axis.</span></p>
+            <p class="vig-def"><b>Definition card</b> Discriminant — its sign gives the number of real roots.</p>
+          </div>
+          <p class="step-word">Write.</p>
+          <p>One notebook per subject, split into the same units and chapters as your syllabus. Formatting, images and equations are all there.</p>
+          <div class="step-shot"><img class="shot-light" src="shots/notebook-light.webp" alt="A Mathematics notebook open on a chapter." loading="lazy"><img class="shot-dark" src="shots/notebook.webp" alt="A Mathematics notebook open on a chapter." loading="lazy"></div>
+        </div>
+        <div class="step" data-k="plan" data-cap="Your week">
+          <div class="vig vig-plan" aria-hidden="true">
+            <p class="vig-k"><span>This week</span><span class="vig-free">2h 15m free tonight</span></p>
+            <div class="wk">
+              <div><b>Mon</b><i style="--t:8%;--h:26%;--n:0">Maths</i><i class="due" style="--t:58%;--h:22%;--n:5">Essay due</i></div>
+              <div><b>Tue</b><i style="--t:30%;--h:30%;--n:1">Physics</i></div>
+              <div><b>Wed</b><i style="--t:12%;--h:22%;--n:2">Chem</i><i style="--t:62%;--h:24%;--n:6">Maths</i></div>
+              <div><b>Thu</b><i style="--t:40%;--h:28%;--n:3">Biology</i></div>
+              <div><b>Fri</b><i style="--t:18%;--h:26%;--n:4">Physics</i></div>
+              <div><b>Sat</b></div>
+              <div><b>Sun</b><i style="--t:46%;--h:24%;--n:7">Recall</i></div>
+            </div>
+          </div>
+          <p class="step-word">Plan.</p>
+          <p>Classes, deadlines and study time on one week. Your free time is worked out for you, and ticking something off crosses it out right where it sits.</p>
+          <div class="step-shot"><img class="shot-light" src="shots/planner-light.webp" alt="The weekly agenda." loading="lazy"><img class="shot-dark" src="shots/planner.webp" alt="The weekly agenda." loading="lazy"></div>
+        </div>
+        <div class="step" data-k="practise" data-cap="What's next, on your home page">
+          <div class="vig vig-rec" aria-hidden="true">
+            <p class="vig-k"><span>Recall · Physics</span><span>Card 4 of 12</span></p>
+            <div class="flip"><div class="flip-in">
+              <p class="face front">Ignoring air resistance, what is a projectile's horizontal acceleration?</p>
+              <p class="face back">Zero — its horizontal velocity stays the same throughout.</p>
+            </div></div>
+            <div class="rate"><span>Again</span><span>Hard</span><span class="pick">Got it</span></div>
+            <p class="score">Practice paper · <b class="count" data-to="22">22</b> / 25 marks</p>
+          </div>
+          <p class="step-word">Practise.</p>
+          <p>Recall cards made from your own notes bring back what you keep forgetting. Short practice papers come with a mark scheme, one line per mark.</p>
+          <div class="step-shot"><img class="shot-light" src="shots/home-light.webp" alt="The home page." loading="lazy"><img class="shot-dark" src="shots/home.webp" alt="The home page." loading="lazy"></div>
+        </div>
       </div>
     </div>
+  </div>
+</section>
 
+<!-- 4 · Try it -->
+<section aria-labelledby="demo-h" style="padding-top:0">
+  <div class="wrap">
+    <div class="demo-head">
+      <div>
+        <p class="kicker">Try it right here</p>
+        <h2 class="split" id="demo-h">This is the real app.</h2>
+      </div>
+      <p class="lead">Look around — open a notebook, flip through the week. To write and plan, make a free account.</p>
+    </div>
+    <div class="demo reveal" id="demo">
+      <p class="demo-bar">
+        <span class="demo-live"><span class="demo-dot"></span>Live</span>
+        <span class="demo-say">A look-only preview of the real app</span>
+        <a class="btn demo-open" href="demo.html" target="_blank" rel="noopener">Try the live demo ↗</a>
+      </p>
+      <div class="demo-stage">
+        <img class="shot-light" src="shots/home-light.webp" alt="The notivlo home screen: a greeting, what is due today, and a grid of subject notebooks." width="1760" height="1100" loading="lazy">
+        <img class="shot-dark" src="shots/home.webp" alt="The notivlo home screen in dark mode." width="1760" height="1100" loading="lazy">
+        <iframe class="demo-frame" id="demo-frame" title="A live, working copy of notivlo to try"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · What's inside -->
+<section id="everything" aria-labelledby="in-h" style="padding-top:0">
+  <div class="wrap">
+    <div class="inside-head">
+      <p class="kicker">What's inside</p>
+      <h2 class="split" id="in-h">Everything you need, nothing you don't.</h2>
+    </div>
+    <div class="inside">
+      <div class="reveal"><span class="n">01</span><h3>Recall</h3><p>Cards made from your own chapters. What you keep missing comes back sooner than what you know.</p></div>
+      <div class="reveal"><span class="n">02</span><h3>Practice papers</h3><p>Short papers whenever you want one, and a full mock on a schedule. Every question is written for the app.</p></div>
+      <div class="reveal"><span class="n">03</span><h3>Written lessons</h3><p>Seven lessons on the topics that trip people up, from the discriminant to two's complement.</p></div>
+      <div class="reveal"><span class="n">04</span><h3>Mark schemes</h3><p>One line per mark, so you can see exactly where marks were won or lost.</p></div>
+      <div class="reveal"><span class="n">05</span><h3>Sync</h3><p>Sign in on another device and everything is there. Or skip the account and keep it on one device.</p></div>
+      <div class="reveal"><span class="n">06</span><h3>Light, dark and bigger text</h3><p>Four text sizes that scale the whole app, not just the words.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · By subject -->
+<section aria-labelledby="sub-h" style="padding-top:0">
+  <div class="wrap">
+    <div class="subj-head">
+      <p class="kicker">By subject</p>
+      <h2 class="split" id="sub-h">See it with your subjects.</h2>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Subjects" id="tabs"></div>
+    <div class="example" id="example" role="tabpanel" aria-live="polite">
+      <div class="ex"><i class="ex-line" aria-hidden="true"></i><p class="ex-k">Notebook chapter</p><p class="ex-t" data-f="chapter"></p><p class="ex-a" data-f="code"></p></div>
+      <div class="ex"><i class="ex-line" aria-hidden="true"></i><p class="ex-k">Recall card</p><p class="ex-t" data-f="q"></p><p class="ex-a" data-f="a"></p></div>
+      <div class="ex"><i class="ex-line" aria-hidden="true"></i><p class="ex-k" data-f="pk">Practice question</p><p class="ex-t" data-f="pq"></p><p class="ex-a" data-f="ps"></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · A tester's words. Hidden until a real quote is filled in:
+     replace the text and the name, then delete the hidden attribute. Never
+     put an invented quote here. -->
+<section class="quote" id="quote" hidden aria-label="From a tester">
+  <div class="wrap">
+    <blockquote>REAL QUOTE HERE</blockquote>
+    <cite>— NAME, YEAR</cite>
+  </div>
+</section>
+
+<!-- 8 · Get it -->
+<section id="download" aria-labelledby="dl-h">
+  <div class="wrap">
+    <div class="get-head">
+      <p class="kicker">Get it</p>
+      <h2 class="split" id="dl-h">Start in your browser. Keep it on your Mac.</h2>
+    </div>
+    <div class="ways">
+      <div class="way reveal">
+        <h3>In your browser</h3>
+        <p class="soft">Works on any computer, phone or tablet. Nothing to install.</p>
+        <a class="btn btn-primary" href="app/SignUp.dc.html">Open notivlo <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <p class="way-meta">Chrome, Safari, Firefox or Edge</p>
+      </div>
+      <div class="way reveal">
+        <h3>On your Mac</h3>
+        <p class="soft">A real app in your Dock, in its own window. Same app, same account.</p>
+        <a class="btn" id="dmg-link" href="#">Download .dmg</a>
+        <p class="way-meta">Universal · Intel &amp; Apple Silicon · macOS 13+ · 1.8 MB</p>
+      </div>
+    </div>
     <details>
-      <summary>Mac: it will say the app can't be verified or installed. Here's why, and what to do.</summary>
-      <p class="note">notivlo isn't signed with a paid Apple Developer certificate yet, so macOS shows a warning the first time. The app is sandboxed and can only reach its own sync server — but you shouldn't take that on faith from the person asking you to install it, so here's exactly what to click.</p>
+      <summary>Mac says the app can't be verified or installed? Here's why, and what to do.</summary>
+      <div class="det">
+<p class="note">notivlo isn't signed with a paid Apple Developer certificate yet, so macOS shows a warning the first time. The app is sandboxed and can only reach its own sync server — but you shouldn't take that on faith from the person asking you to install it, so here's exactly what to click.</p>
       <ol class="steps">
         <li>Open the <code>.dmg</code>. If macOS offers to <strong>Install this app?</strong>, click <strong>Cancel</strong>: that installer only accepts notarized apps and will say it <em>could not install</em>. Instead, drag <strong>notivlo</strong> onto the Applications folder in the window that opened.</li>
         <li>Open it. macOS will refuse the first time — that's expected.</li>
@@ -640,23 +721,24 @@ footer a:hover{color:var(--ink)}
       </ol>
       <p class="note">If you'd rather do it in one line instead:</p>
       <code class="code-block">xattr -dr com.apple.quarantine /Applications/notivlo.app</code>
+      </div>
     </details>
   </div>
 </section>
 
-<section id="feedback" style="padding-top:0">
-  <div class="wrap">
-    <div class="sec-head">
-      <p class="tag">The part I actually need</p>
-      <h2>Tell me what's broken</h2>
-      <p class="body">This is an early beta and it is being built by one person. Anything you noticed is worth sending — a bug, a thing that confused you, a subject that's missing, or a feature you expected to find.</p>
+<!-- 9 · Feedback -->
+<section id="feedback" aria-labelledby="fb-h" style="padding-top:0">
+  <div class="wrap fb">
+    <div>
+      <p class="kicker">Feedback</p>
+      <h2 class="split" id="fb-h">Tell me what's broken.</h2>
+      <p class="soft">This is an early beta, built by one person. A bug, something confusing, a missing subject — all of it helps.</p>
+      <p class="priv">What gets sent: your message, your email if you typed one, which version you were on and your browser's user-agent string. Nothing from your notebooks, and nothing else.</p>
     </div>
-
     <form id="fb-form" novalidate>
       <div class="field-row">
         <label for="fb-msg">What happened, or what's missing?</label>
-        <textarea id="fb-msg" name="message" rows="5" required maxlength="4000"
-          placeholder="I tried to… and then…"></textarea>
+        <textarea id="fb-msg" name="message" rows="5" required maxlength="4000" placeholder="I tried to… and then…"></textarea>
       </div>
       <div class="field-row">
         <label for="fb-email">Email <span class="opt">— optional, only so I can reply</span></label>
@@ -667,14 +749,27 @@ footer a:hover{color:var(--ink)}
         <span class="status" id="fb-status" role="status" aria-live="polite"></span>
       </div>
     </form>
-    <p class="priv">What gets sent: your message, your email if you typed one, which version you were on and your browser's user-agent string. Nothing from your notebooks, and nothing else.</p>
   </div>
 </section>
+
+<!-- 10 · Start -->
+<section class="end" aria-labelledby="end-h">
+  <div class="wrap">
+    <h2 class="split" id="end-h">Ready when you are.</h2>
+    <p class="lead">Make an account in a minute, or just look around first.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="app/SignUp.dc.html">Open notivlo <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn" href="demo.html" target="_blank" rel="noopener">Try the demo first</a>
+    </div>
+  </div>
+</section>
+
+</main>
 
 <footer>
   <div class="wrap foot-in">
     <span class="logo">notivlo</span>
-    <span>An early beta. Built for A level.</span>
+    <span>An early beta, built for A level.</span>
     <span class="foot-links">
       <a href="app/SignUp.dc.html">Open the app</a>
       <a href="#download">Download</a>
@@ -686,6 +781,293 @@ footer a:hover{color:var(--ink)}
 <script>
 (function () {
   'use strict';
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var desktop = window.matchMedia ? window.matchMedia('(min-width: 900px)') : { matches: true };
+
+  /* ---- Nav gets its rule once the page moves ---------------------------- */
+  var nav = document.getElementById('nav');
+  function navTick() { if (nav) nav.classList.toggle('scrolled', scrollY > 8); }
+  addEventListener('scroll', navTick, { passive: true });
+  navTick();
+
+  /* ---- Subjects: examples taken from the app's own lessons and papers --- */
+  /* Chapters are the lesson titles in lessons.js; practice questions and
+     their first mark line are the app's own originals from exam-bank.js
+     (Computer Science has no paper yet, so it shows a lesson exercise). */
+  (function () {
+    var SUBJ = [
+      { name: 'Mathematics', code: '9709', chapter: 'Quadratics: completed square and the discriminant',
+        q: 'What does b² − 4ac < 0 tell you about a quadratic?', a: 'It has no real roots — the curve never meets the x-axis.',
+        pq: 'Find the angle between the vectors a and b, giving your answer to one decimal place.', marks: 4, ps: 'M1 — a · b = 2(1) + (−3)(4) + (1)(−2) = −12' },
+      { name: 'Physics', code: '9702', chapter: 'Uniform acceleration and projectile motion',
+        q: 'Ignoring air resistance, what is the horizontal acceleration of a projectile?', a: 'Zero — its horizontal velocity stays the same throughout.',
+        pq: 'Distinguish between distance and displacement, and between speed and velocity.', marks: 2, ps: 'B1 — distance and speed are scalars, having magnitude only' },
+      { name: 'Chemistry', code: '9701', chapter: 'Moles, concentration and titration calculations',
+        q: 'How do you find a concentration from moles and volume?', a: 'c = n ÷ V, with the volume in dm³.',
+        pq: 'State the number of electrons, protons and neutrons in one atom of ⁵⁵Mn.', marks: 1, ps: '25 electrons, 25 protons and 30 neutrons — all three required for the mark.' },
+      { name: 'Biology', code: '9700', chapter: 'Enzymes: mode of action, rate and inhibition',
+        q: 'Where does a competitive inhibitor bind?', a: 'In the active site, competing with the substrate.',
+        pq: 'State three structural differences between a prokaryotic cell and a eukaryotic cell.', marks: 3, ps: 'A prokaryote has no nucleus; its DNA lies free in the cytoplasm.' },
+      { name: 'Economics', code: '9708', chapter: 'Price elasticity of demand and total revenue',
+        q: 'Demand is price elastic. What happens to total revenue if the price falls?', a: 'It rises — quantity demanded grows proportionally more than the price fell.',
+        pq: 'Define aggregate demand and state its components.', marks: 2, ps: 'The total planned expenditure on an economy’s goods and services at a given price level.' },
+      { name: 'Computer Science', code: '9618', chapter: 'Binary, hexadecimal and two’s complement',
+        q: 'What is the range of an n-bit two’s complement number?', a: '−2ⁿ⁻¹ to 2ⁿ⁻¹ − 1.',
+        pk: 'Lesson exercise', pq: 'Represent −45 in eight-bit two’s complement.', marks: 3, ps: '1101 0011 — show the inverted value as its own line of working.' }
+    ];
+    var tabs = document.getElementById('tabs'), panel = document.getElementById('example');
+    if (!tabs || !panel) return;
+    var btns = SUBJ.map(function (s, i) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'tab'; b.id = 'tab-' + i;
+      b.setAttribute('role', 'tab'); b.setAttribute('aria-controls', 'example');
+      b.textContent = s.name;
+      b.addEventListener('click', function () { select(i, true); });
+      b.addEventListener('keydown', function (e) {
+        var k = e.key, j = null;
+        if (k === 'ArrowRight') j = (i + 1) % SUBJ.length;
+        else if (k === 'ArrowLeft') j = (i - 1 + SUBJ.length) % SUBJ.length;
+        else if (k === 'Home') j = 0;
+        else if (k === 'End') j = SUBJ.length - 1;
+        if (j !== null) { e.preventDefault(); select(j, true); btns[j].focus(); }
+      });
+      tabs.appendChild(b);
+      return b;
+    });
+    function fill(s) {
+      var f = function (k, v) { var n = panel.querySelector('[data-f="' + k + '"]'); if (n) n.textContent = v; };
+      f('chapter', s.chapter);
+      f('code', 'Cambridge ' + s.code + ' · ' + s.name);
+      f('q', s.q);
+      f('pk', (s.pk || 'Practice question') + ' · ' + s.marks + (s.marks === 1 ? ' mark' : ' marks'));
+      f('pq', s.pq);
+      var a = panel.querySelector('[data-f="a"]'); a.innerHTML = '<b>Answer</b>'; a.appendChild(document.createTextNode(s.a));
+      var ps = panel.querySelector('[data-f="ps"]'); ps.innerHTML = '<b>Mark scheme</b>'; ps.appendChild(document.createTextNode(s.ps));
+    }
+    function select(i, animate) {
+      btns.forEach(function (b, j) {
+        b.setAttribute('aria-selected', j === i ? 'true' : 'false');
+        b.tabIndex = j === i ? 0 : -1;
+      });
+      panel.setAttribute('aria-labelledby', 'tab-' + i);
+      placeInd(true);
+      var from = current; current = i;
+      if (!animate || reduce || !panel.animate || from === i) { fill(SUBJ[i]); return; }
+      /* Out towards where you came from, in from where you are going:
+         each card's lines leave and arrive one after another, and a
+         signal line draws across the top as the new subject lands. */
+      var dir = i > from ? 1 : -1, token = ++swapToken;
+      var items = panel.querySelectorAll('.ex > p'), lines = panel.querySelectorAll('.ex-line');
+      var outs = Array.prototype.map.call(items, function (el, n) {
+        el.getAnimations().forEach(function (a) { a.cancel(); });
+        return el.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateX(' + (-dir * 16) + 'px)' }],
+          { duration: 180, delay: (n % 3) * 20 + Math.floor(n / 3) * 30, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+      });
+      Promise.all(outs.map(function (a) { return a.finished.catch(function () {}); })).then(function () {
+        if (token !== swapToken) return;
+        fill(SUBJ[i]);
+        Array.prototype.forEach.call(items, function (el, n) {
+          el.getAnimations().forEach(function (a) { a.cancel(); });
+          el.animate([{ opacity: 0, transform: 'translateX(' + (dir * 22) + 'px)' }, { opacity: 1, transform: 'none' }],
+            { duration: 640, delay: Math.floor(n / 3) * 70 + (n % 3) * 45, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+        });
+        Array.prototype.forEach.call(lines, function (l, n) {
+          l.animate([{ transform: 'scaleX(0)', opacity: 1 }, { transform: 'scaleX(1)', opacity: 1, offset: .6 },
+            { transform: 'scaleX(1)', opacity: 0 }], { duration: 1200, delay: n * 70, easing: 'cubic-bezier(.65,0,.35,1)' });
+        });
+      });
+    }
+    /* The ink block under the chosen tab. */
+    var ind = document.createElement('span');
+    ind.className = 'tab-ind'; ind.setAttribute('aria-hidden', 'true');
+    tabs.insertBefore(ind, tabs.firstChild);
+    tabs.classList.add('has-ind');
+    var current = 0, swapToken = 0;
+    function placeInd(moving) {
+      var b = btns[current === undefined ? 0 : current];
+      var sel = btns.filter(function (x) { return x.getAttribute('aria-selected') === 'true'; })[0] || b;
+      if (!moving) ind.style.transition = 'none';
+      ind.style.left = sel.offsetLeft + 'px'; ind.style.top = sel.offsetTop + 'px';
+      ind.style.width = sel.offsetWidth + 'px'; ind.style.height = sel.offsetHeight + 'px';
+      if (!moving) { void ind.offsetWidth; ind.style.transition = ''; }
+    }
+    addEventListener('resize', function () { placeInd(false); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { placeInd(false); });
+    select(0, false);
+    placeInd(false);
+  })();
+
+  /* ---- Buttons: remember where the cursor came in and went out --------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.btn'), function (b) {
+    var svg = b.querySelector(':scope > svg');
+    if (svg) { var w = document.createElement('span'); w.className = 'ico'; b.insertBefore(w, svg); w.appendChild(svg); }
+    function at(e) {
+      var r = b.getBoundingClientRect();
+      b.style.setProperty('--bx', (e.clientX - r.left) + 'px');
+      b.style.setProperty('--by', (e.clientY - r.top) + 'px');
+    }
+    b.addEventListener('pointerenter', at);
+    b.addEventListener('pointerleave', at);
+  });
+
+  if (!reduce && 'IntersectionObserver' in window) {
+    document.documentElement.classList.add('motion');
+
+    /* ---- Headings rise word by word as they arrive ------------------------ */
+    Array.prototype.forEach.call(document.querySelectorAll('.split'), function (h) {
+      var text = h.textContent.trim();
+      h.setAttribute('aria-label', text);
+      h.innerHTML = text.split(/\s+/).map(function (w, k) {
+        var safe = w.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        return '<span class="wm" aria-hidden="true"><span class="wi" style="--k:' + k + '">' + safe + '</span></span>';
+      }).join(' ');
+    });
+
+    /* ---- Things settle in once as they scroll into view ------------------- */
+    var counts = new Map();
+    Array.prototype.forEach.call(document.querySelectorAll('.reveal'), function (el) {
+      var p = el.parentNode, i = counts.get(p) || 0;
+      counts.set(p, i + 1);
+      el.style.setProperty('--d', String(i % 6));
+    });
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('seen'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.1 });
+    Array.prototype.forEach.call(document.querySelectorAll('.split, .reveal'), function (el) { io.observe(el); });
+
+    /* ---- The sentence inks in as it is read (desktop, where it is pinned) - */
+    var say = document.getElementById('say');
+    if (say) {
+      var track = say.closest('.say-track');
+      var html = say.innerHTML;
+      say.setAttribute('aria-label', say.textContent.trim());
+      /* Wrap each word, keeping the <em> around the words that had it. */
+      var tmp = document.createElement('div'); tmp.innerHTML = html;
+      var out = [];
+      (function walk(node, em) {
+        Array.prototype.forEach.call(node.childNodes, function (c) {
+          if (c.nodeType === 3) c.textContent.split(/(\s+)/).forEach(function (t) {
+            if (!t) return;
+            if (/^\s+$/.test(t)) { out.push(' '); return; }
+            var safe = t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+            out.push('<span class="w" aria-hidden="true">' + (em ? '<em>' + safe + '</em>' : safe) + '</span>');
+          });
+          else walk(c, em || c.nodeName === 'EM');
+        });
+      })(tmp, false);
+      say.innerHTML = out.join('');
+      var words = say.querySelectorAll('.w');
+      var sayTick = function () {
+        if (!desktop.matches) { for (var j = 0; j < words.length; j++) words[j].classList.add('on'); return; }
+        var r = track.getBoundingClientRect();
+        var t = (-r.top + innerHeight * 0.15) / (r.height - innerHeight * 0.9);
+        var n = Math.round(Math.max(0, Math.min(1, t)) * words.length);
+        for (var i = 0; i < words.length; i++) words[i].classList.toggle('on', i < n);
+      };
+      addEventListener('scroll', sayTick, { passive: true });
+      addEventListener('resize', sayTick);
+      sayTick();
+    }
+
+    /* ---- The hero drawing floats gently as the page scrolls --------------- */
+    var img = document.getElementById('hero-img');
+    if (img) {
+      var raf = 0;
+      var float = function () {
+        raf = 0;
+        if (scrollY > innerHeight * 1.5) return;
+        img.style.transform = 'translateY(' + (Math.sin(scrollY / 160) * 14 - scrollY * 0.06).toFixed(1) + 'px)';
+      };
+      addEventListener('scroll', function () { if (!raf) raf = requestAnimationFrame(float); }, { passive: true });
+    }
+  }
+
+  /* ---- How it works: the pinned picture follows the step in view -------- */
+  (function () {
+    var steps = document.querySelectorAll('.step');
+    var figs = document.querySelectorAll('.how-stage figure');
+    var bars = document.querySelectorAll('.how-progress span');
+    var still = !document.documentElement.classList.contains('motion');
+
+    /* The progress line fills continuously with the scroll, one bar per step. */
+    function progress() {
+      var mid = innerHeight / 2;
+      Array.prototype.forEach.call(steps, function (s, i) {
+        var r = s.getBoundingClientRect();
+        var f = Math.max(0, Math.min(1, (mid - r.top) / r.height));
+        if (bars[i]) bars[i].style.setProperty('--p', f.toFixed(3));
+      });
+    }
+    addEventListener('scroll', progress, { passive: true });
+    addEventListener('resize', progress);
+    progress();
+
+    /* Each vignette plays once, the first time its step is in view. */
+    function play(step) {
+      var v = step.querySelector('.vig');
+      if (!v || v.dataset.played) return;
+      v.dataset.played = '1';
+      if (still) { finish(v); return; }
+      if (v.classList.contains('vig-write')) typeOut(v);
+      else if (v.classList.contains('vig-plan')) { v.classList.add('play'); setTimeout(function () { v.classList.add('ticked'); }, 1700); }
+      else if (v.classList.contains('vig-rec')) {
+        setTimeout(function () { v.classList.add('flipped'); }, 700);
+        setTimeout(function () { v.classList.add('rated'); }, 1800);
+        setTimeout(function () { countUp(v.querySelector('.count')); }, 2000);
+      }
+    }
+    function finish(v) { v.classList.add('done', 'play', 'ticked', 'flipped', 'rated'); }
+    function countUp(el) {
+      if (!el) return;
+      var to = +el.getAttribute('data-to'), t0 = performance.now();
+      (function f(t) {
+        var k = Math.min(1, (t - t0) / 900), e = 1 - Math.pow(1 - k, 3);
+        el.textContent = String(Math.round(to * e));
+        if (k < 1) requestAnimationFrame(f);
+      })(t0);
+    }
+    /* Type each line in turn, keeping any marked words marked. */
+    function typeOut(v) {
+      var lines = v.querySelectorAll('.type');
+      var plans = Array.prototype.map.call(lines, function (l) {
+        var parts = Array.prototype.map.call(l.childNodes, function (n) {
+          return { mark: n.nodeName === 'MARK', text: n.textContent };
+        });
+        l.textContent = '';
+        return { el: l, parts: parts };
+      });
+      var caret = document.createElement('span'); caret.className = 'caret';
+      var li = 0, pi = 0, ci = 0, node = null;
+      (function tick() {
+        var pl = plans[li];
+        if (!pl) { caret.remove(); v.classList.add('done'); return; }
+        var part = pl.parts[pi];
+        if (!part) { li++; pi = 0; ci = 0; node = null; setTimeout(tick, 180); return; }
+        if (!node) {
+          node = part.mark ? document.createElement('mark') : document.createTextNode('');
+          pl.el.appendChild(node); pl.el.appendChild(caret);
+        }
+        ci++;
+        node.textContent = part.text.slice(0, ci);
+        if (ci >= part.text.length) { pi++; ci = 0; node = null; }
+        setTimeout(tick, 16 + Math.random() * 18);
+      })();
+    }
+    var cap = document.getElementById('how-cap'), num = document.getElementById('how-n');
+    if (!steps.length || !('IntersectionObserver' in window)) return;
+    var sio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var idx = Array.prototype.indexOf.call(steps, e.target), k = e.target.getAttribute('data-k');
+        Array.prototype.forEach.call(steps, function (s, i) { s.classList.toggle('on', i === idx); });
+        play(e.target);
+        Array.prototype.forEach.call(figs, function (f) { f.classList.toggle('on', f.getAttribute('data-k') === k); });
+        if (cap) cap.textContent = e.target.getAttribute('data-cap');
+        if (num) num.textContent = (idx + 1) + ' of ' + steps.length;
+      });
+    }, { rootMargin: '-45% 0px -45% 0px' });
+    Array.prototype.forEach.call(steps, function (s) { sio.observe(s); });
+  })();
 
   /* ---- Theme --------------------------------------------------------- */
   /* Until the button is pressed there is no stored choice and the page
@@ -777,22 +1159,32 @@ footer a:hover{color:var(--ink)}
   });
 
   if (frame) {
-    // After load, and out of the way of anything else the browser still has
-    // to do: the app is a few hundred kilobytes and the hero has to paint
-    // first.
-    var start = function () {
-      if (window.requestIdleCallback) requestIdleCallback(pointDemo, { timeout: 2000 });
-      else setTimeout(pointDemo, 400);
+    /* The app is about half a megabyte, so it is fetched only when the
+       demo is within a screen or so of being seen, and only after the page
+       itself has finished loading. A visitor who never scrolls that far
+       never downloads it. */
+    var near = !('IntersectionObserver' in window), loaded = document.readyState === 'complete';
+    var startIfReady = function () {
+      if (!near || !loaded || frame.getAttribute('src')) return;
+      if (window.requestIdleCallback) requestIdleCallback(pointDemo, { timeout: 1200 });
+      else setTimeout(pointDemo, 200);
     };
-    if (document.readyState === 'complete') start();
-    else window.addEventListener('load', start);
+    if (!near) {
+      new IntersectionObserver(function (entries, obs) {
+        if (entries.some(function (e) { return e.isIntersecting; })) { near = true; obs.disconnect(); startIfReady(); }
+      }, { rootMargin: '1000px 0px' }).observe(demo);
+    }
+    if (!loaded) window.addEventListener('load', function () { loaded = true; startIfReady(); });
+    startIfReady();
 
     // Turning a phone sideways, or dragging a window wider, can cross the
-    // threshold where the demo fits.
+    // threshold where the demo fits. It only ever starts the demo here —
+    // pointDemo reloads a running frame, which is right for a theme change
+    // but would restart the app on every resize.
     var sized = null;
     window.addEventListener('resize', function () {
       clearTimeout(sized);
-      sized = setTimeout(pointDemo, 250);
+      sized = setTimeout(startIfReady, 250);
     });
   }
 

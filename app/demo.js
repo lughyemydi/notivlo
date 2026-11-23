@@ -124,6 +124,155 @@
 
   window.notivloDemo = true;
 
+  /* ---- Look, don't touch --------------------------------------------------
+     The demo is a preview, not a free copy of the app: a visitor can walk
+     through Home, the agenda and the notebooks, open chapters and page
+     through weeks, but cannot write, add, remove, tick off, format, change
+     settings or start a test. Doing any of that is what an account is for,
+     so a blocked action says so and offers one.
+
+     This is an allow-list. Anything that is not plainly navigation is
+     stopped in the capture phase, before the app's own handlers see it, so
+     a control added to the app later is blocked here by default rather
+     than quietly left open. */
+  var page = (location.pathname.split('/').pop() || '').toLowerCase();
+  var PAGES = ['home.dc.html', 'planner.dc.html', 'notebook.dc.html'];
+  if (PAGES.indexOf(page) < 0) {
+    /* Settings, setup, sign-in and the rest are not part of the tour. */
+    location.replace('Home.dc.html');
+    return;
+  }
+  var onPlanner = page === 'planner.dc.html';
+
+  function label(el) {
+    return ((el.getAttribute('aria-label') || el.title || el.textContent || '') + '').replace(/\s+/g, ' ').trim();
+  }
+  /* true: navigation, let it through. false: an action, stop it.
+     null: not a control at all. */
+  function verdict(target) {
+    if (!target || !target.closest) return null;
+    var a = target.closest('a[href]');
+    if (a) {
+      var h = a.getAttribute('href') || '';
+      if (/^(\.\/)?(home|planner|notebook)\.dc\.html/i.test(h)) return true;
+      /* In a notebook, chapters and units are '#' links; their "Add …"
+         neighbours are not navigation. */
+      if (h === '#' && !/^add\b/i.test(label(a))) return true;
+      return false;
+    }
+    var b = target.closest('button, [role="button"], label, summary');
+    if (b) return /^(previous week|next week)$/i.test(label(b));
+    var f = target.closest('input, select, textarea');
+    if (f) {
+      if (f.tagName === 'SELECT') return /sort/i.test(f.textContent || '');
+      return /^search/i.test(f.getAttribute('placeholder') || '');
+    }
+    if (target.closest('[contenteditable]')) return null;
+    return null;
+  }
+
+  var nudgeEl = null, nudgeTimer = 0;
+  function nudge() {
+    if (!nudgeEl) {
+      nudgeEl = document.createElement('div');
+      nudgeEl.setAttribute('role', 'status');
+      nudgeEl.style.cssText = 'position:fixed;left:50%;bottom:22px;z-index:2147483647;transform:translate(-50%,12px);' +
+        'display:flex;align-items:center;gap:16px;padding:12px 12px 12px 18px;max-width:calc(100% - 32px);' +
+        'background:#14161b;color:#f6f4ef;font:500 14px/1.35 "Google Sans Flex","Google Sans",Arial,sans-serif;' +
+        'opacity:0;transition:opacity .3s,transform .4s cubic-bezier(.16,1,.3,1);pointer-events:auto';
+      var t = document.createElement('span');
+      t.textContent = 'This is a look-only preview. Make a free account to write, plan and practise.';
+      var go = document.createElement('a');
+      go.href = 'SignUp.dc.html';
+      go.target = '_top';
+      go.textContent = 'Make an account';
+      go.style.cssText = 'flex:none;padding:9px 14px;background:#ff5a1f;color:#14161b;text-decoration:none;' +
+        'font:600 12px/1 "Google Sans Code",ui-monospace,monospace';
+      go.setAttribute('data-demo-ok', '');
+      nudgeEl.appendChild(t);
+      nudgeEl.appendChild(go);
+      document.body.appendChild(nudgeEl);
+    }
+    requestAnimationFrame(function () {
+      nudgeEl.style.opacity = '1';
+      nudgeEl.style.transform = 'translate(-50%,0)';
+    });
+    clearTimeout(nudgeTimer);
+    nudgeTimer = setTimeout(function () {
+      nudgeEl.style.opacity = '0';
+      nudgeEl.style.transform = 'translate(-50%,12px)';
+    }, 3600);
+  }
+
+  function stop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+  }
+  function guardPointer(e) {
+    if (e.target.closest && e.target.closest('[data-demo-ok]')) return;
+    var v = verdict(e.target);
+    if (v === true) return;
+    /* On the agenda, a click on empty grid adds an entry, so plain
+       surfaces are off limits there too. */
+    if (v === false || (v === null && onPlanner)) {
+      stop(e);
+      if (e.type === 'click') nudge();
+    }
+  }
+  ['pointerdown', 'mousedown', 'click', 'dblclick', 'auxclick', 'contextmenu'].forEach(function (t) {
+    document.addEventListener(t, guardPointer, true);
+  });
+
+  /* No text gets in or out by any route. */
+  ['beforeinput', 'paste', 'cut', 'drop', 'dragstart'].forEach(function (t) {
+    document.addEventListener(t, function (e) {
+      var f = e.target && e.target.closest && e.target.closest('input, textarea');
+      if (t === 'beforeinput' && f && verdict(f) === true) return;   /* the search boxes */
+      stop(e);
+      if (t !== 'dragstart') nudge();
+    }, true);
+  });
+  document.addEventListener('keydown', function (e) {
+    var f = e.target && e.target.closest && e.target.closest('input, textarea, select');
+    if (f && verdict(f) === true) return;
+    var k = (e.key || '').toLowerCase();
+    var edit = k === 'backspace' || k === 'delete' ||
+      ((e.metaKey || e.ctrlKey) && /^[zybiusk]$/.test(k));
+    /* Enter and space press whatever has focus; let them through only on
+       navigation, the click guard stops the rest. */
+    if (edit || ((k === 'enter' || k === ' ') && verdict(e.target) === false)) {
+      stop(e);
+      if (!edit) nudge();
+    }
+  }, true);
+
+  /* Nothing is editable, however the app sets it. */
+  function freeze(root) {
+    var nodes = root.querySelectorAll ? root.querySelectorAll('[contenteditable]:not([contenteditable="false"])') : [];
+    Array.prototype.forEach.call(nodes, function (n) { n.setAttribute('contenteditable', 'false'); });
+    var fields = root.querySelectorAll ? root.querySelectorAll('input, textarea') : [];
+    Array.prototype.forEach.call(fields, function (n) { if (verdict(n) !== true) n.readOnly = true; });
+  }
+  function watch() {
+    freeze(document);
+    new MutationObserver(function (list) {
+      list.forEach(function (m) {
+        if (m.type === 'attributes') {
+          if (m.target.getAttribute('contenteditable') !== 'false') m.target.setAttribute('contenteditable', 'false');
+        } else {
+          Array.prototype.forEach.call(m.addedNodes, function (n) {
+            if (n.nodeType !== 1) return;
+            if (n.hasAttribute('contenteditable') && n.getAttribute('contenteditable') !== 'false') n.setAttribute('contenteditable', 'false');
+            freeze(n);
+          });
+        }
+      });
+    }).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['contenteditable'] });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch);
+  else watch();
+
   /* Tell the host the app has painted, so it can take the screenshot out
      from under the frame only once there is something to replace it with. */
   function announce() {
