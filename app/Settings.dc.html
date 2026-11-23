@@ -20,6 +20,8 @@
 <script src="./theme.js"></script>
 <script src="./text-size.js"></script>
 <script src="./note-font.js"></script>
+<!-- The year at school the setup guide asked for, changeable here. -->
+<script src="./school-level.js"></script>
 <script src="./legal-documents.js"></script>
 <script src="./legal-licenses.js"></script>
 <script src="./auth.js"></script>
@@ -321,6 +323,42 @@
       </sc-if>
 
       <sc-if value="{{ showPreferences }}" hint-placeholder-val="{{ false }}">
+        <!-- Year at school, part of Preferences -->
+        <div class="set-card">
+          <div>
+            <div class="card-kicker">Preferences</div>
+            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">Your year and goal</h2>
+          </div>
+          <div class="set-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-4)">
+            <div class="field">
+              <label for="set-school-system">Where you go to school</label>
+              <select id="set-school-system" class="input" value="{{ schoolSystem }}" onChange="{{ onSchoolSystem }}" style="border-radius:14px;background:var(--color-surface)">
+                <sc-for list="{{ schoolSystems }}" as="ss" hint-placeholder-count="8">
+                  <option value="{{ ss.value }}">{{ ss.label }}</option>
+                </sc-for>
+              </select>
+            </div>
+            <div class="field">
+              <label for="set-school-grade">Your year</label>
+              <select id="set-school-grade" class="input" value="{{ schoolGrade }}" onChange="{{ onSchoolGrade }}" style="border-radius:14px;background:var(--color-surface)">
+                <sc-for list="{{ schoolGrades }}" as="sg" hint-placeholder-count="5">
+                  <option value="{{ sg.value }}">{{ sg.label }}</option>
+                </sc-for>
+              </select>
+            </div>
+            <div class="field">
+              <label for="set-goal">What you are here to do</label>
+              <select id="set-goal" class="input" value="{{ studyGoal }}" onChange="{{ onStudyGoal }}" style="border-radius:14px;background:var(--color-surface)">
+                <sc-for list="{{ studyGoals }}" as="sgl" hint-placeholder-count="5">
+                  <option value="{{ sgl.value }}">{{ sgl.label }}</option>
+                </sc-for>
+              </select>
+            </div>
+          </div>
+          <p style="margin:0;font-size:13px;color:var(--color-neutral-600)">{{ schoolNote }}</p>
+          <p style="margin:0;font-size:13px;color:var(--color-neutral-600)">{{ goalNote }}</p>
+        </div>
+
         <!-- Preferences -->
         <div class="set-card">
           <div>
@@ -862,6 +900,15 @@ class Component extends DCLogic {
       currentPassword: '', newPassword: '', confirmPassword: '',
       passwordMessage: '', passwordOk: false,
       defaultSort: prefs.defaultSort || 'recent',
+      ...(() => {
+        const sch = window.notivloSchool;
+        const had = sch ? sch.read() : { system: '', grade: '' };
+        return {
+          schoolSystem: had.system || (sch ? sch.guessSystem(sch.browserLocales()) : ''),
+          schoolGrade: had.grade,
+          studyGoal: (sch && sch.readGoal() && sch.readGoal().id) || '',
+        };
+      })(),
       exportMessage: '',
       // Feedback. The email is pre-filled from the account so a signed-in
       // tester does not retype it, and stays editable because the report is
@@ -1373,6 +1420,24 @@ class Component extends DCLogic {
     });
   }
 
+  // The year at school. Changing the system clears the year, because the
+  // years are that system's own; '' for the year clears the answer.
+  setSchool(system, grade) {
+    const sch = window.notivloSchool;
+    if (!sch) return;
+    const now = sch.write(system, grade);
+    this.setState({ schoolSystem: system, schoolGrade: now.grade });
+    if (window.notivloSync && window.notivloSync.enabled()) window.notivloSync.sync();
+  }
+
+  setStudyGoal(id) {
+    const sch = window.notivloSchool;
+    if (!sch) return;
+    const g = sch.writeGoal(id);
+    this.setState({ studyGoal: g ? g.id : '' });
+    if (window.notivloSync && window.notivloSync.enabled()) window.notivloSync.sync();
+  }
+
   setDefaultSort(value) {
     const prefs = readJSON(PREFS_KEY, {}) || {};
     writeJSON(PREFS_KEY, { ...prefs, defaultSort: value });
@@ -1648,6 +1713,31 @@ class Component extends DCLogic {
       passwordMessageBorder: wMsgStyle.border,
       passwordMessageColor: wMsgStyle.color,
 
+      ...(() => {
+        const sch = window.notivloSchool;
+        const sys = sch ? sch.systemById(this.state.schoolSystem) : null;
+        const year = sys ? sys.grades.filter(g => g.id === this.state.schoolGrade)[0] : null;
+        return {
+          schoolSystem: this.state.schoolSystem,
+          schoolGrade: this.state.schoolGrade,
+          schoolSystems: sch ? sch.SYSTEMS.map(sy => ({ value: sy.id, label: sy.label })) : [],
+          schoolGrades: [{ value: '', label: 'Not set' }].concat(sys ? sys.grades.map(g => ({ value: g.id, label: g.label })) : []),
+          onSchoolSystem: (e) => this.setSchool(e.target.value, ''),
+          onSchoolGrade: (e) => this.setSchool(this.state.schoolSystem, e.target.value),
+          studyGoal: this.state.studyGoal,
+          studyGoals: [{ value: '', label: 'Not set' }].concat(sch ? Object.keys(sch.GOALS).map(k => ({ value: k, label: sch.GOALS[k].label })) : []),
+          onStudyGoal: (e) => this.setStudyGoal(e.target.value),
+          goalNote: (() => {
+            const g = sch && sch.goalById(this.state.studyGoal);
+            if (!g) return 'No goal set, so lessons written for you are written the ordinary way.';
+            if (!g.make) return g.label + '. Lessons are written the ordinary way for this goal.';
+            return g.label + '. Lessons written for you are aimed at this, and the lesson button says so.';
+          })(),
+          schoolNote: year
+            ? sch.LEVELS[year.level].label + '. Notebooks you have not written in yet start with notes for this stage; anything you have written stays as it is.'
+            : 'Not set, so built-in notebooks start with the full A level set. Notebooks you have written in keep what you wrote either way.',
+        };
+      })(),
       defaultSort: this.state.defaultSort,
       onDefaultSortChange: (e) => this.setDefaultSort(e.target.value),
 

@@ -43,6 +43,11 @@
 <!-- Only asked one question: does this subject have lessons behind it. The
      shelf preview in the subjects step says so before the notebook exists. -->
 <script src="./lessons.js"></script>
+<!-- The school systems and years asked about on the first step, and what each
+     one means for the text the student's notebooks start with. -->
+<script src="./school-level.js"></script>
+<!-- Only asked whether a subject starts with notes, for the shelf preview. -->
+<script src="./subject-notes.js"></script>
 </head>
 <body>
 <x-dc>
@@ -126,6 +131,26 @@
           <p class="su-body">{{ goalBody }}</p>
         </div>
 
+        <div class="su-school">
+          <h2 class="su-h2" id="su-year-q">{{ yearHeading }}</h2>
+          <p class="su-hint">{{ yearBody }}</p>
+          <div class="field">
+            <label for="su-system">{{ systemLabel }}</label>
+            <select id="su-system" class="input" value="{{ systemId }}" onChange="{{ onSystem }}" style="border-radius:14px;background:var(--color-surface)">
+              <sc-for list="{{ systemOptions }}" as="so" hint-placeholder-count="8">
+                <option value="{{ so.value }}">{{ so.label }}</option>
+              </sc-for>
+            </select>
+          </div>
+          <div class="su-chips" role="group" aria-labelledby="su-year-q">
+            <sc-for list="{{ gradeChips }}" as="gr" hint-placeholder-count="5">
+              <button type="button" class="su-chip {{ gr.cls }}" onClick="{{ gr.pick }}" aria-pressed="{{ gr.pressed }}">{{ gr.label }}</button>
+            </sc-for>
+          </div>
+          <p class="su-effect" aria-live="polite">{{ yearEffect }}</p>
+        </div>
+
+        <h2 class="su-h2">{{ goalQuestion }}</h2>
         <div class="su-goals" role="group" aria-label="Your goal">
           <sc-for list="{{ goalCards }}" as="gc" hint-placeholder-count="4">
             <button type="button" class="su-goal {{ gc.cls }}" onClick="{{ gc.pick }}" aria-pressed="{{ gc.pressed }}">
@@ -447,6 +472,16 @@ class Component extends DCLogic {
       step,
       reviewing,
       goal: saved.goal,
+      // Where the student is at school. The system is guessed from the
+      // browser's region until they pick one; the year is never guessed.
+      ...(() => {
+        const sch = window.notivloSchool;
+        const had = sch ? sch.read() : { system: '', grade: '' };
+        return {
+          schoolSystem: had.system || (sch ? sch.guessSystem(sch.browserLocales()) : ''),
+          schoolGrade: had.grade,
+        };
+      })(),
       subjects: saved.subjects,
       days: saved.days,
       slot: saved.slot,
@@ -503,8 +538,28 @@ class Component extends DCLogic {
     this.arrive();
   }
 
+  // A tap on the year already picked takes it back off, like the goal cards.
+  pickGrade(id) {
+    const sch = window.notivloSchool;
+    if (!sch) return;
+    const next = this.state.schoolGrade === id ? '' : id;
+    const now = sch.write(this.state.schoolSystem, next);
+    this.setState({ schoolGrade: now.grade });
+  }
+
+  // A different system has different years, so the one picked goes.
+  pickSystem(id) {
+    const sch = window.notivloSchool;
+    if (!sch || !sch.systemById(id) || id === this.state.schoolSystem) return;
+    sch.write(id, '');
+    this.setState({ schoolSystem: id, schoolGrade: '' });
+  }
+
   pickGoal(id) {
     SETUP.setGoal(this.state.goal === id ? '' : id);
+    // Also kept beside the year in the synced preferences, because the
+    // notebook — where lessons are written for it — never reads the guide.
+    try { if (window.notivloSchool) window.notivloSchool.writeGoal(SETUP.state().goal); } catch (e) {}
     this.setState({ goal: SETUP.state().goal });
   }
 
@@ -612,6 +667,9 @@ class Component extends DCLogic {
     const lower = s.subjects.map(x => x.toLowerCase());
 
     const goal = SETUP.goal();
+    const sch = window.notivloSchool;
+    const system = sch ? sch.systemById(s.schoolSystem) : null;
+    const year = system ? system.grades.filter(gr => gr.id === s.schoolGrade)[0] || null : null;
     const name = (STORE.sessionName() || '').split(/\s+/)[0];
     const query = s.typed.trim().toLowerCase();
     const shownSubjects = query
@@ -624,6 +682,9 @@ class Component extends DCLogic {
         return !!(window.notivloLessons &&
           window.notivloLessons.forNotebook(STORE.slugify(title), title).length);
       } catch (e) { return false; }
+    };
+    const hasNotes = (title) => {
+      try { return !!(sch && sch.hasNotes(STORE.slugify(title))); } catch (e) { return false; }
     };
     const firstBook = s.step === STEPS.DONE ? SETUP.firstNotebook() : null;
 
@@ -669,7 +730,23 @@ class Component extends DCLogic {
         pick: () => this.pickGoal(g.id),
       })),
       goalEffect: goal ? goal.does : COPY.goalNone,
-      goalNextLabel: goal ? 'Next' : 'Skip for now',
+      goalQuestion: COPY.goalQuestion,
+      goalNextLabel: goal || year ? 'Next' : 'Skip for now',
+
+      // --- the year at school
+      yearHeading: COPY.yearHeading,
+      yearBody: COPY.yearBody,
+      systemLabel: COPY.systemLabel,
+      systemId: s.schoolSystem,
+      systemOptions: sch ? sch.SYSTEMS.map(sy => ({ value: sy.id, label: sy.label })) : [],
+      onSystem: (e) => this.pickSystem(e.target.value),
+      gradeChips: system ? system.grades.map(gr => ({
+        label: gr.label,
+        cls: s.schoolGrade === gr.id ? 'su-chip-on' : '',
+        pressed: s.schoolGrade === gr.id,
+        pick: () => this.pickGrade(gr.id),
+      })) : [],
+      yearEffect: year ? sch.LEVELS[year.level].effect : COPY.yearNone,
       goalBack: () => this.go(STEPS.INTRO),
       goalNext: () => this.go(STEPS.SUBJECTS),
 
@@ -689,7 +766,9 @@ class Component extends DCLogic {
       noPicked: s.subjects.length === 0,
       picked: s.subjects.map(name => ({
         label: name,
-        sub: hasLessons(name) ? COPY.lessonsTag : COPY.plainTag,
+        sub: hasNotes(name)
+          ? (hasLessons(name) ? COPY.notesLessonsTag : COPY.notesTag)
+          : (hasLessons(name) ? COPY.lessonsTag : COPY.plainTag),
         removeLabel: 'Remove ' + name,
         remove: () => this.toggleSubject(name),
       })),

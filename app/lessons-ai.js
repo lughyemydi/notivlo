@@ -132,7 +132,13 @@
     if (!ready()) return Promise.resolve(null);
 
     var slug = req.slug || '';
-    var cacheKey = [req.subject || '', req.code || '', req.topic || '', slug].join('|');
+    // 'foundation' | 'as' | 'a2' from school-level.js, or '' when not said.
+    var level = /^(foundation|as|a2)$/.test(String(req.level || '')) ? req.level : '';
+    // What the student is here to do, from the setup guide — see GOALS in
+    // school-level.js. 'organised' changes nothing about a lesson, so it is
+    // not sent.
+    var goal = /^(exams|keep-up|catch-up)$/.test(String(req.goal || '')) ? req.goal : '';
+    var cacheKey = [req.subject || '', req.code || '', req.topic || '', slug, level, goal].join('|');
     if (made[cacheKey]) return Promise.resolve(made[cacheKey]);
 
     var weak = (req.weak && req.weak.length ? req.weak : weakFromRecall(slug))
@@ -147,6 +153,8 @@
         topic: req.topic || '',
         after: req.after && req.after.length ? req.after : alreadySat(req.subjectKey),
         weak: weak,
+        level: level,
+        goal: goal,
       },
     }).then(function (res) {
       if (res.error) {

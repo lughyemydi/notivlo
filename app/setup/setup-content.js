@@ -200,7 +200,7 @@
     introBody: 'Four short steps, about two minutes. You finish with your own notebooks on the shelf and your own week in the agenda. Nothing here is permanent — everything can be renamed, moved or deleted afterwards.',
     // The four steps, said before they are asked for.
     introPlan: [
-      { title: 'Your goal', note: 'What you are here to do' },
+      { title: 'Your year and goal', note: 'Where you are at school, and what you are here to do' },
       { title: 'Your subjects', note: 'Each one becomes a notebook' },
       { title: 'Your week', note: 'When you can study, and what is due' },
       { title: 'A look round', note: 'What is where, and how to use it' },
@@ -210,18 +210,28 @@
     introSkipNote: 'Skipping leaves the example A level notebooks and agenda in place, so there is something to poke at. Delete them whenever you like.',
 
     // The goal
-    goalKicker: 'Your goal',
-    goalHeading: 'What are you here to do?',
-    goalBody: 'Pick the one closest to why you signed up. It shapes what the guide shows you first; it does not lock anything, and you can skip it.',
+    goalKicker: 'Your year and goal',
+    goalHeading: 'Where are you, and what are you here to do?',
+    goalBody: 'Two quick questions. Your year decides what your notebooks start with; your goal shapes what the guide shows you first. Neither locks anything.',
+    goalQuestion: 'What are you here to do?',
     goalNone: 'Not sure? Skip this one — the guide works the same without it.',
+
+    // The year at school, on the same screen. Systems and years are in
+    // school-level.js, with what each level puts in a notebook.
+    yearHeading: 'What year are you in?',
+    yearBody: 'Pick where you go to school, then your year as your school names it. Your notebooks come with notes written for that stage.',
+    systemLabel: 'Where you go to school',
+    yearNone: 'Pick your year and your notebooks will start at your level. Skip it and they start with the full A level set.',
 
     // Step 1
     step1Kicker: 'Your subjects',
     step1Heading: 'What are you studying?',
-    step1Body: 'Tap the A level subjects you take, or type anything that is not listed. Each one becomes a notebook with its first chapter ready to write in \u2014 and the ones with lessons behind them will offer those too.',
+    step1Body: 'Tap the subjects you take, or type anything that is not listed. Every subject on the list becomes a notebook that starts with notes at your level \u2014 and the ones with lessons will offer those too. Anything you type in starts blank.',
     step1Empty: 'Your notebooks will appear here as you pick subjects.',
     shelfHeading: 'Your shelf',
     lessonsTag: 'Lessons included',
+    notesTag: 'Starts with notes at your level',
+    notesLessonsTag: 'Notes at your level, and lessons',
     plainTag: 'Blank, ready to write in',
     step1Skip: 'I will add them later',
 

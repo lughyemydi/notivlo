@@ -123,6 +123,10 @@
 .su-plan-note { color: var(--color-neutral-600); font-size: 13px; }
 
 /* --- the goal -------------------------------------------------------- */
+/* The year at school: system select, then that system's years as chips. */
+.su-school { display: flex; flex-direction: column; gap: var(--space-2); padding-bottom: var(--space-3); border-bottom: 1px solid var(--color-border); }
+.su-school .field { max-width: 420px; }
+.su-school .su-effect { min-height: 0; }
 .su-goals { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 .su-goal {
   display: flex;

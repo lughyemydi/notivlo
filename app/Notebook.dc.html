@@ -27,6 +27,13 @@
      still works if it fails to load, with the Lesson button simply saying
      there is nothing for this subject. -->
 <script src="./lessons.js"></script>
+<!-- The student's year at school, asked on the first screen of the setup
+     guide, and the IGCSE-stage chapters a younger student's notebooks start
+     with. Read once, when an unwritten built-in notebook opens. -->
+<script src="./school-level.js"></script>
+<!-- Starter notes for the subjects this page has no NOTEBOOKS entry for —
+     History, Business, French and the rest of the guide's list. -->
+<script src="./subject-notes.js"></script>
 <!-- The test papers, and the clock that runs while one is being sat. The bank
      defers to lessons.js for what subject a notebook is, so it loads after it.
      exam-session.js is what makes a timed paper survive the app being closed —
@@ -948,6 +955,9 @@
                 <p style="margin:0">Recall still works here, and it is built from whatever you have already written.</p>
               </div>
             </sc-if>
+            <sc-if value="{{ lessonHasGoalLine }}" hint-placeholder-val="{{ false }}">
+              <p class="ls-goal" style="margin:0 0 var(--space-3);font-size:13px;line-height:1.5;color:var(--color-neutral-600)">{{ lessonGoalLine }}</p>
+            </sc-if>
             <sc-if value="{{ lessonHasList }}" hint-placeholder-val="{{ true }}">
               <ul class="ls-list">
                 <sc-for list="{{ lessonList }}" as="l" hint-placeholder-count="2">
@@ -966,6 +976,9 @@
                         </sc-if>
                       </div>
                     </button>
+                    <sc-if value="{{ l.canCheckOnly }}" hint-placeholder-val="{{ false }}">
+                      <button type="button" class="rc-btn" onClick="{{ l.startCheck }}" style="margin-top:6px;width:100%">{{ l.checkOnlyLabel }}</button>
+                    </sc-if>
                   </li>
                 </sc-for>
               </ul>
@@ -2821,7 +2834,19 @@ function stripLegacyPrompt(chapter) {
 class Component extends DCLogic {
   state = (() => {
     const { slug, title, ch } = getUrlParams();
-    const known = NOTEBOOKS[slug];
+    // A built-in notebook starts at the student's level: IGCSE-stage notes,
+    // the AS chapters, or everything opened on A Level. See school-level.js.
+    // Only what an unwritten notebook shows depends on it — saved chapters,
+    // read below, always win.
+    const school = window.notivloSchool;
+    // Subjects beyond the seven below come from subject-notes.js.
+    let known = NOTEBOOKS[slug] || null;
+    if (!known && school) {
+      try { known = school.base(slug); } catch (e) { known = null; }
+    }
+    if (known && school) {
+      try { known = school.leveled(slug, known, school.read().level) || known; } catch (e) {}
+    }
     // A notebook this page has no built-in content for and whose link carries
     // no title — one of the old example subjects still on a device from before
     // the A level set, or any link that lost its &title — is still on the
@@ -3080,8 +3105,15 @@ class Component extends DCLogic {
     const fromBank = bank.filter(l => !l.generated)[0];
     // The syllabus number is on the notebook's own subject line ("Cambridge
     // 9709") when the bank has nothing to take it from.
+    // The last number on the line, because an IGCSE-stage notebook's line
+    // names both: "Cambridge IGCSE 0470 → 9489".
     const code = (fromBank && fromBank.code)
-      || (String(this.state.subject || '').match(/\d{4}/) || [''])[0];
+      || (String(this.state.subject || '').match(/\d{4}/g) || ['']).pop();
+
+    // What the student said they are here to do, and — for the goals that
+    // are about a particular class — the chapter they have open as the topic.
+    const goal = this.studyGoal();
+    const topic = goal && goal.topic === 'chapter' ? this.openChapterTitle() : '';
 
     this.setState({ lessonMaking: true, lessonMakeError: '' });
     Promise.resolve()
@@ -3090,6 +3122,12 @@ class Component extends DCLogic {
         subjectKey: api.subjectFor(this.state.slug, this.state.title) || this.state.slug,
         code,
         slug: this.state.slug,
+        // 'foundation' | 'as' | 'a2', or '' when the student never said.
+        level: (() => {
+          try { return window.notivloSchool ? window.notivloSchool.read().level : ''; } catch (e) { return ''; }
+        })(),
+        goal: goal ? goal.id : '',
+        topic,
       }))
       .then((lesson) => {
         // Null means it was never possible — signed out between opening the
@@ -3202,13 +3240,31 @@ class Component extends DCLogic {
   // Back to the list, and a fresh sitting if they pick the same lesson again.
   lessonRestart() { this.openLesson(); }
 
-  startLesson(id) {
+  // The goal from the setup guide (school-level.js), or null.
+  studyGoal() {
+    try { return window.notivloSchool ? window.notivloSchool.readGoal() : null; } catch (e) { return null; }
+  }
+
+  // The open chapter's title, as a lesson topic. Not a lesson's own
+  // worksheet chapter, and not a chapter still called "Chapter 3".
+  openChapterTitle() {
+    const c = (this.state.chapters || [])[this.state.activeIdx];
+    const t = c && typeof c.title === 'string' ? c.title.trim() : '';
+    if (!t || /^chapter \d+$/i.test(t) || /^lesson:/i.test(t)) return '';
+    return t.slice(0, 120);
+  }
+
+  // `toCheck` starts at the exam-style check instead of the teaching pages —
+  // offered to a student preparing for exams. The worksheet is still written
+  // whole, so the teaching is in the notebook to read afterwards.
+  startLesson(id, toCheck) {
     const lesson = this.lessonBank().filter(l => l.id === id)[0];
     if (!lesson) return;
     const hasTeach = !!(lesson.teach && lesson.teach.length);
+    const hasCheck = !!(lesson.test && lesson.test.questions && lesson.test.questions.length);
     this.setState({
       lessonId: id,
-      lessonPhase: hasTeach ? 'teach' : 'exercise',
+      lessonPhase: toCheck && hasCheck ? 'test' : (hasTeach ? 'teach' : 'exercise'),
       lessonStep: 0, lessonAnswer: '', lessonChecked: false, lessonAwarded: null,
       lessonWork: { answers: {}, test: {} },
       lessonChapterIdx: null,
@@ -4608,6 +4664,10 @@ class Component extends DCLogic {
     // forever on a build with no backend — which is the case the panel does
     // not appear in at all, so it never has to mean anything there.
     const lsCredits = this.state.lessonCredits;
+    // The setup guide's goal, and the open chapter it may write about.
+    const lsGoal = this.studyGoal();
+    const lsGoalLessons = !!(lsGoal && lsGoal.make);
+    const lsChapter = this.openChapterTitle();
 
     // Lesson text carries LaTeX between dollar signs, rendered through this
     // page's own converter — so maths in a lesson looks like maths the student
@@ -5085,6 +5145,9 @@ class Component extends DCLogic {
           doneLabel: sat ? 'Last sitting ' + sat.score + '/' + sat.marks : '',
           generated: !!l.generated,
           start: () => this.startLesson(l.id),
+          canCheckOnly: !!(lsGoal && lsGoal.straightToCheck && l.test && l.test.questions && l.test.questions.length),
+          checkOnlyLabel: 'Straight to the exam-style check' + (lsApi ? ' · ' + lsApi.totalMarks(l).test + ' marks' : ''),
+          startCheck: () => this.startLesson(l.id, true),
         };
       }),
 
@@ -5105,9 +5168,14 @@ class Component extends DCLogic {
       lessonHasCredits: lsCredits === null || lsCredits > 0,
       lessonNeedsCredits: lsCredits !== null && lsCredits <= 0,
       lessonMaking: this.state.lessonMaking,
-      lessonMakeLabel: this.state.lessonMaking ? 'Writing it…' : 'Write me a lesson',
+      lessonMakeLabel: this.state.lessonMaking ? 'Writing it…' : (lsGoalLessons ? lsGoal.make : 'Write me a lesson'),
+      // Only above a list: it talks about the lessons in it.
+      lessonHasGoalLine: !!(lsGoal && lsGoal.list) && lsBank.length > 0,
+      lessonGoalLine: lsGoal ? lsGoal.list : '',
       lessonMakeOpacity: this.state.lessonMaking ? '.65' : '1',
-      lessonMakeNote: 'A new lesson on something this notebook has not covered, '
+      lessonMakeNote: lsGoalLessons
+        ? lsGoal.note.replace('{ch}', lsChapter ? '\u201c' + lsChapter + '\u201d' : 'the topic this notebook covers next')
+        : 'A new lesson on something this notebook has not covered, '
         + 'aimed at what you have been getting wrong — the cards you keep missing in Recall '
         + 'and the lessons you scored low on. It takes a minute to write.',
       // One credit, one lesson, and the panel says which it is: how many are
