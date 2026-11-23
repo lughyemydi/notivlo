@@ -630,10 +630,10 @@ footer a:hover{color:var(--ink)}
     </div>
 
     <details>
-      <summary>Mac: it will say the app can't be verified. Here's why, and what to do.</summary>
+      <summary>Mac: it will say the app can't be verified or installed. Here's why, and what to do.</summary>
       <p class="note">notivlo isn't signed with a paid Apple Developer certificate yet, so macOS shows a warning the first time. The app is sandboxed and can only reach its own sync server — but you shouldn't take that on faith from the person asking you to install it, so here's exactly what to click.</p>
       <ol class="steps">
-        <li>Open the <code>.dmg</code> and drag <strong>notivlo</strong> into Applications.</li>
+        <li>Open the <code>.dmg</code>. If macOS offers to <strong>Install this app?</strong>, click <strong>Cancel</strong>: that installer only accepts notarized apps and will say it <em>could not install</em>. Instead, drag <strong>notivlo</strong> onto the Applications folder in the window that opened.</li>
         <li>Open it. macOS will refuse the first time — that's expected.</li>
         <li>Go to <strong>System Settings → Privacy &amp; Security</strong>, scroll down, and click <strong>Open Anyway</strong> next to the notivlo message.</li>
         <li>Open it once more and confirm. That's the last time you'll see it.</li>
