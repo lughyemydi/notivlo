@@ -252,6 +252,10 @@
   var css = [
     '.bl-root{position:fixed;inset:0;z-index:5000;display:flex;flex-direction:column;background:' + SURFACE + ';color:' + INK + ';font:15px/1.5 ' + SANS + '}',
     '.bl-root *{box-sizing:border-box}',
+    // concrete-signal.css gives every [role=dialog] the raised surface and an
+    // ink outline, which is right for a sheet over the page. This is not a
+    // sheet: it replaces the page, so it takes the page's own ground.
+    'html .bl-root[role="dialog"]{background:' + SURFACE + ' !important;border:0 !important}',
     '.bl-line{position:absolute;left:0;top:0;height:4px;width:0;background:' + SIGNAL + ';transition:width 1s linear;pointer-events:none}',
     '.bl-root.bl-over .bl-line{width:100% !important}',
     '.bl-bar{display:flex;align-items:center;gap:14px;padding:16px 24px;border-bottom:2px solid ' + RULE + ';flex:none;flex-wrap:wrap}',
@@ -275,7 +279,7 @@
     '.bl-ta::placeholder{color:inherit;opacity:.38}',
     // concrete-signal.css: text being edited shows a caret, not a ring.
     'html .bl-root .bl-ta:focus,html .bl-root .bl-ta:focus-visible{outline:none !important}',
-    '.bl-foot{display:flex;align-items:center;gap:12px;padding:14px 24px;border-top:2px solid ' + RULE + ';flex:none;flex-wrap:wrap;background:' + RAISED + '}',
+    '.bl-foot{display:flex;align-items:center;gap:12px;padding:14px 24px calc(14px + var(--notivlo-safe-bottom,env(safe-area-inset-bottom,0px)));border-top:2px solid ' + RULE + ';flex:none;flex-wrap:wrap;background:' + RAISED + '}',
     '.bl-meta{font:12px/1.4 ' + MONO + ';opacity:.75;flex:1;min-width:160px}',
     '.bl-btn{all:unset;cursor:pointer;height:40px;padding:0 16px;display:inline-flex;align-items:center;gap:8px;border:2px solid ' + RULE + ';font:700 13px/1 ' + MONO + ';white-space:nowrap}',
     '.bl-btn kbd{font:400 11px/1 ' + MONO + ';opacity:.7}',
@@ -322,7 +326,7 @@
     '.bl-note{margin:18px 0 0;font:11px/1.5 ' + MONO + ';opacity:.65}',
     '.bl-nothing{max-width:560px;margin:12vh auto;padding:0 24px}',
     '.bl-nothing h2{font:700 28px/1.1 ' + SANS + ';margin:0 0 10px;letter-spacing:-.01em}',
-    '@media (max-width:760px){.bl-bar,.bl-foot{padding:12px 16px}.bl-page{padding:28px 16px 16px}.bl-result{padding:20px 16px}',
+    '@media (max-width:760px){.bl-bar{padding:12px 16px}.bl-foot{padding:12px 16px calc(12px + var(--notivlo-safe-bottom,env(safe-area-inset-bottom,0px)))}.bl-page{padding:28px 16px 16px}.bl-result{padding:20px 16px}',
     '.bl-cols{grid-template-columns:1fr}.bl-col + .bl-col{border-left:0;border-top:2px solid ' + RULE + '}.bl-head{grid-template-columns:1fr}.bl-score{grid-row:auto}',
     '.bl-chips{order:5}.bl-btn kbd{display:none}}',
     '@media print{.bl-root{display:none !important}}',

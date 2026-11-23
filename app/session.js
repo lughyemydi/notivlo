@@ -259,7 +259,7 @@
   var FAINT = 'var(--cs-rule-faint,rgb(20 22 27 / .22))';
 
   var css = [
-    '.ns-dock{position:fixed;left:16px;bottom:16px;z-index:45;display:flex;align-items:stretch;height:34px;max-width:calc(100vw - 150px);',
+    '.ns-dock{position:fixed;left:16px;bottom:calc(16px + var(--notivlo-safe-bottom,0px));z-index:45;display:flex;align-items:stretch;height:34px;max-width:calc(100vw - 150px);',
     'background:' + RAISED + ';color:' + INK + ';border:2px solid ' + RULE + ';font:700 12px/1 ' + MONO + '}',
     'body:has([role="dialog"]) .ns-dock,body:has([role="dialog"]) .ns-line{display:none}',
     '.ns-dock button{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:8px;padding:0 12px;cursor:pointer;white-space:nowrap;min-width:0}',
@@ -301,7 +301,7 @@
     '.ns-btn.ns-primary{background:' + SIGNAL + ';color:' + ONSIG + ';border-color:' + SIGNAL + '}',
     '.ns-btn.ns-primary:hover{background:' + INK + ';color:var(--cs-surface,#e6e3dc);border-color:' + INK + '}',
     '.ns-big{font:700 44px/1 ' + MONO + ';letter-spacing:-.02em;margin:2px 0 10px;font-variant-numeric:tabular-nums}',
-    '@media (max-width:760px){.ns-dock{left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));max-width:calc(100vw - 104px)}.ns-what em,.ns-go i{display:none}.ns-scrim{padding-top:5vh}.ns-box h2{font-size:21px}}',
+    '@media (max-width:760px){.ns-dock{left:12px;bottom:calc(12px + var(--notivlo-safe-bottom,env(safe-area-inset-bottom,0px)));max-width:calc(100vw - 104px)}.ns-what em,.ns-go i{display:none}.ns-scrim{padding-top:5vh}.ns-box h2{font-size:21px}}',
     '@media print{.ns-dock,.ns-line,.ns-scrim{display:none !important}}',
     '@media (prefers-reduced-motion:reduce){.ns-line{transition:none}}',
   ].join('');

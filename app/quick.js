@@ -181,13 +181,13 @@
   /* ---------- the box ---------------------------------------------------- */
 
   var css = [
-    '.qj-launch{position:fixed;right:16px;bottom:16px;z-index:45;display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;',
+    '.qj-launch{position:fixed;right:16px;bottom:calc(16px + var(--notivlo-safe-bottom,0px));z-index:45;display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;',
     'background:var(--cs-surface-raised,#f6f4ef);color:var(--cs-ink,#14161b);border:2px solid var(--cs-rule,#14161b);',
     'font:700 12px/1 var(--cs-mono,ui-monospace,Menlo,monospace);cursor:pointer}',
     '.qj-launch kbd{font:inherit;font-weight:400;opacity:.65}',
     '.qj-launch:hover{background:var(--cs-ink,#14161b);color:var(--cs-surface,#e6e3dc)}',
     'body:has([role="dialog"]) .qj-launch{display:none}',
-    '@media (max-width:760px){.qj-launch kbd{display:none}.qj-launch{right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px))}}',
+    '@media (max-width:760px){.qj-launch kbd{display:none}.qj-launch{right:12px;bottom:calc(12px + var(--notivlo-safe-bottom,env(safe-area-inset-bottom,0px)))}}',
     '@media print{.qj-launch,.qj-scrim{display:none !important}}',
     '.qj-scrim{position:fixed;inset:0;z-index:5000;background:rgb(20 22 27 / .55);display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px}',
     ':root[data-theme="dark"] .qj-scrim{background:rgb(0 0 0 / .62)}',
