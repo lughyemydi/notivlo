@@ -257,6 +257,51 @@ section{padding:clamp(88px,12vw,160px) 0}
   .hero-art{max-width:440px;margin:0 auto}
 }
 
+/* The hero's right half is a recall session the visitor can play: pick a
+   subject, answer three cards, rate them. The drawing sits behind, faint. */
+.hero-art.has-quiz{display:grid;align-items:center}
+.hero-art.has-quiz > img{grid-area:1/1;opacity:.14;transform-origin:center;pointer-events:none}
+.quiz{grid-area:1/1;position:relative;z-index:1;max-width:460px;width:100%;justify-self:center}
+.quiz-ask{font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin:0 0 10px;display:flex;justify-content:space-between;gap:12px}
+.quiz-ask b{font-weight:600;color:var(--ink)}
+.quiz-ask span{white-space:nowrap}
+.quiz-subj{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
+.quiz-chip{font-family:var(--mono);font-size:12px;padding:7px 10px;border:1px solid var(--rule-faint);background:var(--surface);color:var(--ink);cursor:pointer;line-height:1}
+.quiz-chip:hover{border-color:var(--ink)}
+.quiz-chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.deck{position:relative}
+.deck::before,.deck::after{content:"";position:absolute;inset:0;border:1px solid var(--rule);background:var(--surface-raised);transition:transform .5s var(--ease)}
+.deck::before{transform:translate(12px,12px) rotate(2.2deg)}
+.deck::after{transform:translate(6px,6px) rotate(1deg)}
+.deck[data-left="1"]::before{transform:none;opacity:0}
+.deck[data-left="0"]::before,.deck[data-left="0"]::after{transform:none;opacity:0}
+.qcard{position:relative;z-index:1;background:var(--surface-raised);border:1px solid var(--rule);padding:22px 24px 20px;min-height:300px;display:flex;flex-direction:column;box-shadow:0 1px 0 var(--rule)}
+.qcard-head{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;letter-spacing:.02em;color:var(--ink-soft);padding-bottom:14px;border-bottom:1px solid var(--rule-faint);margin-bottom:18px}
+.qcard-head i{font-style:normal;color:var(--accent-text);font-weight:600}
+.q-q{font-size:clamp(20px,1.7vw,24px);line-height:1.3;letter-spacing:-.015em;font-weight:600;margin:0 0 14px}
+.q-a{margin:0 0 14px;padding:12px 14px;border-left:3px solid var(--signal);background:var(--surface);font-size:16px;line-height:1.5}
+.q-a[hidden]{display:none}
+.q-a .q-lbl{display:block;font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-bottom:4px}
+.q-actions{margin-top:auto;display:flex;gap:8px;flex-wrap:wrap}
+.q-actions .btn{padding:12px 16px;font-size:12px}
+.q-rate{flex:1;justify-content:center;white-space:nowrap}
+@media (hover:none),(max-width:1180px){.q-kbd{display:none}}
+.q-rate small{font-weight:400;opacity:.7;margin-left:2px}
+.q-next{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin:12px 0 0;min-height:1.4em}
+.q-kbd{font-family:var(--mono);font-size:10px;border:1px solid var(--rule-faint);padding:2px 5px;margin-left:6px;opacity:.75}
+.q-done-score{font-size:clamp(40px,4vw,56px);font-weight:600;letter-spacing:-.04em;line-height:1;margin:0 0 10px}
+.q-done-p{margin:0 0 18px;color:var(--ink-soft);line-height:1.5}
+.q-dots{display:flex;gap:6px;margin:0 0 18px}
+.q-dots b{width:22px;height:6px;background:var(--rule-faint)}
+.q-dots b.ok{background:var(--ink)}
+.q-dots b.miss{background:var(--signal)}
+.qcard.flip{animation:q-flip .45s var(--ease)}
+.qcard.deal{animation:q-deal .5s var(--ease)}
+@keyframes q-flip{0%{transform:rotateX(0)}45%{transform:rotateX(8deg) translateY(-4px)}100%{transform:none}}
+@keyframes q-deal{0%{transform:translate(10px,10px) rotate(1.5deg);opacity:.4}100%{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.qcard.flip,.qcard.deal{animation:none}.deck::before,.deck::after{transition:none}}
+@media(max-width:900px){.hero-art.has-quiz{max-width:520px}.hero-art.has-quiz > img{display:none}.qcard{min-height:0}}
+
 /* ---- 2 · The sentence ----------------------------------------------------- */
 .say{padding:0}
 .say-track{position:relative}
@@ -539,7 +584,24 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
       </div>
       <p class="hero-note">Free · no card · takes about a minute</p>
     </div>
-    <div class="hero-art">
+    <div class="hero-art has-quiz">
+      <div class="quiz" id="quiz" aria-labelledby="quiz-h">
+        <p class="quiz-ask"><b id="quiz-h">Try it — three cards, no account</b><span id="quiz-sub">Pick a subject</span></p>
+        <div class="quiz-subj" id="quiz-subj" role="group" aria-label="Subject"></div>
+        <div class="deck" id="deck" data-left="2">
+          <article class="qcard" id="qcard" aria-live="polite">
+            <div class="qcard-head"><span>Recall · <i id="q-subj">Physics</i></span><span id="q-n">Card 1 of 3</span></div>
+            <div id="q-body">
+              <p class="q-q" id="q-q">Ignoring air resistance, what is the horizontal acceleration of a projectile?</p>
+              <p class="q-a" id="q-a" hidden><span class="q-lbl">Answer</span><span id="q-a-t"></span></p>
+            </div>
+            <div class="q-actions" id="q-actions">
+              <button type="button" class="btn btn-primary q-rate" id="q-show">Show answer<span class="q-kbd" aria-hidden="true">Space</span></button>
+            </div>
+            <p class="q-next" id="q-next">Say it in your head first. Then check.</p>
+          </article>
+        </div>
+      </div>
       <img class="ink" id="hero-img" src="shots/kit.webp" width="1024" height="1024" fetchpriority="high" decoding="async"
            alt="A drawing of a study kit laid out in layers: an open notebook with subject tabs, a weekly planner, a stack of revision cards and a pencil.">
     </div>
@@ -1280,6 +1342,145 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
       btn.disabled = false;
     });
   });
+})();
+
+/* ---- Hero: a three-card recall session anyone can play ----------------- */
+(function () {
+  var root = document.getElementById('quiz');
+  if (!root) return;
+  var DECKS = {
+    'Maths':   [['What does b² − 4ac < 0 tell you about a quadratic?', 'It has no real roots — the curve never meets the x-axis.'],
+                ['Differentiate x⁵.', '5x⁴ — bring the power down, then take one off it.'],
+                ['Write logₐ(xy) in terms of logₐx and logₐy.', 'logₐx + logₐy.']],
+    'Physics': [['Ignoring air resistance, what is the horizontal acceleration of a projectile?', 'Zero — its horizontal velocity stays the same throughout.'],
+                ['What does the gradient of a velocity–time graph give you?', 'The acceleration.'],
+                ['What is the SI unit of power?', 'The watt — one joule per second.']],
+    'Chemistry': [['How do you find a concentration from moles and volume?', 'c = n ÷ V, with the volume in dm³.'],
+                ['What is the Avogadro constant?', '6.02 × 10²³ mol⁻¹ — the number of particles in one mole.'],
+                ['What colour is phenolphthalein in an alkali?', 'Pink. It is colourless in acid.']],
+    'Biology': [['Where does a competitive inhibitor bind?', 'In the active site, competing with the substrate.'],
+                ['Which bond joins two amino acids?', 'A peptide bond, made in a condensation reaction.'],
+                ['Where in the cell does the Krebs cycle happen?', 'In the matrix of the mitochondrion.']],
+    'Economics': [['Demand is price elastic. What happens to total revenue if the price falls?', 'It rises — quantity demanded grows proportionally more than the price fell.'],
+                ['What is opportunity cost?', 'The next best alternative given up when a choice is made.'],
+                ['PED is −0.3. Is demand elastic or inelastic?', 'Inelastic — a 1% price rise cuts quantity demanded by only 0.3%.']],
+    'Comp Sci': [['What is the range of an n-bit two’s complement number?', '−2ⁿ⁻¹ to 2ⁿ⁻¹ − 1.'],
+                ['What is 2F in hexadecimal, in denary?', '47 — 2 × 16 + 15.'],
+                ['Is a stack first-in-first-out or last-in-first-out?', 'Last in, first out.']]
+  };
+  var RATE = [['Again', 'again', 'Again — it comes back before you finish.'],
+              ['Hard', 'hard', 'Hard — back tomorrow.'],
+              ['Got it', 'ok', 'Got it — back in a few days.']];
+  var $ = function (id) { return document.getElementById(id); };
+  var chips = $('quiz-subj'), card = $('qcard'), deck = $('deck'), body = $('q-body'),
+      actions = $('q-actions'), next = $('q-next'), sub = $('quiz-sub');
+  var motion = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var subj = 'Physics', i = 0, shown = false, marks = [], hasPlayed = false;
+
+  Object.keys(DECKS).forEach(function (k) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'quiz-chip'; b.textContent = k;
+    b.setAttribute('aria-pressed', k === subj ? 'true' : 'false');
+    b.addEventListener('click', function () { start(k); });
+    chips.appendChild(b);
+  });
+
+  function anim(cls) {
+    if (!motion) return;
+    card.classList.remove('flip', 'deal'); void card.offsetWidth; card.classList.add(cls);
+  }
+  function btn(label, cls, kbd, fn) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn ' + cls;
+    b.appendChild(document.createTextNode(label));
+    if (kbd) { var k = document.createElement('span'); k.className = 'q-kbd'; k.setAttribute('aria-hidden', 'true'); k.textContent = kbd; b.appendChild(k); }
+    b.addEventListener('click', fn);
+    actions.appendChild(b);
+    return b;
+  }
+  function head(n) {
+    $('q-subj').textContent = subj;
+    $('q-n').textContent = n;
+  }
+  function start(k) {
+    subj = k; i = 0; marks = [];
+    [].forEach.call(chips.children, function (c) { c.setAttribute('aria-pressed', c.textContent === k ? 'true' : 'false'); });
+    sub.textContent = 'Pick a subject';
+    deal();
+  }
+  function deal() {
+    shown = false;
+    var c = DECKS[subj][i];
+    deck.setAttribute('data-left', String(2 - i));
+    head('Card ' + (i + 1) + ' of 3');
+    body.innerHTML = '';
+    var q = document.createElement('p'); q.className = 'q-q'; q.textContent = c[0]; body.appendChild(q);
+    actions.innerHTML = '';
+    btn('Show answer', 'btn-primary q-rate', 'Space', reveal);
+    next.textContent = i === 0 ? 'Say it in your head first. Then check.' : next.textContent;
+    anim('deal');
+  }
+  function reveal() {
+    if (shown) return;
+    shown = true; hasPlayed = true;
+    var a = document.createElement('p'); a.className = 'q-a';
+    var l = document.createElement('span'); l.className = 'q-lbl'; l.textContent = 'Answer';
+    a.appendChild(l); a.appendChild(document.createTextNode(DECKS[subj][i][1]));
+    body.appendChild(a);
+    actions.innerHTML = '';
+    RATE.forEach(function (r, n) {
+      btn(r[0], 'q-rate', String(n + 1), function () { rate(n); });
+    });
+    next.textContent = 'How did that go?';
+    anim('flip');
+    actions.firstChild.focus({ preventScroll: true });
+  }
+  function rate(n) {
+    marks.push(n);
+    next.textContent = RATE[n][2];
+    i += 1;
+    if (i < 3) deal(); else done();
+  }
+  function done() {
+    var got = marks.filter(function (m) { return m === 2; }).length;
+    deck.setAttribute('data-left', '0');
+    head('Session done');
+    body.innerHTML = '';
+    var sc = document.createElement('p'); sc.className = 'q-done-score'; sc.textContent = got + ' of 3';
+    var dots = document.createElement('div'); dots.className = 'q-dots'; dots.setAttribute('aria-hidden', 'true');
+    marks.forEach(function (m) { var d = document.createElement('b'); d.className = m === 2 ? 'ok' : 'miss'; dots.appendChild(d); });
+    var p = document.createElement('p'); p.className = 'q-done-p';
+    p.textContent = (got === 3 ? 'Clean sweep. ' : (3 - got) + (3 - got === 1 ? ' card comes' : ' cards come') + ' back sooner. ') +
+      'In notivlo, cards like these are made from your own notes — and the ones you miss keep returning until they stick.';
+    body.appendChild(sc); body.appendChild(dots); body.appendChild(p);
+    actions.innerHTML = '';
+    var go = document.createElement('a');
+    go.className = 'btn btn-primary q-rate'; go.href = 'app/SignUp.dc.html';
+    go.innerHTML = 'Make my free notebooks <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+    actions.appendChild(go);
+    btn('Go again', '', '', function () { start(subj); });
+    next.textContent = 'Free · no card · takes about a minute';
+    sub.textContent = 'Or try another subject';
+    anim('deal');
+  }
+
+  /* Space reveals, 1–3 rate — only while the card is in view and nothing
+     else (a form field, the demo) has the keyboard. */
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (t && (t.tagName === 'BUTTON' || t.tagName === 'A') && e.key === ' ') return;
+    var r = card.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > innerHeight) return;
+    if (e.key === ' ' && !shown && i < 3) {
+      e.preventDefault(); reveal();
+    } else if (shown && i < 3 && /^[123]$/.test(e.key)) {
+      e.preventDefault(); rate(+e.key - 1);
+    }
+  });
+
+  deal();
 })();
 </script>
 </body>
