@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- The app icon's mark (folio-app/icon/notivlo-icon.svg) on a rounded
+       mint tile, without the shadows, which only blur at tab size. -->
+  <defs>
+    <linearGradient id="m" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8FE0C9"/>
+      <stop offset="1" stop-color="#3FAE8D"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#m)"/>
+  <path d="M356 700 V452 C356 374 418 322 512 322 C606 322 668 374 668 452 V544"
+        fill="none" stroke="#FFFFFF" stroke-width="112" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M612 500 H724 V784 L668 722 L612 784 Z" fill="#FFFFFF"/>
+</svg>
