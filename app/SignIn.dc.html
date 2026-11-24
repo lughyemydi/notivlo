@@ -662,11 +662,11 @@ class Component extends DCLogic {
       // ---- the panel ----
       cardClass: mode === 'signin' ? '' : 'su-card--solo',
       railClass: mode === 'signin' ? '' : 'su-hide',
-      claimA: shelf.real ? 'Your notebooks are' : 'Every subject, every deadline,',
-      claimB: shelf.real ? 'where you left them.' : 'in one quiet place.',
+      claimA: shelf.real ? 'Your notebooks are' : 'Your notes, deadlines and revision —',
+      claimB: shelf.real ? 'where you left them.' : 'all in one calm place.',
       claimSub: shelf.real
         ? 'Signing out never erased anything. ' + p.books + ' and your week are still here, exactly as you left them.'
-        : 'A notebook for each class, a week built around what is actually due, and a home page that opens on the next thing to do.',
+        : 'notivlo gives every subject its own notebook, puts everything that’s due on one week, and quizzes you on what you wrote.',
       // Where the reader's work actually lives depends on whether this build
       // has a backend, so the claim has to as well. With supabase-config.js
       // filled in, notebooks go to the account and reach every device signed
