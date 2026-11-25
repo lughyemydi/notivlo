@@ -26,9 +26,14 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 src="${FOLIO:-$here/../folio}"
 dest="$here/app"
 
-dry=()
+# Scalar, not an array: macOS ships bash 3.2, where expanding an empty array
+# under `set -u` is itself an "unbound variable" error. ${dry:+$dry} expands
+# to nothing when empty and to a single word (no spaces) otherwise.
+dry=""
+is_dry=0
 if [ "${1:-}" = "--dry-run" ] || [ "${1:-}" = "-n" ]; then
-  dry=(--dry-run)
+  dry="--dry-run"
+  is_dry=1
   echo "DRY RUN — nothing will be written."
 fi
 
@@ -64,7 +69,7 @@ mkdir -p "$dest"
 # session.js problem). rsync protects excluded names from --delete, so a .md
 # or test that is somehow already in app/ is reported, not silently kept —
 # run with --dry-run first if app/ has drifted.
-rsync -a --delete "${dry[@]}" --itemize-changes \
+rsync -a --delete ${dry:+$dry} --itemize-changes \
   --exclude='_backup-*' \
   --exclude='prototype-*' \
   --exclude='supabase' \
@@ -80,7 +85,7 @@ rsync -a --delete "${dry[@]}" --itemize-changes \
   "$src"/ "$dest"/
 
 echo
-if [ ${#dry[@]} -gt 0 ]; then
+if [ "$is_dry" = 1 ]; then
   echo "Dry run complete. Re-run without --dry-run to apply, then:"
 else
   echo "Synced $src -> $dest. Now:"
