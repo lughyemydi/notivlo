@@ -543,6 +543,11 @@
   // The systems by continent, for menus: Europe first, since that is where
   // most of notivlo's students are, then North America. Every system is in
   // exactly one group (school-level-test checks); "go by my age" is last.
+  // Systems left out of the short menus (the schooling page, like the landing
+  // page), being far from where notivlo's students are. They still exist: an
+  // account already on one keeps it, and sees it in the menu.
+  var MENU_HIDDEN = ['russia', 'turkey', 'pakistan', 'bangladesh', 'forms', 'vietnam', 'east-africa', 'egypt', 'grades'];
+
   var CONTINENTS = [
     { label: 'Europe', ids: ['uk', 'scotland', 'ireland', 'france', 'germany', 'austria', 'switzerland', 'netherlands', 'spain', 'italy', 'portugal', 'poland', 'russia', 'turkey'] },
     { label: 'North America', ids: ['us', 'canada'] },
@@ -1474,6 +1479,7 @@
     LEVELS: LEVELS,
     SYSTEMS: SYSTEMS,
     CONTINENTS: CONTINENTS,
+    MENU_HIDDEN: MENU_HIDDEN,
     GOALS: GOALS,
     goalById: goalById,
     readGoal: readGoal,

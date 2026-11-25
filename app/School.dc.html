@@ -387,10 +387,14 @@ class Component extends DCLogic {
         ? 'Pick the country whose school years you go by — usually where you live — and the year you’d be in at school. It sets the level your notebooks start at.'
         : 'Years are named differently everywhere, so pick your system first, then your year in its own words.',
       systemId: s.system,
-      // Grouped by continent, Europe first (school-level.js CONTINENTS).
+      // Grouped by continent, Europe first, and trimmed like the landing page
+      // (school-level.js CONTINENTS, MENU_HIDDEN). A system left out still
+      // shows when it is the one this account is on.
       systemGroups: sch.CONTINENTS.map(c => ({
         label: c.label,
-        options: c.ids.map(id => sch.systemById(id)).filter(Boolean).map(sy => ({ value: sy.id, label: sy.label })),
+        options: c.ids
+          .filter(id => id === s.system || sch.MENU_HIDDEN.indexOf(id) === -1)
+          .map(id => sch.systemById(id)).filter(Boolean).map(sy => ({ value: sy.id, label: sy.label })),
       })).filter(c => c.options.length),
       gradeChips: (system ? system.grades : []).map(g => {
         const on = s.grade === g.id;
