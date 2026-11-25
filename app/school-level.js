@@ -31,9 +31,19 @@
  * A notebook the student has written in keeps what they wrote: the page reads
  * saved chapters first and only falls back to this when there are none.
  *
+ * The exam, and how they are schooled
+ * -----------------------------------
+ * Since 25 November 2026 the student also says, on its own page straight
+ * after sign-up (School.dc.html), whether they are at a public or private
+ * school or homeschooled, and which exam they are working towards — the bac,
+ * GCSEs, a US diploma, A levels… (QUALS, below). The exam is what practice
+ * papers (exam-bank.js), marks (SCALES / markOn) and AI lessons follow; the
+ * level above still only picks where the built-in notebooks start.
+ *
  * Where the answer lives
  * ----------------------
- * `folio_prefs.school` — { system, grade, level, account }. folio_prefs is
+ * `folio_prefs.school` — { system, grade, level, account }, and
+ * `folio_prefs.schooling` — { type, qual, account }. folio_prefs is
  * synced (as the preferences row's `extra`), so a notebook opened on a second
  * device starts at the same level. The record is stamped with the signed-in
  * address because folio_prefs outlives sign-out on a shared device; a record
@@ -71,180 +81,445 @@
     },
   };
 
-  // Each system lists the years worth asking about — the ones before A level
-  // through to the end of school — under the names that system uses. The
-  // first grade in each list sweeps up everyone younger. `regions` are the
-  // ISO country codes whose browsers default to it; the student can always
-  // change the system, so a wrong guess costs one tap.
-  function g(id, label, level) { return { id: id, label: label, level: level }; }
+  // Each system lists the years worth asking about — the ones before the
+  // final school exams through to the end of school — under the names that
+  // system uses. The first grade in each list sweeps up everyone younger.
+  // `regions` are the ISO country codes whose browsers default to it; the
+  // student can always change the system, so a wrong guess costs one tap.
+  //
+  // `quals` are the system's own exams, in the order a student meets them
+  // (see QUALS below); the international ones are offered to everyone on top.
+  // A grade's fourth field is the exam a student in that year is most likely
+  // working towards, which the "about your schooling" page picks for them
+  // until they pick something else: a French Seconde is aiming at the bac,
+  // because the brevet is already behind them.
+  function g(id, label, level, target) { return { id: id, label: label, level: level, target: target || '' }; }
 
   var SYSTEMS = [
     {
       id: 'cambridge', label: 'International school (Cambridge, Edexcel)',
       regions: [],
+      quals: ['igcse', 'o-level', 'as-level', 'a-level'],
       grades: [
-        g('pre-igcse', 'Before IGCSE', 'foundation'),
-        g('igcse-1', 'IGCSE, first year', 'foundation'),
-        g('igcse-2', 'IGCSE, second year', 'foundation'),
-        g('as', 'AS Level', 'as'),
-        g('a2', 'A Level (A2)', 'a2'),
+        g('pre-igcse', 'Before IGCSE', 'foundation', 'igcse'),
+        g('igcse-1', 'IGCSE, first year', 'foundation', 'igcse'),
+        g('igcse-2', 'IGCSE, second year', 'foundation', 'igcse'),
+        g('as', 'AS Level', 'as', 'a-level'),
+        g('a2', 'A Level (A2)', 'a2', 'a-level'),
       ],
     },
     {
       id: 'uk', label: 'England, Wales or Northern Ireland',
       regions: ['GB', 'IM', 'JE', 'GG', 'GI'],
+      quals: ['gcse', 'a-level'],
       grades: [
-        g('y9', 'Year 9 or below', 'foundation'),
-        g('y10', 'Year 10', 'foundation'),
-        g('y11', 'Year 11', 'foundation'),
-        g('y12', 'Year 12 (Lower Sixth)', 'as'),
-        g('y13', 'Year 13 (Upper Sixth)', 'a2'),
+        g('y9', 'Year 9 or below', 'foundation', 'gcse'),
+        g('y10', 'Year 10', 'foundation', 'gcse'),
+        g('y11', 'Year 11', 'foundation', 'gcse'),
+        g('y12', 'Year 12 (Lower Sixth)', 'as', 'a-level'),
+        g('y13', 'Year 13 (Upper Sixth)', 'a2', 'a-level'),
       ],
     },
     {
       id: 'scotland', label: 'Scotland',
       regions: [],
+      quals: ['nat5', 'higher', 'adv-higher'],
       grades: [
-        g('s3', 'S3 or below', 'foundation'),
-        g('s4', 'S4', 'foundation'),
-        g('s5', 'S5', 'as'),
-        g('s6', 'S6', 'a2'),
+        g('s3', 'S3 or below', 'foundation', 'nat5'),
+        g('s4', 'S4', 'foundation', 'nat5'),
+        g('s5', 'S5', 'as', 'higher'),
+        g('s6', 'S6', 'a2', 'adv-higher'),
       ],
     },
     {
       id: 'ireland', label: 'Ireland',
       regions: ['IE'],
+      quals: ['junior-cycle', 'leaving-cert'],
       grades: [
-        g('y3', 'Third Year or below', 'foundation'),
-        g('ty', 'Transition Year', 'foundation'),
-        g('y5', 'Fifth Year', 'as'),
-        g('y6', 'Sixth Year', 'a2'),
+        g('y3', 'Third Year or below', 'foundation', 'junior-cycle'),
+        g('ty', 'Transition Year', 'foundation', 'leaving-cert'),
+        g('y5', 'Fifth Year', 'as', 'leaving-cert'),
+        g('y6', 'Sixth Year', 'a2', 'leaving-cert'),
       ],
     },
     {
-      id: 'grades', label: 'Grades 1–12 (US, Canada, the Gulf, the Philippines…)',
-      regions: ['US', 'CA', 'PH', 'SA', 'AE', 'QA', 'KW', 'BH', 'OM', 'JO', 'LB', 'LK', 'KR', 'MX', 'BR', 'CO', 'CL', 'PE', 'AR', 'TH', 'VN', 'ID'],
+      id: 'us', label: 'United States',
+      regions: ['US', 'PR', 'GU', 'VI', 'AS', 'MP'],
+      quals: ['us-diploma', 'sat', 'act', 'ap', 'ged'],
       grades: [
-        g('g8', 'Grade 8 or below', 'foundation'),
-        g('g9', 'Grade 9', 'foundation'),
-        g('g10', 'Grade 10', 'foundation'),
-        g('g11', 'Grade 11', 'as'),
-        g('g12', 'Grade 12', 'a2'),
+        g('g8', 'Grade 8 or below', 'foundation', 'us-diploma'),
+        g('g9', 'Grade 9 (Freshman)', 'foundation', 'us-diploma'),
+        g('g10', 'Grade 10 (Sophomore)', 'foundation', 'us-diploma'),
+        g('g11', 'Grade 11 (Junior)', 'as', 'us-diploma'),
+        g('g12', 'Grade 12 (Senior)', 'a2', 'us-diploma'),
       ],
     },
     {
-      id: 'classes', label: 'Classes 1–12 (India, Pakistan, Bangladesh, Nepal)',
-      regions: ['IN', 'PK', 'BD', 'NP'],
+      id: 'canada', label: 'Canada',
+      regions: ['CA'],
+      quals: ['ca-diploma'],
       grades: [
-        g('c8', 'Class 8 or below', 'foundation'),
-        g('c9', 'Class 9', 'foundation'),
-        g('c10', 'Class 10', 'foundation'),
-        g('c11', 'Class 11', 'as'),
-        g('c12', 'Class 12', 'a2'),
+        g('g8', 'Grade 8 or below', 'foundation', 'ca-diploma'),
+        g('g9', 'Grade 9', 'foundation', 'ca-diploma'),
+        g('g10', 'Grade 10', 'foundation', 'ca-diploma'),
+        g('g11', 'Grade 11', 'as', 'ca-diploma'),
+        g('g12', 'Grade 12', 'a2', 'ca-diploma'),
+      ],
+    },
+    {
+      // Kept under its old id: accounts that answered "grades" before the US
+      // and Canada had their own entries still read back correctly.
+      id: 'grades', label: 'Grades 1–12 (the Gulf, the Philippines, Latin America…)',
+      regions: ['PH', 'SA', 'AE', 'QA', 'KW', 'BH', 'OM', 'JO', 'LB', 'LK', 'CO', 'CL', 'PE', 'AR', 'UY', 'EC', 'BO', 'PY', 'VE', 'TH', 'ID'],
+      quals: ['national-leaving'],
+      grades: [
+        g('g8', 'Grade 8 or below', 'foundation', 'national-leaving'),
+        g('g9', 'Grade 9', 'foundation', 'national-leaving'),
+        g('g10', 'Grade 10', 'foundation', 'national-leaving'),
+        g('g11', 'Grade 11', 'as', 'national-leaving'),
+        g('g12', 'Grade 12', 'a2', 'national-leaving'),
+      ],
+    },
+    {
+      id: 'classes', label: 'India or Nepal',
+      regions: ['IN', 'NP'],
+      quals: ['cbse-10', 'cbse-12', 'icse', 'isc', 'state-board', 'jee', 'neet', 'np-see', 'np-neb'],
+      grades: [
+        g('c8', 'Class 8 or below', 'foundation', 'cbse-10'),
+        g('c9', 'Class 9', 'foundation', 'cbse-10'),
+        g('c10', 'Class 10', 'foundation', 'cbse-10'),
+        g('c11', 'Class 11', 'as', 'cbse-12'),
+        g('c12', 'Class 12', 'a2', 'cbse-12'),
+      ],
+    },
+    {
+      id: 'pakistan', label: 'Pakistan',
+      regions: ['PK'],
+      quals: ['pk-ssc', 'pk-hssc', 'mdcat'],
+      grades: [
+        g('c8', 'Class 8 or below', 'foundation', 'pk-ssc'),
+        g('c9', 'Class 9 (Matric, part 1)', 'foundation', 'pk-ssc'),
+        g('c10', 'Class 10 (Matric)', 'foundation', 'pk-ssc'),
+        g('c11', 'First year (FSc / FA, part 1)', 'as', 'pk-hssc'),
+        g('c12', 'Second year (FSc / FA, part 2)', 'a2', 'pk-hssc'),
+      ],
+    },
+    {
+      id: 'bangladesh', label: 'Bangladesh',
+      regions: ['BD'],
+      quals: ['bd-ssc', 'bd-hsc'],
+      grades: [
+        g('c8', 'Class 8 or below', 'foundation', 'bd-ssc'),
+        g('c9', 'Class 9', 'foundation', 'bd-ssc'),
+        g('c10', 'Class 10 (SSC)', 'foundation', 'bd-ssc'),
+        g('c11', 'Class 11 (HSC, first year)', 'as', 'bd-hsc'),
+        g('c12', 'Class 12 (HSC)', 'a2', 'bd-hsc'),
       ],
     },
     {
       id: 'australia', label: 'Australia',
       regions: ['AU'],
+      quals: ['atar'],
       grades: [
-        g('y9', 'Year 9 or below', 'foundation'),
-        g('y10', 'Year 10', 'foundation'),
-        g('y11', 'Year 11', 'as'),
-        g('y12', 'Year 12', 'a2'),
+        g('y9', 'Year 9 or below', 'foundation', 'atar'),
+        g('y10', 'Year 10', 'foundation', 'atar'),
+        g('y11', 'Year 11', 'as', 'atar'),
+        g('y12', 'Year 12', 'a2', 'atar'),
       ],
     },
     {
       id: 'nz', label: 'New Zealand',
       regions: ['NZ'],
+      quals: ['ncea-1', 'ncea-2', 'ncea-3'],
       grades: [
-        g('y10', 'Year 10 or below', 'foundation'),
-        g('y11', 'Year 11 (NCEA Level 1)', 'foundation'),
-        g('y12', 'Year 12 (NCEA Level 2)', 'as'),
-        g('y13', 'Year 13 (NCEA Level 3)', 'a2'),
+        g('y10', 'Year 10 or below', 'foundation', 'ncea-1'),
+        g('y11', 'Year 11 (NCEA Level 1)', 'foundation', 'ncea-1'),
+        g('y12', 'Year 12 (NCEA Level 2)', 'as', 'ncea-2'),
+        g('y13', 'Year 13 (NCEA Level 3)', 'a2', 'ncea-3'),
       ],
     },
     {
       id: 'singapore', label: 'Singapore',
       regions: ['SG'],
+      quals: ['sg-o', 'sg-a'],
       grades: [
-        g('sec3', 'Secondary 3 or below', 'foundation'),
-        g('sec4', 'Secondary 4', 'foundation'),
-        g('jc1', 'JC1', 'as'),
-        g('jc2', 'JC2', 'a2'),
+        g('sec3', 'Secondary 3 or below', 'foundation', 'sg-o'),
+        g('sec4', 'Secondary 4', 'foundation', 'sg-o'),
+        g('jc1', 'JC1', 'as', 'sg-a'),
+        g('jc2', 'JC2', 'a2', 'sg-a'),
       ],
     },
     {
-      id: 'forms', label: 'Forms (Malaysia, Hong Kong, Brunei)',
-      regions: ['MY', 'HK', 'BN', 'MO'],
+      // Old id, from when Hong Kong shared it.
+      id: 'forms', label: 'Malaysia or Brunei',
+      regions: ['MY', 'BN'],
+      quals: ['spm', 'stpm'],
       grades: [
-        g('f3', 'Form 3 or below', 'foundation'),
-        g('f4', 'Form 4', 'foundation'),
-        g('f5', 'Form 5', 'foundation'),
-        g('l6', 'Form 6 lower / first pre-university year', 'as'),
-        g('u6', 'Form 6 upper / second pre-university year', 'a2'),
+        g('f3', 'Form 3 or below', 'foundation', 'spm'),
+        g('f4', 'Form 4', 'foundation', 'spm'),
+        g('f5', 'Form 5 (SPM)', 'foundation', 'spm'),
+        g('l6', 'Form 6 lower / first pre-university year', 'as', 'stpm'),
+        g('u6', 'Form 6 upper / second pre-university year', 'a2', 'stpm'),
+      ],
+    },
+    {
+      id: 'hong-kong', label: 'Hong Kong or Macau',
+      regions: ['HK', 'MO'],
+      quals: ['hkdse'],
+      grades: [
+        g('s3', 'S3 or below', 'foundation', 'hkdse'),
+        g('s4', 'S4', 'foundation', 'hkdse'),
+        g('s5', 'S5', 'as', 'hkdse'),
+        g('s6', 'S6', 'a2', 'hkdse'),
+      ],
+    },
+    {
+      id: 'china', label: 'China (mainland)',
+      regions: ['CN'],
+      quals: ['zhongkao', 'gaokao'],
+      grades: [
+        g('cz3', 'Junior 3 (初三) or below', 'foundation', 'zhongkao'),
+        g('gz1', 'Senior 1 (高一)', 'foundation', 'gaokao'),
+        g('gz2', 'Senior 2 (高二)', 'as', 'gaokao'),
+        g('gz3', 'Senior 3 (高三)', 'a2', 'gaokao'),
+      ],
+    },
+    {
+      id: 'japan', label: 'Japan',
+      regions: ['JP'],
+      quals: ['jp-hs-entrance', 'jp-common-test'],
+      grades: [
+        g('c3', 'Junior high 3 (中学3年) or below', 'foundation', 'jp-hs-entrance'),
+        g('k1', 'High school 1 (高校1年)', 'foundation', 'jp-common-test'),
+        g('k2', 'High school 2 (高校2年)', 'as', 'jp-common-test'),
+        g('k3', 'High school 3 (高校3年)', 'a2', 'jp-common-test'),
+      ],
+    },
+    {
+      id: 'korea', label: 'South Korea',
+      regions: ['KR'],
+      quals: ['csat'],
+      grades: [
+        g('m3', 'Middle school 3 (중3) or below', 'foundation', 'csat'),
+        g('h1', 'High school 1 (고1)', 'foundation', 'csat'),
+        g('h2', 'High school 2 (고2)', 'as', 'csat'),
+        g('h3', 'High school 3 (고3)', 'a2', 'csat'),
+      ],
+    },
+    {
+      id: 'vietnam', label: 'Vietnam',
+      regions: ['VN'],
+      quals: ['vn-grade10', 'vn-thpt'],
+      grades: [
+        g('l9', 'Lớp 9 or below', 'foundation', 'vn-grade10'),
+        g('l10', 'Lớp 10', 'foundation', 'vn-thpt'),
+        g('l11', 'Lớp 11', 'as', 'vn-thpt'),
+        g('l12', 'Lớp 12', 'a2', 'vn-thpt'),
       ],
     },
     {
       id: 'west-africa', label: 'Nigeria, Ghana and West Africa',
       regions: ['NG', 'GH', 'SL', 'GM', 'LR', 'CM'],
+      quals: ['bece', 'wassce', 'neco', 'utme'],
       grades: [
-        g('jss3', 'JSS 3 / JHS 3 or below', 'foundation'),
-        g('ss1', 'SS 1 / SHS 1', 'foundation'),
-        g('ss2', 'SS 2 / SHS 2', 'as'),
-        g('ss3', 'SS 3 / SHS 3', 'a2'),
+        g('jss3', 'JSS 3 / JHS 3 or below', 'foundation', 'bece'),
+        g('ss1', 'SS 1 / SHS 1', 'foundation', 'wassce'),
+        g('ss2', 'SS 2 / SHS 2', 'as', 'wassce'),
+        g('ss3', 'SS 3 / SHS 3', 'a2', 'wassce'),
       ],
     },
     {
       id: 'east-africa', label: 'Kenya, Uganda, Tanzania',
       regions: ['KE', 'UG', 'TZ', 'RW', 'ZM', 'ZW', 'MW'],
+      quals: ['kcse', 'uce', 'uace', 'csee', 'acsee'],
       grades: [
-        g('form2', 'Form 2 or below', 'foundation'),
-        g('form3', 'Form 3', 'foundation'),
-        g('form4', 'Form 4', 'foundation'),
-        g('form5', 'Form 5 / Senior 5', 'as'),
-        g('form6', 'Form 6 / Senior 6', 'a2'),
+        g('form2', 'Form 2 or below', 'foundation', 'kcse'),
+        g('form3', 'Form 3', 'foundation', 'kcse'),
+        g('form4', 'Form 4', 'foundation', 'kcse'),
+        g('form5', 'Form 5 / Senior 5', 'as', 'uace'),
+        g('form6', 'Form 6 / Senior 6', 'a2', 'uace'),
+      ],
+    },
+    {
+      id: 'south-africa', label: 'South Africa',
+      regions: ['ZA', 'NA', 'BW', 'LS', 'SZ'],
+      quals: ['za-nsc', 'za-ieb'],
+      grades: [
+        g('gr9', 'Grade 9 or below', 'foundation', 'za-nsc'),
+        g('gr10', 'Grade 10', 'foundation', 'za-nsc'),
+        g('gr11', 'Grade 11', 'as', 'za-nsc'),
+        g('gr12', 'Grade 12 (Matric)', 'a2', 'za-nsc'),
+      ],
+    },
+    {
+      id: 'egypt', label: 'Egypt',
+      regions: ['EG'],
+      quals: ['eg-thanaweya'],
+      grades: [
+        g('p3', 'Third preparatory or below', 'foundation', 'eg-thanaweya'),
+        g('s1', 'First secondary', 'foundation', 'eg-thanaweya'),
+        g('s2', 'Second secondary', 'as', 'eg-thanaweya'),
+        g('s3', 'Third secondary (Thanaweya Amma)', 'a2', 'eg-thanaweya'),
       ],
     },
     {
       id: 'ib', label: 'International Baccalaureate',
       regions: [],
+      quals: ['ib-myp', 'ib-dp'],
       grades: [
-        g('myp3', 'MYP 3 or below', 'foundation'),
-        g('myp4', 'MYP 4', 'foundation'),
-        g('myp5', 'MYP 5', 'foundation'),
-        g('dp1', 'Diploma, first year', 'as'),
-        g('dp2', 'Diploma, second year', 'a2'),
+        g('myp3', 'MYP 3 or below', 'foundation', 'ib-myp'),
+        g('myp4', 'MYP 4', 'foundation', 'ib-myp'),
+        g('myp5', 'MYP 5', 'foundation', 'ib-myp'),
+        g('dp1', 'Diploma, first year', 'as', 'ib-dp'),
+        g('dp2', 'Diploma, second year', 'a2', 'ib-dp'),
       ],
     },
     {
-      id: 'france', label: 'France',
-      regions: ['FR', 'MC', 'LU', 'MA', 'TN', 'DZ', 'SN', 'CI'],
+      id: 'france', label: 'France (and French schools abroad)',
+      regions: ['FR', 'MC', 'LU', 'MA', 'TN', 'DZ', 'SN', 'CI', 'RE', 'GP', 'MQ', 'GF', 'YT', 'NC', 'PF'],
+      quals: ['brevet', 'bac', 'bac-pro'],
       grades: [
-        g('3e', 'Troisième or below', 'foundation'),
-        g('2de', 'Seconde', 'foundation'),
-        g('1re', 'Première', 'as'),
-        g('tle', 'Terminale', 'a2'),
+        g('3e', 'Troisième or below', 'foundation', 'brevet'),
+        g('2de', 'Seconde', 'foundation', 'bac'),
+        g('1re', 'Première', 'as', 'bac'),
+        g('tle', 'Terminale', 'a2', 'bac'),
       ],
     },
     {
-      id: 'germany', label: 'Germany, Austria, Switzerland',
-      regions: ['DE', 'AT', 'CH', 'LI'],
+      id: 'germany', label: 'Germany',
+      regions: ['DE'],
+      quals: ['msa', 'abitur'],
       grades: [
-        g('k9', 'Klasse 9 or below', 'foundation'),
-        g('k10', 'Klasse 10', 'foundation'),
-        g('k11', 'Klasse 11', 'as'),
-        g('k12', 'Klasse 12', 'a2'),
-        g('k13', 'Klasse 13', 'a2'),
+        g('k9', 'Klasse 9 or below', 'foundation', 'msa'),
+        g('k10', 'Klasse 10', 'foundation', 'msa'),
+        g('k11', 'Klasse 11', 'as', 'abitur'),
+        g('k12', 'Klasse 12', 'a2', 'abitur'),
+        g('k13', 'Klasse 13', 'a2', 'abitur'),
+      ],
+    },
+    {
+      id: 'austria', label: 'Austria',
+      regions: ['AT'],
+      quals: ['matura-at'],
+      grades: [
+        g('k5', '5. Klasse (9. Schulstufe) or below', 'foundation', 'matura-at'),
+        g('k6', '6. Klasse', 'foundation', 'matura-at'),
+        g('k7', '7. Klasse', 'as', 'matura-at'),
+        g('k8', '8. Klasse (Maturaklasse)', 'a2', 'matura-at'),
+      ],
+    },
+    {
+      id: 'switzerland', label: 'Switzerland or Liechtenstein',
+      regions: ['CH', 'LI'],
+      quals: ['matura-ch'],
+      grades: [
+        g('y9', '9th school year (11H) or below', 'foundation', 'matura-ch'),
+        g('y10', '10th school year', 'foundation', 'matura-ch'),
+        g('y11', '11th school year', 'as', 'matura-ch'),
+        g('y12', '12th school year (Maturajahr)', 'a2', 'matura-ch'),
       ],
     },
     {
       id: 'spain', label: 'Spain',
       regions: ['ES', 'AD'],
+      quals: ['eso', 'pau'],
       grades: [
-        g('eso3', '3º ESO or below', 'foundation'),
-        g('eso4', '4º ESO', 'foundation'),
-        g('bach1', '1º Bachillerato', 'as'),
-        g('bach2', '2º Bachillerato', 'a2'),
+        g('eso3', '3º ESO or below', 'foundation', 'eso'),
+        g('eso4', '4º ESO', 'foundation', 'eso'),
+        g('bach1', '1º Bachillerato', 'as', 'pau'),
+        g('bach2', '2º Bachillerato', 'a2', 'pau'),
+      ],
+    },
+    {
+      id: 'italy', label: 'Italy',
+      regions: ['IT', 'SM', 'VA'],
+      quals: ['licenza-media', 'maturita'],
+      grades: [
+        g('m3', 'Terza media or below', 'foundation', 'licenza-media'),
+        g('s1', 'Primo anno di superiori', 'foundation', 'maturita'),
+        g('s2', 'Secondo anno', 'foundation', 'maturita'),
+        g('s3', 'Terzo anno', 'as', 'maturita'),
+        g('s4', 'Quarto anno', 'a2', 'maturita'),
+        g('s5', 'Quinto anno (Maturità)', 'a2', 'maturita'),
+      ],
+    },
+    {
+      id: 'portugal', label: 'Portugal',
+      regions: ['PT'],
+      quals: ['pt-9', 'pt-sec'],
+      grades: [
+        g('a9', '9.º ano or below', 'foundation', 'pt-9'),
+        g('a10', '10.º ano', 'foundation', 'pt-sec'),
+        g('a11', '11.º ano', 'as', 'pt-sec'),
+        g('a12', '12.º ano', 'a2', 'pt-sec'),
+      ],
+    },
+    {
+      id: 'netherlands', label: 'Netherlands',
+      regions: ['NL'],
+      quals: ['nl-vmbo', 'nl-havo', 'nl-vwo'],
+      grades: [
+        g('k3', 'Klas 3 or below', 'foundation', 'nl-havo'),
+        g('k4', 'Klas 4', 'foundation', 'nl-havo'),
+        g('k5', 'Klas 5', 'as', 'nl-havo'),
+        g('k6', 'Klas 6 (vwo)', 'a2', 'nl-vwo'),
+      ],
+    },
+    {
+      id: 'poland', label: 'Poland',
+      regions: ['PL'],
+      quals: ['pl-e8', 'pl-matura'],
+      grades: [
+        g('k8', 'Klasa 8 (szkoła podstawowa) or below', 'foundation', 'pl-e8'),
+        g('l1', 'Liceum, klasa 1', 'foundation', 'pl-matura'),
+        g('l2', 'Liceum, klasa 2', 'as', 'pl-matura'),
+        g('l3', 'Liceum, klasa 3', 'a2', 'pl-matura'),
+        g('l4', 'Liceum, klasa 4', 'a2', 'pl-matura'),
+      ],
+    },
+    {
+      id: 'russia', label: 'Russia or Belarus',
+      regions: ['RU', 'BY'],
+      quals: ['oge', 'ege'],
+      grades: [
+        g('k8', '8th grade (8 класс) or below', 'foundation', 'oge'),
+        g('k9', '9th grade (9 класс)', 'foundation', 'oge'),
+        g('k10', '10th grade (10 класс)', 'as', 'ege'),
+        g('k11', '11th grade (11 класс)', 'a2', 'ege'),
+      ],
+    },
+    {
+      id: 'turkey', label: 'Türkiye',
+      regions: ['TR'],
+      quals: ['lgs', 'yks'],
+      grades: [
+        g('s8', '8. sınıf or below', 'foundation', 'lgs'),
+        g('s9', '9. sınıf', 'foundation', 'yks'),
+        g('s10', '10. sınıf', 'foundation', 'yks'),
+        g('s11', '11. sınıf', 'as', 'yks'),
+        g('s12', '12. sınıf', 'a2', 'yks'),
+      ],
+    },
+    {
+      id: 'brazil', label: 'Brazil',
+      regions: ['BR'],
+      quals: ['enem'],
+      grades: [
+        g('ef9', '9º ano (Ensino Fundamental) or below', 'foundation', 'enem'),
+        g('em1', '1ª série (Ensino Médio)', 'foundation', 'enem'),
+        g('em2', '2ª série', 'as', 'enem'),
+        g('em3', '3ª série', 'a2', 'enem'),
+      ],
+    },
+    {
+      id: 'mexico', label: 'Mexico',
+      regions: ['MX'],
+      quals: ['mx-exani'],
+      grades: [
+        g('s3', '3º de secundaria or below', 'foundation', 'mx-exani'),
+        g('p1', '1º de preparatoria / bachillerato', 'foundation', 'mx-exani'),
+        g('p2', '2º de preparatoria', 'as', 'mx-exani'),
+        g('p3', '3º de preparatoria', 'a2', 'mx-exani'),
       ],
     },
     {
@@ -252,12 +527,13 @@
       // out what theirs is called. Age at the start of the school year.
       id: 'age', label: 'None of these — go by my age',
       regions: [],
+      quals: ['national-leaving'],
       grades: [
-        g('14', '14 or younger', 'foundation'),
-        g('15', '15', 'foundation'),
-        g('16', '16', 'as'),
-        g('17', '17', 'a2'),
-        g('18', '18 or older', 'a2'),
+        g('14', '14 or younger', 'foundation', ''),
+        g('15', '15', 'foundation', ''),
+        g('16', '16', 'as', ''),
+        g('17', '17', 'a2', ''),
+        g('18', '18 or older', 'a2', ''),
       ],
     },
   ];
@@ -437,6 +713,445 @@
     return readGoal();
   }
 
+  // --- how the student is schooled, and the exam they are aiming at ---------
+  // The page straight after sign-up (School.dc.html) asks three things before
+  // anything else: what kind of school, which system, and which exam. The
+  // exam is the one that matters most: it is what the student's practice
+  // papers are written for, what their marks are converted to, and what an
+  // AI lesson is pitched at. A French Seconde student aiming at the bac sees
+  // bac papers marked out of 20; a homeschooled student aiming at A levels
+  // sees A level papers marked A* to U.
+
+  var SCHOOLING = [
+    { id: 'public', label: 'A public (state) school',
+      note: 'We start from your country’s national exams.' },
+    { id: 'private', label: 'A private or international school',
+      note: 'National exams and international ones — pick whichever your school prepares you for.' },
+    { id: 'home', label: 'I’m homeschooled',
+      note: 'You can sit most of these as a private candidate, wherever you live — pick the one you are working towards.' },
+  ];
+
+  function schoolingById(id) {
+    for (var i = 0; i < SCHOOLING.length; i++) if (SCHOOLING[i].id === id) return SCHOOLING[i];
+    return null;
+  }
+
+  /* Marking scales. A paper is marked in raw marks; the result is then shown
+   * the way the student's own exam reports it. Every conversion here is
+   * indicative — real boundaries move every session — and the page says so.
+   *
+   *   bands   [label, minimum %] from the top; `below` for anything lower
+   *   score   a number from min to max, rounded to `step`, with optional
+   *           `bands` naming ranges of that score (mentions, levels…) and a
+   *           `pass` mark
+   */
+  function bands(list, below, pass) { return { kind: 'bands', bands: list, below: below, pass: pass }; }
+  function score(min, max, step, opts) {
+    var o = opts || {};
+    return { kind: 'score', min: min, max: max, step: step, pass: o.pass, bands: o.bands || null, suffix: o.suffix || '', below: o.below || '' };
+  }
+
+  var SCALES = {
+    'a-level':  bands([['A*', 90], ['A', 80], ['B', 70], ['C', 60], ['D', 50], ['E', 40]], 'U', 'E'),
+    'as-level': bands([['A', 80], ['B', 70], ['C', 60], ['D', 50], ['E', 40]], 'U', 'E'),
+    'igcse':    bands([['A*', 90], ['A', 80], ['B', 70], ['C', 60], ['D', 50], ['E', 40], ['F', 30], ['G', 20]], 'U', 'C'),
+    'nine-one': bands([['9', 88], ['8', 79], ['7', 70], ['6', 61], ['5', 52], ['4', 43], ['3', 32], ['2', 21], ['1', 10]], 'U', '4'),
+    'scot':     bands([['A', 70], ['B', 60], ['C', 50], ['D', 40]], 'No award', 'C'),
+    'irl-lc':   bands([['H1', 90], ['H2', 80], ['H3', 70], ['H4', 60], ['H5', 50], ['H6', 40], ['H7', 30]], 'H8', 'H6'),
+    'irl-jc':   bands([['Distinction', 90], ['Higher Merit', 75], ['Merit', 55], ['Achieved', 40], ['Partially Achieved', 20]], 'Not Graded', 'Achieved'),
+    'letter':   bands([['A', 90], ['B', 80], ['C', 70], ['D', 60]], 'F', 'D'),
+    'ap':       bands([['5', 75], ['4', 60], ['3', 45], ['2', 30]], '1', '3'),
+    'sat':      score(200, 800, 10, { suffix: ' (section score)' }),
+    'act':      score(1, 36, 1, { suffix: ' (ACT scale)' }),
+    'ged':      score(100, 200, 1, { pass: 145 }),
+    'percent':  score(0, 100, 1, { suffix: '%' }),
+    'pct-33':   score(0, 100, 1, { suffix: '%', pass: 33 }),
+    'pct-40':   score(0, 100, 1, { suffix: '%', pass: 40 }),
+    'pct-50':   score(0, 100, 1, { suffix: '%', pass: 50 }),
+    'cbse':     bands([['A1', 91], ['A2', 81], ['B1', 71], ['B2', 61], ['C1', 51], ['C2', 41], ['D', 33]], 'E', 'D'),
+    'pk':       bands([['A1', 80], ['A', 70], ['B', 60], ['C', 50], ['D', 40], ['E', 33]], 'F', 'E'),
+    'bd-gpa':   bands([['A+ (5.00)', 80], ['A (4.00)', 70], ['A− (3.50)', 60], ['B (3.00)', 50], ['C (2.00)', 40], ['D (1.00)', 33]], 'F', 'D (1.00)'),
+    'np-gpa':   bands([['A+ (4.0)', 90], ['A (3.6)', 80], ['B+ (3.2)', 70], ['B (2.8)', 60], ['C+ (2.4)', 50], ['C (2.0)', 40], ['D (1.6)', 35]], 'NG', 'D (1.6)'),
+    'atar':     bands([['Band 6', 90], ['Band 5', 80], ['Band 4', 70], ['Band 3', 60], ['Band 2', 50]], 'Band 1', 'Band 2'),
+    'ncea':     bands([['Excellence', 80], ['Merit', 65], ['Achieved', 50]], 'Not Achieved', 'Achieved'),
+    'sg-o':     bands([['A1', 75], ['A2', 70], ['B3', 65], ['B4', 60], ['C5', 55], ['C6', 50], ['D7', 45], ['E8', 40]], 'F9', 'C6'),
+    'sg-a':     bands([['A', 70], ['B', 60], ['C', 55], ['D', 50], ['E', 45], ['S', 40]], 'U', 'E'),
+    'spm':      bands([['A+', 90], ['A', 80], ['A−', 70], ['B+', 65], ['B', 60], ['C+', 55], ['C', 50], ['D', 45], ['E', 40]], 'G', 'E'),
+    'stpm':     bands([['A', 80], ['A−', 75], ['B+', 70], ['B', 65], ['B−', 60], ['C+', 55], ['C', 50], ['C−', 45], ['D+', 40], ['D', 35]], 'F', 'C'),
+    'hkdse':    bands([['5**', 85], ['5*', 78], ['5', 70], ['4', 58], ['3', 45], ['2', 33], ['1', 20]], 'U', '2'),
+    'waec':     bands([['A1', 75], ['B2', 70], ['B3', 65], ['C4', 60], ['C5', 55], ['C6', 50], ['D7', 45], ['E8', 40]], 'F9', 'C6'),
+    'bece':     bands([['Grade 1', 80], ['Grade 2', 70], ['Grade 3', 60], ['Grade 4', 55], ['Grade 5', 50], ['Grade 6', 45], ['Grade 7', 40], ['Grade 8', 35]], 'Grade 9', 'Grade 6'),
+    'jamb':     score(0, 400, 1, { pass: 160, suffix: ' / 400' }),
+    'kcse':     bands([['A', 80], ['A−', 75], ['B+', 70], ['B', 65], ['B−', 60], ['C+', 55], ['C', 50], ['C−', 45], ['D+', 40], ['D', 35], ['D−', 30]], 'E', 'C+'),
+    'ug-uce':   bands([['D1', 80], ['D2', 75], ['C3', 70], ['C4', 65], ['C5', 60], ['C6', 55], ['P7', 50], ['P8', 45]], 'F9', 'P8'),
+    'ug-uace':  bands([['A', 80], ['B', 70], ['C', 60], ['D', 50], ['E', 40], ['O', 35]], 'F', 'E'),
+    'tz':       bands([['A', 75], ['B', 65], ['C', 45], ['D', 30]], 'F', 'D'),
+    'za-nsc':   bands([['Level 7', 80], ['Level 6', 70], ['Level 5', 60], ['Level 4', 50], ['Level 3', 40], ['Level 2', 30]], 'Level 1', 'Level 2'),
+    'ib7':      bands([['7', 80], ['6', 70], ['5', 60], ['4', 50], ['3', 40], ['2', 25]], '1', '4'),
+    'fr20':     score(0, 20, 0.5, { pass: 10, suffix: '/20', bands: [['mention Très bien', 16], ['mention Bien', 14], ['mention Assez bien', 12], ['admis', 10], ['oral de rattrapage', 8]], below: 'non admis' }),
+    'fr-brevet': score(0, 20, 0.5, { pass: 10, suffix: '/20', bands: [['mention Très bien', 16], ['mention Bien', 14], ['mention Assez bien', 12], ['admis', 10]], below: 'non admis' }),
+    'de-abi':   bands([['15 Punkte (1+)', 95], ['14 Punkte (1)', 90], ['13 Punkte (1−)', 85], ['12 Punkte (2+)', 80], ['11 Punkte (2)', 75], ['10 Punkte (2−)', 70], ['9 Punkte (3+)', 65], ['8 Punkte (3)', 60], ['7 Punkte (3−)', 55], ['6 Punkte (4+)', 50], ['5 Punkte (4)', 45], ['4 Punkte (4−)', 40], ['3 Punkte (5+)', 33], ['2 Punkte (5)', 27], ['1 Punkt (5−)', 20]], '0 Punkte (6)', '5 Punkte (4)'),
+    'de-note':  bands([['1 (sehr gut)', 87], ['2 (gut)', 73], ['3 (befriedigend)', 59], ['4 (ausreichend)', 45], ['5 (mangelhaft)', 18]], '6 (ungenügend)', '4 (ausreichend)'),
+    'at5':      bands([['1 (Sehr gut)', 89], ['2 (Gut)', 76], ['3 (Befriedigend)', 63], ['4 (Genügend)', 50]], '5 (Nicht genügend)', '4 (Genügend)'),
+    'ch6':      score(1, 6, 0.5, { pass: 4 }),
+    'es10':     score(0, 10, 0.1, { pass: 5, suffix: '/10', bands: [['Sobresaliente', 9], ['Notable', 7], ['Bien', 6], ['Suficiente', 5]], below: 'Insuficiente' }),
+    'it10':     score(0, 10, 1, { pass: 6, suffix: '/10' }),
+    'it100':    score(0, 100, 1, { pass: 60, suffix: '/100' }),
+    'pt20':     score(0, 20, 1, { pass: 10, suffix: '/20' }),
+    'pt5':      score(1, 5, 1, { pass: 3, suffix: ' (nível)' }),
+    'nl10':     score(1, 10, 0.1, { pass: 5.5 }),
+    'pl-pct':   score(0, 100, 1, { pass: 30, suffix: '%' }),
+    'ru-oge':   bands([['5 (отлично)', 80], ['4 (хорошо)', 60], ['3 (удовлетворительно)', 35]], '2 (неудовлетворительно)', '3 (удовлетворительно)'),
+    'ru-ege':   score(0, 100, 1, { suffix: ' / 100 (test score)' }),
+    'tr-net':   score(0, 100, 1, { suffix: '% correct' }),
+    'enem':     score(300, 900, 1, { suffix: ' (ENEM-style score)' }),
+    'mx':       score(700, 1300, 1, { suffix: ' (EXANI-II-style score)' }),
+    'gaokao':   score(0, 150, 1, { pass: 90, suffix: ' / 150' }),
+    'zhongkao': score(0, 120, 1, { pass: 72, suffix: ' / 120' }),
+    'jp100':    score(0, 100, 1, { suffix: ' / 100' }),
+    'kr9':      bands([['1등급', 90], ['2등급', 80], ['3등급', 70], ['4등급', 60], ['5등급', 50], ['6등급', 40], ['7등급', 30], ['8등급', 20]], '9등급', '4등급'),
+    'vn10':     score(0, 10, 0.25, { pass: 5, suffix: '/10' }),
+    'eg-pct':   score(0, 100, 1, { pass: 50, suffix: '%' }),
+    'ca-pct':   score(0, 100, 1, { pass: 50, suffix: '%', bands: [['Level 4', 80], ['Level 3', 70], ['Level 2', 60], ['Level 1', 50]], below: 'below Level 1' }),
+    'myp7':     bands([['7', 85], ['6', 72], ['5', 60], ['4', 48], ['3', 36], ['2', 20]], '1', '4'),
+  };
+
+  // A score of `pct` per cent on a paper, as the scale reports it:
+  // { grade, mention, passed, text }. `text` is what the page prints.
+  function markOn(scaleId, pct) {
+    var sc = SCALES[scaleId] || SCALES['a-level'];
+    var p = Math.max(0, Math.min(100, Number(pct) || 0));
+    if (sc.kind === 'bands') {
+      for (var i = 0; i < sc.bands.length; i++) {
+        if (p >= sc.bands[i][1]) {
+          var passIdx = -1;
+          for (var j = 0; j < sc.bands.length; j++) if (sc.bands[j][0] === sc.pass) passIdx = j;
+          return { grade: sc.bands[i][0], mention: '', passed: passIdx === -1 || i <= passIdx, text: sc.bands[i][0] };
+        }
+      }
+      return { grade: sc.below, mention: '', passed: false, text: sc.below };
+    }
+    var raw = sc.min + (sc.max - sc.min) * p / 100;
+    var val = Math.round(raw / sc.step) * sc.step;
+    var digits = sc.step < 1 ? (String(sc.step).split('.')[1] || '').length : 0;
+    var shown = digits ? val.toFixed(digits).replace(/0+$/, '').replace(/\.$/, '') : String(Math.round(val));
+    var mention = '';
+    if (sc.bands) {
+      mention = sc.below || '';
+      for (var k = 0; k < sc.bands.length; k++) if (val >= sc.bands[k][1]) { mention = sc.bands[k][0]; break; }
+    }
+    var passed = sc.pass == null ? true : val >= sc.pass;
+    return { grade: shown + sc.suffix, mention: mention, passed: passed, text: shown + sc.suffix + (mention ? ' · ' + mention : '') };
+  }
+
+  // How a scale reports a result, in a few words: "graded A* to U",
+  // "marked out of 20, with mentions".
+  function scaleSummary(scaleId) {
+    var sc = SCALES[scaleId];
+    if (!sc) return '';
+    if (sc.kind === 'bands') return 'graded ' + sc.bands[0][0] + ' to ' + sc.below;
+    var words = sc.min === 0 ? 'marked out of ' + sc.max : 'scored ' + sc.min + '–' + sc.max;
+    if (scaleId === 'fr20' || scaleId === 'fr-brevet') return words + ', with mentions';
+    if (sc.bands) return words + ' (' + sc.bands.map(function (b) { return b[0]; }).slice(0, 3).join(', ') + '…)';
+    return words;
+  }
+
+  /* The exams themselves.
+   *
+   *   label    the name a student would recognise
+   *   short    a few words, for buttons and paper headers
+   *   body     who sets it
+   *   stage    'lower' (around 15–16) or 'upper' (the end of school)
+   *   scale    key into SCALES
+   *   paper    one line on what a real paper looks like — shown before a
+   *            practice paper, and sent to the lesson writer so its
+   *            exam-style questions take the same shape
+   *   lang     the language its papers are set in, when that is not English;
+   *            practice papers written for it are in that language
+   *   intl     offered to students in any system (they are sat worldwide)
+   */
+  function q(id, label, short, body, stage, scale, paper, extra) {
+    var o = { id: id, label: label, short: short, body: body, stage: stage, scale: scale, paper: paper, lang: 'en', intl: false };
+    for (var k in (extra || {})) if (Object.prototype.hasOwnProperty.call(extra, k)) o[k] = extra[k];
+    return o;
+  }
+
+  var QUALS_LIST = [
+    // International — sat in every country, by schools and private candidates
+    q('igcse', 'IGCSE (Cambridge or Edexcel International GCSE)', 'IGCSE', 'Cambridge / Pearson Edexcel', 'lower', 'igcse',
+      'Structured and extended written papers, 1½–2½ hours, Core or Extended tier.', { intl: true }),
+    q('o-level', 'Cambridge O Level', 'O Level', 'Cambridge International', 'lower', 'igcse',
+      'Structured written papers, 1½–2½ hours each.', { intl: true }),
+    q('as-level', 'AS Level only', 'AS Level', 'Cambridge / Pearson Edexcel / AQA / OCR', 'upper', 'as-level',
+      'Structured questions with marks in brackets, 1¼–2 hours per paper.', { intl: true }),
+    q('a-level', 'A Levels', 'A Level', 'Cambridge / Pearson Edexcel / AQA / OCR', 'upper', 'a-level',
+      'Structured and essay papers with marks in brackets, point-marked schemes, 1½–3 hours each.', { intl: true }),
+    q('ib-myp', 'IB Middle Years Programme', 'IB MYP', 'International Baccalaureate', 'lower', 'myp7',
+      'Criterion-based on-screen eAssessments, 2 hours.', { intl: true }),
+    q('ib-dp', 'IB Diploma', 'IB Diploma', 'International Baccalaureate', 'upper', 'ib7',
+      'Paper 1 / 2 / 3 per subject at SL or HL, 1–3 hours, graded 1–7.', { intl: true }),
+    q('ap', 'AP exams (Advanced Placement)', 'AP', 'College Board', 'upper', 'ap',
+      'A multiple-choice section, then free-response questions, about 3 hours, scored 1–5.', { intl: true }),
+    q('sat', 'SAT', 'SAT', 'College Board', 'upper', 'sat',
+      'Digital, adaptive: Reading and Writing, then Math, scored 400–1600.', { intl: true }),
+    q('act', 'ACT', 'ACT', 'ACT', 'upper', 'act',
+      'Multiple-choice English, Math, Reading (and optional Science), scored 1–36.'),
+
+    // United Kingdom and Ireland
+    q('gcse', 'GCSEs', 'GCSE', 'AQA / Edexcel / OCR / WJEC', 'lower', 'nine-one',
+      'Written papers of 1½–2 hours, Foundation or Higher tier, graded 9–1.'),
+    q('nat5', 'National 5', 'National 5', 'SQA', 'lower', 'scot',
+      'A question paper of 1½–2½ hours plus coursework, graded A–D.'),
+    q('higher', 'Highers', 'Higher', 'SQA', 'upper', 'scot',
+      'Question papers of 2–3 hours plus coursework, graded A–D.'),
+    q('adv-higher', 'Advanced Highers', 'Advanced Higher', 'SQA', 'upper', 'scot',
+      'A 3-hour question paper plus a project, graded A–D.'),
+    q('junior-cycle', 'Junior Cycle', 'Junior Cycle', 'SEC', 'lower', 'irl-jc',
+      'A 2-hour final exam per subject plus classroom assessments.'),
+    q('leaving-cert', 'Leaving Certificate', 'Leaving Cert', 'SEC', 'upper', 'irl-lc',
+      'Higher or Ordinary level papers of 2–3 hours, graded H1–H8 / O1–O8.'),
+
+    // North America
+    q('us-diploma', 'High school diploma (graduate high school)', 'High school', 'Your state and school district', 'upper', 'letter',
+      'Unit tests and end-of-course exams set by your school or state, graded A–F; a mix of multiple choice and free response.'),
+    q('ged', 'GED (high school equivalency)', 'GED', 'GED Testing Service', 'upper', 'ged',
+      'Four computer-based tests, scored 100–200; 145 passes each.'),
+    q('ca-diploma', 'Provincial high school diploma (OSSD, BC Dogwood, DES…)', 'High school', 'Your province', 'upper', 'ca-pct',
+      'Course tests and final exams, reported as a percentage and an achievement level.'),
+
+    // South Asia
+    q('cbse-10', 'Class 10 board exams (CBSE / state board)', 'Class 10 boards', 'CBSE or your state board', 'lower', 'cbse',
+      'A 3-hour paper of 80 marks: objective, short- and long-answer and case-based sections.'),
+    q('cbse-12', 'Class 12 board exams (CBSE / state board)', 'Class 12 boards', 'CBSE or your state board', 'upper', 'cbse',
+      'A 3-hour paper of 70–80 marks: objective, short- and long-answer and case-based sections.'),
+    q('icse', 'ICSE (Class 10)', 'ICSE', 'CISCE', 'lower', 'pct-33',
+      'A 2-hour paper: compulsory Section A, then a choice of Section B questions.'),
+    q('isc', 'ISC (Class 12)', 'ISC', 'CISCE', 'upper', 'pct-33',
+      'A 3-hour paper of 70–80 marks with section choices.'),
+    q('state-board', 'State board exams', 'State board', 'Your state board', 'upper', 'pct-33',
+      'A 3-hour written paper set by your state board, marked as a percentage.'),
+    q('jee', 'JEE Main / Advanced', 'JEE', 'NTA / IITs', 'upper', 'percent',
+      'Computer-based multiple-choice and numerical-answer questions in Physics, Chemistry and Maths, with negative marking.'),
+    q('neet', 'NEET-UG', 'NEET', 'NTA', 'upper', 'percent',
+      'Multiple-choice Physics, Chemistry and Biology, 3 hours 20 minutes, with negative marking.'),
+    q('np-see', 'SEE (Grade 10)', 'SEE', 'National Examinations Board, Nepal', 'lower', 'np-gpa',
+      'A 3-hour paper per subject, graded A+ to NG.'),
+    q('np-neb', 'NEB Grade 12', 'NEB', 'National Examinations Board, Nepal', 'upper', 'np-gpa',
+      'A 3-hour paper per subject, graded A+ to NG.'),
+    q('pk-ssc', 'Matric (SSC)', 'Matric', 'Your BISE / FBISE', 'lower', 'pk',
+      'An objective (MCQ) part and a subjective part per subject, marked as a percentage and a grade.'),
+    q('pk-hssc', 'Intermediate (HSSC — FSc / FA / ICS)', 'Intermediate', 'Your BISE / FBISE', 'upper', 'pk',
+      'An objective (MCQ) part and a subjective part per subject, marked as a percentage and a grade.'),
+    q('mdcat', 'MDCAT', 'MDCAT', 'PMDC', 'upper', 'percent',
+      'Multiple-choice Biology, Chemistry, Physics, English and logical reasoning.'),
+    q('bd-ssc', 'SSC', 'SSC', 'Your education board', 'lower', 'bd-gpa',
+      'MCQ and creative (structured) questions per subject, graded on GPA 5.'),
+    q('bd-hsc', 'HSC', 'HSC', 'Your education board', 'upper', 'bd-gpa',
+      'MCQ and creative (structured) questions per subject, graded on GPA 5.'),
+
+    // Asia-Pacific
+    q('atar', 'Year 12 certificate and ATAR (HSC, VCE, QCE, WACE, SACE)', 'Year 12 / ATAR', 'Your state’s board', 'upper', 'atar',
+      'A 2–3 hour written exam per subject, reported in bands, feeding your ATAR.'),
+    q('ncea-1', 'NCEA Level 1', 'NCEA 1', 'NZQA', 'lower', 'ncea',
+      'Achievement standards assessed internally and in end-of-year exams: Not Achieved to Excellence.'),
+    q('ncea-2', 'NCEA Level 2', 'NCEA 2', 'NZQA', 'upper', 'ncea',
+      'Achievement standards assessed internally and in end-of-year exams: Not Achieved to Excellence.'),
+    q('ncea-3', 'NCEA Level 3 (and University Entrance)', 'NCEA 3', 'NZQA', 'upper', 'ncea',
+      'Achievement standards assessed internally and in end-of-year exams: Not Achieved to Excellence.'),
+    q('sg-o', 'GCE O Level / SEC', 'O Level', 'SEAB and Cambridge', 'lower', 'sg-o',
+      'Written papers of 1½–2½ hours, graded A1–F9.'),
+    q('sg-a', 'GCE A Level (H1, H2, H3)', 'A Level', 'SEAB and Cambridge', 'upper', 'sg-a',
+      'Structured and essay papers of 2–3 hours, graded A–U.'),
+    q('spm', 'SPM', 'SPM', 'Malaysian Examinations Board', 'lower', 'spm',
+      'Objective and subjective papers per subject, graded A+ to G.'),
+    q('stpm', 'STPM / Matriculation', 'STPM', 'Malaysian Examinations Council', 'upper', 'stpm',
+      'Three terms of written papers per subject, graded A to F.'),
+    q('hkdse', 'HKDSE', 'HKDSE', 'HKEAA', 'upper', 'hkdse',
+      'Paper 1 and Paper 2 per subject, multiple choice and long questions, graded 5** to 1.'),
+    q('zhongkao', 'Zhongkao (中考)', 'Zhongkao', 'Your city or province', 'lower', 'zhongkao',
+      'A written paper per subject, about 2 hours, usually out of 120.', { lang: 'zh' }),
+    q('gaokao', 'Gaokao (高考)', 'Gaokao', 'Ministry of Education / your province', 'upper', 'gaokao',
+      'Two-hour papers: Chinese, Mathematics and a foreign language out of 150 each, plus elective subjects.', { lang: 'zh' }),
+    q('jp-hs-entrance', 'High school entrance exams (高校入試)', 'High school entrance', 'Your prefecture or school', 'lower', 'jp100',
+      'A 50-minute paper per subject, out of 100.', { lang: 'ja' }),
+    q('jp-common-test', 'University entrance: Common Test (共通テスト)', 'Common Test', 'National Center for University Entrance Examinations', 'upper', 'jp100',
+      'Mark-sheet (multiple-choice) papers, 60–90 minutes per subject, out of 100 or 200.', { lang: 'ja' }),
+    q('csat', 'CSAT — Suneung (수능)', 'Suneung', 'KICE', 'upper', 'kr9',
+      'Multiple-choice and short-answer sections, 70–107 minutes each, graded in stanines 1–9.', { lang: 'ko' }),
+    q('vn-grade10', 'Grade 10 entrance exam (thi vào lớp 10)', 'Grade 10 entrance', 'Your province', 'lower', 'vn10',
+      'Written papers in Maths, Literature and English, 90–120 minutes, out of 10.', { lang: 'vi' }),
+    q('vn-thpt', 'National high school graduation exam (thi tốt nghiệp THPT)', 'THPT exam', 'Ministry of Education and Training', 'upper', 'vn10',
+      'Multiple-choice papers (Literature is written), 50–120 minutes, out of 10.', { lang: 'vi' }),
+
+    // Africa and the Middle East
+    q('bece', 'BECE', 'BECE', 'WAEC / NECO', 'lower', 'bece',
+      'An objective paper and a theory paper per subject.'),
+    q('wassce', 'WASSCE', 'WASSCE', 'WAEC', 'upper', 'waec',
+      'Paper 1 objective, Paper 2 theory (and practicals), graded A1–F9.'),
+    q('neco', 'NECO SSCE', 'NECO', 'NECO', 'upper', 'waec',
+      'An objective paper and an essay paper per subject, graded A1–F9.'),
+    q('utme', 'JAMB UTME', 'UTME', 'JAMB', 'upper', 'jamb',
+      'Computer-based multiple choice in four subjects, scored out of 400.'),
+    q('kcse', 'KCSE', 'KCSE', 'KNEC', 'lower', 'kcse',
+      'Two or three papers per subject, structured and essay questions, graded A to E.'),
+    q('uce', 'UCE (O Level)', 'UCE', 'UNEB', 'lower', 'ug-uce',
+      'Written papers per subject, graded D1–F9.'),
+    q('uace', 'UACE (A Level)', 'UACE', 'UNEB', 'upper', 'ug-uace',
+      'Two or three papers per principal subject, graded A–F.'),
+    q('csee', 'CSEE (Form 4)', 'CSEE', 'NECTA', 'lower', 'tz',
+      'Written papers per subject, graded A–F.'),
+    q('acsee', 'ACSEE (Form 6)', 'ACSEE', 'NECTA', 'upper', 'tz',
+      'Written papers per subject, graded A–F.'),
+    q('za-nsc', 'National Senior Certificate (Matric)', 'Matric', 'DBE', 'upper', 'za-nsc',
+      'Paper 1 and Paper 2 per subject, 2–3 hours, reported as a percentage and a level 1–7.'),
+    q('za-ieb', 'IEB National Senior Certificate', 'IEB Matric', 'IEB', 'upper', 'za-nsc',
+      'Paper 1 and Paper 2 per subject, 2–3 hours, reported as a percentage and a level 1–7.'),
+    q('eg-thanaweya', 'Thanaweya Amma (الثانوية العامة)', 'Thanaweya Amma', 'Ministry of Education', 'upper', 'eg-pct',
+      'A 2–3 hour paper per subject, multiple choice and written questions, marked as a percentage.', { lang: 'ar' }),
+
+    // Europe
+    q('brevet', 'Diplôme national du brevet', 'Brevet', 'Éducation nationale', 'lower', 'fr-brevet',
+      'Épreuves écrites de français, mathématiques, histoire-géographie-EMC et sciences, plus un oral ; noté sur 20, avec mentions.', { lang: 'fr' }),
+    q('bac', 'Baccalauréat (général ou technologique)', 'Bac', 'Éducation nationale', 'upper', 'fr20',
+      'Épreuves écrites de 4 heures en spécialité et en philosophie, le grand oral, et l’épreuve anticipée de français en Première ; noté sur 20, avec mentions.', { lang: 'fr' }),
+    q('bac-pro', 'Baccalauréat professionnel', 'Bac pro', 'Éducation nationale', 'upper', 'fr20',
+      'Épreuves écrites et pratiques, notées sur 20.', { lang: 'fr' }),
+    q('msa', 'Mittlerer Schulabschluss (MSA / Realschulabschluss)', 'MSA', 'Your Land', 'lower', 'de-note',
+      'Written exams in Deutsch, Mathematik and English, 2–3 hours, graded 1–6.', { lang: 'de' }),
+    q('abitur', 'Abitur', 'Abitur', 'Your Land', 'upper', 'de-abi',
+      'Written exams of 4–5 hours in your Leistungskurse plus an oral, marked in Punkte 0–15.', { lang: 'de' }),
+    q('matura-at', 'Matura (Reifeprüfung)', 'Matura', 'BMBWF', 'upper', 'at5',
+      'Standardised written exams of 4–5 hours and oral exams, graded 1–5.', { lang: 'de' }),
+    q('matura-ch', 'Maturität (Matura / maturité)', 'Matura', 'Your canton', 'upper', 'ch6',
+      'Written and oral exams set by your school, graded 1–6 (4 passes).', { lang: 'de' }),
+    q('eso', 'Graduado en ESO', 'ESO', 'Your comunidad autónoma', 'lower', 'es10',
+      'Course exams set by your school, marked out of 10.', { lang: 'es' }),
+    q('pau', 'Bachillerato and PAU (Selectividad / EBAU)', 'PAU', 'Your university district', 'upper', 'es10',
+      '90-minute papers per subject with a choice of questions, marked out of 10.', { lang: 'es' }),
+    q('licenza-media', 'Esame di terza media', 'Terza media', 'Ministero dell’Istruzione', 'lower', 'it10',
+      'Prove scritte di italiano, matematica e lingue, poi un colloquio orale; voto in decimi.', { lang: 'it' }),
+    q('maturita', 'Esame di Maturità', 'Maturità', 'Ministero dell’Istruzione', 'upper', 'it100',
+      'Prima prova di italiano (6 ore), seconda prova di indirizzo, colloquio; voto in centesimi.', { lang: 'it' }),
+    q('pt-9', 'Provas finais do 9.º ano', '9.º ano', 'IAVE', 'lower', 'pt5',
+      'Provas de Português e Matemática, 90 minutos, níveis 1–5.', { lang: 'pt' }),
+    q('pt-sec', 'Exames nacionais do secundário', 'Exames nacionais', 'IAVE', 'upper', 'pt20',
+      'Provas de 120–150 minutos, classificadas de 0 a 20.', { lang: 'pt' }),
+    q('nl-vmbo', 'VMBO eindexamen', 'VMBO', 'CvTE', 'lower', 'nl10',
+      'Central written exams of 2 hours, graded 1–10.', { lang: 'nl' }),
+    q('nl-havo', 'HAVO eindexamen', 'HAVO', 'CvTE', 'upper', 'nl10',
+      'Central written exams of 3 hours, graded 1–10.', { lang: 'nl' }),
+    q('nl-vwo', 'VWO eindexamen', 'VWO', 'CvTE', 'upper', 'nl10',
+      'Central written exams of 3 hours, graded 1–10.', { lang: 'nl' }),
+    q('pl-e8', 'Egzamin ósmoklasisty', 'Egzamin 8-klasisty', 'CKE', 'lower', 'pl-pct',
+      'Polish, Mathematics and a foreign language, 100–150 minutes, scored as a percentage.', { lang: 'pl' }),
+    q('pl-matura', 'Matura', 'Matura', 'CKE', 'upper', 'pl-pct',
+      'Basic and extended level papers, 170–180 minutes, scored as a percentage (30% passes).', { lang: 'pl' }),
+    q('oge', 'OGE (ОГЭ, 9th grade)', 'OGE', 'FIPI / Rosobrnadzor', 'lower', 'ru-oge',
+      'Short-answer then extended-answer parts, about 4 hours, graded 2–5.', { lang: 'ru' }),
+    q('ege', 'EGE (ЕГЭ, 11th grade)', 'EGE', 'FIPI / Rosobrnadzor', 'upper', 'ru-ege',
+      'Short-answer then extended-answer parts, 3–4 hours, scored out of 100.', { lang: 'ru' }),
+    q('lgs', 'LGS', 'LGS', 'MEB', 'lower', 'tr-net',
+      'Multiple-choice verbal and numerical sessions.', { lang: 'tr' }),
+    q('yks', 'YKS (TYT / AYT)', 'YKS', 'ÖSYM', 'upper', 'tr-net',
+      'Multiple-choice sessions with a penalty for wrong answers.', { lang: 'tr' }),
+
+    // Latin America
+    q('enem', 'ENEM', 'ENEM', 'INEP', 'upper', 'enem',
+      'Two days of multiple-choice questions plus an essay (redação).', { lang: 'pt' }),
+    q('mx-exani', 'Bachillerato and EXANI-II / university entrance', 'EXANI-II', 'CENEVAL / your university', 'upper', 'mx',
+      'Multiple-choice sections in reasoning, maths, language and your chosen field.', { lang: 'es' }),
+
+    // Anything else
+    q('national-leaving', 'My country’s school-leaving exam', 'School-leaving exam', 'Your country', 'upper', 'percent',
+      'Written papers in your country’s format — we mark them as a percentage.'),
+  ];
+
+  var QUALS = {};
+  QUALS_LIST.forEach(function (x) { QUALS[x.id] = x; });
+
+  // Never an exam: a student who is not working towards one right now.
+  var NO_EXAM = { id: 'none', label: 'Not working towards an exam right now', short: 'No exam', body: '', stage: '', scale: 'percent', paper: '', lang: 'en', intl: true };
+
+  function qualById(id) {
+    if (id === 'none') return NO_EXAM;
+    return own(QUALS, id) ? QUALS[id] : null;
+  }
+
+  // The exams worth offering a student, in two groups: their system's own,
+  // then the international ones (minus any already in the first group).
+  function qualsFor(systemId) {
+    var sy = systemById(systemId);
+    var national = (sy ? sy.quals : []).map(qualById).filter(Boolean);
+    var seen = {};
+    national.forEach(function (x) { seen[x.id] = true; });
+    var intl = QUALS_LIST.filter(function (x) { return x.intl && !seen[x.id]; });
+    return { national: national, international: intl };
+  }
+
+  // The exam a student in that year is most likely working towards.
+  function suggestQual(systemId, gradeId) {
+    var sy = systemById(systemId);
+    var gr = gradeIn(sy, gradeId);
+    if (gr && gr.target && qualById(gr.target)) return gr.target;
+    if (sy && sy.quals && sy.quals.length) {
+      var upper = sy.quals.filter(function (id) { var x = qualById(id); return x && x.stage === 'upper'; });
+      return upper[0] || sy.quals[0];
+    }
+    return '';
+  }
+
+  // { schooling, qual } as this account last answered, or empty strings.
+  function readSchooling() {
+    var none = { schooling: '', qual: '' };
+    var prefs = readJson(PREFS_KEY);
+    var rec = prefs && prefs.schooling;
+    if (!rec || typeof rec !== 'object' || Array.isArray(rec)) return none;
+    var owner = typeof rec.account === 'string' ? rec.account.toLowerCase() : '';
+    var me = sessionEmail();
+    if (owner && me && owner !== me) return none;
+    return {
+      schooling: schoolingById(rec.type) ? rec.type : '',
+      qual: qualById(rec.qual) ? rec.qual : '',
+    };
+  }
+
+  function writeSchooling(type, qualId) {
+    var s = ls();
+    if (!s) return readSchooling();
+    var prefs = readJson(PREFS_KEY) || {};
+    var t = schoolingById(type) ? type : '';
+    var qq = qualById(qualId) ? qualId : '';
+    if (t || qq) prefs.schooling = { type: t, qual: qq, account: sessionEmail() };
+    else delete prefs.schooling;
+    try { s.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (e) {}
+    return readSchooling();
+  }
+
+  // Everything the app knows about where this student is and where they are
+  // headed, in one read. `complete` is what decides whether the "about your
+  // schooling" page still has to be shown.
+  function profile() {
+    var sc = read();
+    var sg = readSchooling();
+    var qual = qualById(sg.qual);
+    return {
+      schooling: sg.schooling,
+      system: sc.system,
+      grade: sc.grade,
+      level: sc.level,
+      qual: qual ? qual.id : '',
+      qualification: qual,
+      scale: qual ? qual.scale : 'a-level',
+      complete: !!(sg.schooling && sc.system && sc.grade && qual),
+    };
+  }
+
+  // The exam the student is aiming at, or null — what papers, marks and
+  // lessons follow. A student who has not said gets the A level behaviour the
+  // app always had.
+  function qualification() {
+    try { return profile().qualification; } catch (e) { return null; }
+  }
   // --- the IGCSE-stage notebooks -------------------------------------------
   // Original notes, one notebook per subject the app ships example chapters
   // for, keyed on the same slugs. Pitched at Cambridge IGCSE (whose syllabus
@@ -759,6 +1474,21 @@
     leveled: leveled,
     base: base,
     hasNotes: hasNotes,
+    SCHOOLING: SCHOOLING,
+    schoolingById: schoolingById,
+    QUALS: QUALS,
+    QUALS_LIST: QUALS_LIST,
+    NO_EXAM: NO_EXAM,
+    qualById: qualById,
+    qualsFor: qualsFor,
+    suggestQual: suggestQual,
+    readSchooling: readSchooling,
+    writeSchooling: writeSchooling,
+    profile: profile,
+    qualification: qualification,
+    SCALES: SCALES,
+    markOn: markOn,
+    scaleSummary: scaleSummary,
     _useStorage: _useStorage,
     _useNotes: _useNotes,
   };
