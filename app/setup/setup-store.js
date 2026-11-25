@@ -121,6 +121,7 @@
       applied: false,         // true once the notebooks and agenda are written
       created: { notebooks: 0, blocks: 0, classes: 0, deadlines: 0 },
       checklistDismissed: false,
+      inherited: [],          // slugs already on the device when this account was made
     };
   }
 
@@ -156,6 +157,7 @@
         deadlines: Number(s.created.deadlines) || 0,
       } : blank.created,
       checklistDismissed: !!s.checklistDismissed,
+      inherited: Array.isArray(s.inherited) ? s.inherited.filter(function (x) { return typeof x === 'string'; }) : [],
     };
   }
 

@@ -30,22 +30,39 @@
 
   // Welcome, Sign in and Home all ask this to decide where a signed-in
   // reader goes. The answer is yes for an account that has neither finished
-  // nor skipped the guide AND has no notebooks: the second half is what
-  // leaves alone an account that was using notivlo before the guide existed,
-  // or one whose notebooks have just come down from another device.
+  // nor skipped the guide AND has no notebooks of its own: the second half is
+  // what leaves alone an account that was using notivlo before the guide
+  // existed, or one whose notebooks have just come down from another device.
+  // "Of its own": notebooks that were already on the device when this account
+  // was made belong to whoever used it before (they stay on sign-out), and
+  // must not stop a brand new account from getting its guide.
   function shouldOffer() {
     if (!flagOn()) return false;
     var s = store.readState();
     if (s.status !== 'new') return false;
-    return store.readNotebooks().length === 0;
+    var before = s.inherited;
+    var books = store.readNotebooks();
+    return (Array.isArray(books) ? books : []).filter(function (nb) {
+      return !(nb && before.indexOf(String(nb.slug)) !== -1);
+    }).length === 0;
   }
 
   // Sign up calls this the moment an account is created. A new account has
   // by definition not been through the guide, whatever the last person to
-  // use this device did.
-  function startFresh() {
+  // use this device did. Whatever notebooks are already here are noted as
+  // not this account's, so shouldOffer() looks past them.
+  function startFresh(email) {
     if (!flagOn()) return;
     store.clearModule();
+    var books = store.readNotebooks();
+    var slugs = (Array.isArray(books) ? books : [])
+      .map(function (nb) { return nb && nb.slug ? String(nb.slug) : ''; })
+      .filter(Boolean);
+    if (!slugs.length) return;
+    var patch = { inherited: slugs };
+    var who = String(email || '').trim().toLowerCase();
+    if (who) patch.account = who;
+    store.writeState(patch);
   }
 
   function isDone() {

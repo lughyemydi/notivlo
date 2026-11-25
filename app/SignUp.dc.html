@@ -247,7 +247,7 @@ class Component extends DCLogic {
       this.setState({ error: '', notice: '', submitting: true });
       const res = await window.notivloAuth.signUp({ name, email, password });
       if (!res.ok) return this.setState({ submitting: false, error: res.error });
-      if (window.notivloSetup) window.notivloSetup.startFresh();
+      if (window.notivloSetup) window.notivloSetup.startFresh(email);
 
       // With email confirmation turned on there is no session yet, so there
       // is nowhere to send them — saying so beats bouncing off the Welcome
@@ -275,7 +275,7 @@ class Component extends DCLogic {
     this.setState({ error: '', submitting: true });
     const user = { name, email, ...(await createCredential(password)) };
     writeUsers([...users, user]);
-    if (window.notivloSetup) window.notivloSetup.startFresh();
+    if (window.notivloSetup) window.notivloSetup.startFresh(email);
     setSession({ email, name });
     // A brand new account says first where it studies and which exam it is
     // aiming at (School.dc.html), then picks its appearance and text size.
