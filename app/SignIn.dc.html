@@ -34,6 +34,9 @@
      swaps localStorage for an in-memory one before anything below reads it.
      Does nothing unless this page is framed by the demo host. -->
 <script src="./demo.js"></script>
+<!-- Whose stores these are: moves another account's work aside before the
+     page reads anything. Must stay right after demo.js. -->
+<script src="./account-stash.js"></script>
 <title>notivlo — Sign in</title>
 <script>
   // If already signed in, skip straight to Home — runs before the DC runtime
@@ -575,6 +578,10 @@ class Component extends DCLogic {
         });
       }
       clearLoginFailures(email);
+      // Another account's notebooks may still be here (signing out leaves
+      // them): moved aside before the sync, so they are neither merged into
+      // this account nor block it from syncing.
+      if (window.notivloAccounts) window.notivloAccounts.becomeAccount(email);
       // Awaited: on a second device this is what puts the notebooks there
       // before Home renders an empty shelf. A failure is not fatal — the
       // stores are untouched and the next sync picks it up.
@@ -604,6 +611,7 @@ class Component extends DCLogic {
       writeUsers(users.map(u => (u.email === email ? { ...u, ...result.upgrade } : u)));
     }
     setSession({ email: user.email, name: user.name });
+    if (window.notivloAccounts) window.notivloAccounts.becomeAccount(user.email);
     window.location.href = 'Home.dc.html';
   }
 

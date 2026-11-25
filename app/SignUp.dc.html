@@ -12,6 +12,9 @@
      swaps localStorage for an in-memory one before anything below reads it.
      Does nothing unless this page is framed by the demo host. -->
 <script src="./demo.js"></script>
+<!-- Whose stores these are: moves another account's work aside before the
+     page reads anything. Must stay right after demo.js. -->
+<script src="./account-stash.js"></script>
 <title>notivlo — Create account</title>
 <script>
   // If already signed in, skip straight to Home — runs before the DC runtime
@@ -247,6 +250,7 @@ class Component extends DCLogic {
       this.setState({ error: '', notice: '', submitting: true });
       const res = await window.notivloAuth.signUp({ name, email, password });
       if (!res.ok) return this.setState({ submitting: false, error: res.error });
+      if (window.notivloAccounts) window.notivloAccounts.startNewAccount(email);
       if (window.notivloSetup) window.notivloSetup.startFresh(email);
 
       // With email confirmation turned on there is no session yet, so there
@@ -275,6 +279,7 @@ class Component extends DCLogic {
     this.setState({ error: '', submitting: true });
     const user = { name, email, ...(await createCredential(password)) };
     writeUsers([...users, user]);
+    if (window.notivloAccounts) window.notivloAccounts.startNewAccount(email);
     if (window.notivloSetup) window.notivloSetup.startFresh(email);
     setSession({ email, name });
     // A brand new account says first where it studies and which exam it is

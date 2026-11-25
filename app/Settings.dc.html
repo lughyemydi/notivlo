@@ -12,6 +12,9 @@
      swaps localStorage for an in-memory one before anything below reads it.
      Does nothing unless this page is framed by the demo host. -->
 <script src="./demo.js"></script>
+<!-- Whose stores these are: moves another account's work aside before the
+     page reads anything. Must stay right after demo.js. -->
+<script src="./account-stash.js"></script>
 <title>notivlo — Settings</title>
 <script>
   try {
