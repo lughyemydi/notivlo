@@ -30,6 +30,7 @@
     chapterPrefix: 'folio_nb_state:',
     setup: 'folio_setup_v1',
     session: 'folio_session',
+    shelfPick: 'notivlo_shelf_pick',
   };
 
   // Injectable only for the node test, which has no localStorage. In the
@@ -172,6 +173,23 @@
   // entries it created are left behind on purpose: they are the reader's
   // work by then, not module data.
   function clearModule() { removeRaw(KEYS.setup); }
+
+  // --- the landing page's shelf ---------------------------------------------
+  // The public landing page lets a visitor pick their subjects and year before
+  // they have an account, and leaves the answer here when they press "Make
+  // these notebooks". Read once and removed on the spot, whatever happens to
+  // it next, so it can never come back to a later account on this device.
+  // localStorage rather than sessionStorage so it survives an email
+  // confirmation link opening in a new tab.
+  function takeShelfPick() {
+    var raw = getRaw(KEYS.shelfPick);
+    if (raw == null) return null;
+    removeRaw(KEYS.shelfPick);
+    try {
+      var v = JSON.parse(raw);
+      return v && typeof v === 'object' && !Array.isArray(v) ? v : null;
+    } catch (e) { return null; }
+  }
 
   // --- notebooks --------------------------------------------------------
   function slugify(title) {
@@ -347,6 +365,7 @@
     isValidIso: isValidIso,
     addDays: addDays,
     today: today,
+    takeShelfPick: takeShelfPick,
     _useStorage: _useStorage,
   };
 }));

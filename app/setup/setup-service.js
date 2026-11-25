@@ -120,6 +120,42 @@
     return store.writeState({ subjects: clean });
   }
 
+  // The shelf a visitor built on the landing page before signing up, picked
+  // up when the guide opens. Fills the subjects step, and the year on the
+  // first step, only where the guide has nothing of its own yet: it is a
+  // head start, never an answer written over one the student gave here.
+  // Older than a day, for an account already set up, or with names the
+  // guide does not list, it is dropped. Returns what was used, or null.
+  var PICK_MAX_AGE = 24 * 60 * 60 * 1000;
+  function takeShelfPick(school, now) {
+    var pick = store.takeShelfPick();
+    if (!pick || !flagOn()) return null;
+    var at = Number(pick.at);
+    var t = typeof now === 'number' ? now : Date.now();
+    if (!(at > 0) || t - at > PICK_MAX_AGE || at - t > 60 * 1000) return null;
+    if (!shouldOffer()) return null;
+    var s = store.readState();
+    if (s.applied) return null;
+
+    var listed = {};
+    content.SUBJECTS.forEach(function (n) { listed[n.toLowerCase()] = n; });
+    var subjects = (Array.isArray(pick.subjects) ? pick.subjects : [])
+      .map(function (n) { return listed[String(n || '').toLowerCase()]; })
+      .filter(Boolean)
+      .slice(0, 12);
+    var used = { subjects: [], system: '', grade: '' };
+    if (subjects.length && !s.subjects.length) {
+      setSubjects(subjects);
+      used.subjects = store.readState().subjects;
+    }
+    if (school && typeof school.read === 'function' && typeof school.write === 'function' &&
+        !school.read().grade && pick.system && pick.grade) {
+      var now2 = school.write(String(pick.system), String(pick.grade));
+      used.system = now2.system; used.grade = now2.grade;
+    }
+    return used.subjects.length || used.grade ? used : null;
+  }
+
   function setDays(days) {
     var clean = (days || [])
       .map(Number)
@@ -380,6 +416,7 @@
     begin: begin,
     goTo: goTo,
     setSubjects: setSubjects,
+    takeShelfPick: takeShelfPick,
     setDays: setDays,
     setSlot: setSlot,
     addFixed: addFixed,

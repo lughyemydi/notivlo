@@ -453,6 +453,10 @@ function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
 
 class Component extends DCLogic {
   state = (() => {
+    // Subjects and a year picked on the landing page before signing up, if
+    // any. Read before anything else so the steps below open already holding
+    // them. Not in the demo, which never reaches this page anyway.
+    try { if (!window.notivloDemo) SETUP.takeShelfPick(window.notivloSchool); } catch (e) {}
     const saved = SETUP.state();
     const asked = urlStep();
     // Someone who has already finished and come back for the tour lands on

@@ -5,7 +5,7 @@
 <meta name="google-site-verification" content="A_2RDtMfYpy2ZyJHC0XX0vU-H1KzIL2uMQjbyLn1oXw" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>notivlo — your notes, deadlines and revision in one calm place</title>
-<meta name="description" content="notivlo gives every A-level subject its own notebook, puts everything that’s due on one week, and quizzes you on what you wrote. Free to try in your browser, or download for Mac.">
+<meta name="description" content="notivlo gives every subject its own notebook, puts everything that’s due on one week, and quizzes you on what you wrote — built around the exam you’re sitting, from A levels and the bac to GCSEs, a US diploma or the Abitur. Free to try in your browser, or download for Mac.">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
@@ -13,7 +13,7 @@
 <meta name="theme-color" content="#e6e3dc" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#14161b" media="(prefers-color-scheme: dark)">
 <meta property="og:title" content="notivlo — your notes, deadlines and revision in one calm place">
-<meta property="og:description" content="A study app for A level: a notebook for every subject, one week with everything that’s due, Recall cards and original practice papers. Look around in your browser, no sign-up needed.">
+<meta property="og:description" content="A study app built around your exam — A levels, the bac, GCSEs, a US diploma and more: a notebook for every subject, one week with everything that’s due, Recall cards and original practice papers. Look around in your browser, no sign-up needed.">
 <meta property="og:type" content="website">
 
 <!-- Applied before the first paint, so a reader who chose light does not get
@@ -131,8 +131,8 @@
   .nav-links a:not(.btn){font-size:16px}
   .nav .btn{padding:13px 18px;font-size:13px}
   .theme-btn{width:42px;height:42px}
-  .ex{padding:28px;min-height:250px}.ex-t{font-size:21px}
-  .tab{font-size:16px;padding:12px 18px}
+  .ex-t{font-size:19px}.rc-t{font-size:24px}
+  .chip{font-size:15px;padding:10px 15px}.spine .sp-t{font-size:17px}
   .inside h3{font-size:22px}.inside p{font-size:17px}
   .end h2{font-size:clamp(84px,5vw,104px)}
 }
@@ -154,8 +154,8 @@
   .end h2{font-size:128px}
   h3{font-size:28px}
   .kicker{font-size:15px}
-  .tab{font-size:18px;padding:14px 22px}
-  .ex{padding:34px;min-height:290px}.ex-t{font-size:25px}.ex-a{font-size:17px}.ex-k{font-size:14px}
+  .chip{font-size:16px;padding:11px 17px}.nbk h3{font-size:34px}.nbk-c{font-size:18px}
+  .ex-t{font-size:21px}.ex-a{font-size:17px}.ex-k{font-size:14px}.rc-t{font-size:27px}.rc-a{font-size:18px}
   .inside h3{font-size:26px}.inside p{font-size:19px}
   .nav .btn{padding:15px 22px;font-size:15px}
   .theme-btn{width:48px;height:48px}
@@ -358,27 +358,126 @@ section{padding:clamp(88px,12vw,160px) 0}
 .inside p{color:var(--ink-soft);font-size:16px}
 @media(max-width:760px){.inside{grid-template-columns:1fr}}
 
-/* ---- 6 · Subjects ----------------------------------------------------------- */
-.subj-head{max-width:640px;margin-bottom:36px}
-.tabs{position:relative;display:flex;gap:6px;flex-wrap:wrap;margin-bottom:28px;isolation:isolate}
-/* One ink block glides to whichever subject is chosen. */
-.tab-ind{position:absolute;z-index:-1;left:0;top:0;width:0;height:0;background:var(--ink);pointer-events:none}
-.tab{all:unset;box-sizing:border-box;cursor:pointer;padding:10px 16px;border:1px solid var(--rule-faint);font-size:15px;color:var(--ink-soft)}
-.tab:hover{border-color:var(--rule);color:var(--ink)}
-.tab[aria-selected="true"]{border-color:var(--ink);color:var(--surface)}
-.tabs:not(.has-ind) .tab[aria-selected="true"]{background:var(--ink)}
-.tab:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
-.example{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-.ex{background:var(--surface-raised);border:1px solid var(--rule-faint);padding:24px;display:flex;flex-direction:column;gap:12px;min-height:220px}
-.ex-k{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
-.ex-t{font-size:19px;font-weight:600;letter-spacing:-.015em;line-height:1.3}
-.ex-a{color:var(--ink-soft);font-size:15px;border-top:1px dashed var(--rule-faint);padding-top:12px;margin-top:auto}
+/* ---- 6 · Build your shelf ------------------------------------------------- */
+/* Pick a year and some subjects; each subject stands on the shelf as a
+   notebook spine, and the one pulled out lies open below with the chapters
+   it really starts with. "Make these notebooks" carries the picks into the
+   app's setup guide (setup-service.js takeShelfPick). */
+.subj-head{max-width:700px;margin-bottom:44px}
+.subj-head .lead{margin-top:20px}
+.sb{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:56px;align-items:start}
+.sb-q+.sb-q{margin-top:36px}
+.sb-l{font-family:var(--mono);font-size:13px;color:var(--ink-soft);margin:0 0 14px;display:flex;gap:10px;align-items:baseline}
+.sb-l span{color:var(--ink)}
+.sb-l em{font-style:normal;margin-left:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{all:unset;box-sizing:border-box;cursor:pointer;padding:8px 13px;border:1px solid var(--rule-faint);font-size:14px;line-height:1.3;color:var(--ink-soft)}
+.chip:hover{border-color:var(--rule);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.chip[aria-pressed="true"]::before{content:"";display:inline-block;width:6px;height:6px;background:currentColor;margin:0 8px 2px 0;vertical-align:middle}
+.chip:focus-visible,.spine:focus-visible,.rc:focus-visible,.sb-more:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+.chip[hidden]{display:none}
+.sb-sys{position:relative;display:block;margin-bottom:10px}
+.sb-sys select{appearance:none;-webkit-appearance:none;width:100%;box-sizing:border-box;background:transparent;color:var(--ink);border:1px solid var(--rule-faint);border-radius:0;padding:11px 40px 11px 13px;font:inherit;font-size:14px;cursor:pointer}
+.sb-sys select:hover{border-color:var(--rule)}
+.sb-sys select:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+.sb-sys::after{content:"";position:absolute;right:16px;top:50%;width:7px;height:7px;border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.sb-hint{font-size:14px;color:var(--ink-soft);margin:12px 0 0;min-height:1.4em}
+.sb-more{all:unset;cursor:pointer;margin-top:12px;font-family:var(--mono);font-size:13px;color:var(--ink);border-bottom:1px solid var(--rule-faint);padding-bottom:2px}
+.sb-more:hover{border-color:var(--rule)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* The shelf: spines stand on one heavy rule, and the open one is pulled up. */
+.shelf{position:relative;display:flex;align-items:flex-end;gap:6px;min-height:290px;padding:28px 4px 0;border-bottom:3px solid var(--rule);overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.shelf::-webkit-scrollbar{display:none}
+.spine{all:unset;box-sizing:border-box;cursor:pointer;flex:0 0 auto;position:relative;width:var(--w,56px);height:var(--h,236px);
+  background:var(--surface-raised);border:1px solid var(--rule-faint);border-bottom:0;color:var(--ink);
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:12px 0 12px;transform:translateY(0)}
+.spine::before{content:"";flex:0 0 auto;width:62%;height:5px;border-top:1px solid currentColor;border-bottom:1px solid currentColor;opacity:.45}
+.spine .sp-t{writing-mode:vertical-rl;transform:rotate(180deg);font-weight:600;font-size:15px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-height:calc(var(--h,236px) - 74px)}
+.spine .sp-c{font-family:var(--mono);font-size:11px;opacity:.7}
+.spine:hover{transform:translateY(-8px)}
+.spine[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface);transform:translateY(-22px)}
+.slot{flex:0 0 auto;width:54px;height:var(--h,220px);border:1px dashed var(--rule-faint);border-bottom:0;opacity:.7}
+@media(max-width:700px){.slot{width:46px;height:calc(var(--h,220px) * .8)}}
+.shelf-empty{align-self:center;margin:auto;font-size:15px;color:var(--ink-soft);text-align:center;max-width:30ch;padding-bottom:40px}
+
+/* The open notebook. Its top edge is the same ink as the pulled spine. */
+.nbk{background:var(--surface-raised);border:1px solid var(--rule-faint);border-top:0;padding:28px 30px 30px}
+.nbk[hidden]{display:none}
+.nbk-k{font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin:0 0 10px}
+.nbk h3{font-size:28px;letter-spacing:-.025em;line-height:1.1;margin:0}
+.nbk-s{font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin:8px 0 0}
+.nbk-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;margin-top:24px;padding-top:22px;border-top:1px dashed var(--rule-faint)}
+.nbk-ch{list-style:none;margin:0;padding:0}
+.nbk-u{font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin:0 0 6px}
+.nbk-u:not(:first-child){margin-top:18px}
+.nbk-c{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:baseline;padding:7px 0;border-top:1px solid var(--rule-faint);font-size:16px}
+.nbk-c i{font-style:normal;font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.nbk-c b{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--ink);color:var(--surface);padding:3px 7px;white-space:nowrap}
+.nbk-c.is-open{font-weight:600}
+.nbk-side{display:flex;flex-direction:column;gap:14px}
+.ex{background:var(--surface-raised);border:1px solid var(--rule-faint);padding:24px;display:flex;flex-direction:column;gap:12px}
+.ex-k{font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin:0}
+.ex-t{font-size:17px;font-weight:600;letter-spacing:-.015em;line-height:1.35;margin:0}
+.ex-a{color:var(--ink-soft);font-size:15px;border-top:1px dashed var(--rule-faint);padding-top:12px;margin:auto 0 0}
 .ex-a b{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--ink);margin-right:6px}
-.ex-marks{font-family:var(--mono);font-size:12px;color:var(--ink-soft);white-space:nowrap}
-.ex{position:relative;overflow:hidden}
-/* A signal line draws across the top of each card as a subject arrives. */
-.ex-line{position:absolute;left:0;top:0;height:2px;width:100%;background:var(--signal);transform:scaleX(0);transform-origin:left}
-@media(max-width:860px){.example{grid-template-columns:1fr}.ex{min-height:0}}
+.nbk-side .ex{min-height:0;padding:20px 22px;background:var(--surface)}
+
+/* A Recall card that turns over. */
+.rc{all:unset;box-sizing:border-box;display:block;cursor:pointer;perspective:1000px;width:100%}
+.rc-in{display:grid;transform-style:preserve-3d}
+.rc.over .rc-in{transform:rotateY(180deg)}
+.rc-f,.rc-b{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface);border:1px solid var(--rule-faint);padding:20px 22px;display:flex;flex-direction:column;gap:10px;min-height:168px}
+.rc-b{transform:rotateY(180deg)}
+.rc-t{font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+.rc-a{font-size:16px;line-height:1.5}
+.rc-h{margin-top:auto;font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.rc:hover .rc-f,.rc:hover .rc-b{border-color:var(--rule)}
+
+.sb-go{display:flex;align-items:center;justify-content:space-between;gap:20px 32px;flex-wrap:wrap;margin-top:40px;padding-top:28px;border-top:1px solid var(--rule-faint)}
+.sb-go p{margin:0;font-size:18px;color:var(--ink-soft);max-width:52ch}
+.sb-go p b{color:var(--ink);font-weight:600}
+.sb-go-r{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.sb-go-r small{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+
+@media(max-width:1000px){.sb{grid-template-columns:minmax(0,1fr);gap:40px}}
+@media(max-width:700px){
+  .shelf{min-height:228px;padding-top:24px}
+  .spine{width:calc(var(--w,56px) * .86);height:calc(var(--h,236px) * .8)}
+  .spine .sp-t{font-size:14px;max-height:calc(var(--h,236px) * .8 - 70px)}
+  .nbk{padding:22px 20px 24px}
+  .nbk-body{grid-template-columns:1fr}
+  .sb-go{flex-direction:column;align-items:flex-start}
+}
+/* Laptops: the shelf and its notebook are a screen and a half tall at full
+   size, so picking a subject changed something out of view. Here the stage is
+   tightened to about one screen, and the picker stays beside it as you read. */
+@media(min-width:1001px) and (max-width:1599px){
+  .sb{gap:44px}
+  .shelf{min-height:214px;padding-top:22px}
+  .spine{width:calc(var(--w,56px) * .9);height:calc(var(--h,236px) * .76)}
+  .spine .sp-t{font-size:14px;max-height:calc(var(--h,236px) * .76 - 66px)}
+  .spine[aria-pressed="true"]{transform:translateY(-16px)}
+  .slot{width:48px;height:calc(var(--h,220px) * .76)}
+  .nbk{padding:22px 24px 24px}
+  .nbk h3{font-size:25px}
+  .nbk-body{gap:22px;margin-top:18px;padding-top:16px}
+  .nbk-u:not(:first-child){margin-top:12px}
+  .nbk-c{padding:5px 0;font-size:15px}
+  .nbk-side{gap:10px}
+  .rc-f,.rc-b{min-height:132px;padding:16px 18px}
+  .rc-t{font-size:20px}
+  .rc-a{font-size:15px}
+  .nbk-side .ex{padding:16px 18px;gap:8px}
+  .ex-t{font-size:15px}
+  .ex-a{font-size:14px;padding-top:8px}
+  .sb-go{margin-top:32px;padding-top:22px}
+}
+@media(min-width:1001px) and (max-width:1599px) and (min-height:640px){
+  .sb-controls{position:sticky;top:calc(var(--navh) + 24px)}
+}
+@media(min-width:1600px){.shelf{min-height:330px}.spine{width:calc(var(--w,56px) * 1.12);height:calc(var(--h,236px) * 1.14)}.spine .sp-t{max-height:calc(var(--h,236px) * 1.14 - 80px)}}
 
 /* ---- 7 · Quote (shown only once a real one is filled in) ----------------- */
 .quote{padding-bottom:0}
@@ -465,8 +564,9 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
   .btn{transition:color .35s var(--ease),border-color .35s var(--ease),transform .2s var(--ease)}
   .btn:hover .ico svg{animation:relay .6s var(--ease)}
   @keyframes relay{0%{transform:none}40%{transform:translateX(130%)}41%{transform:translateX(-130%)}100%{transform:none}}
-  .tab-ind{transition:left .55s var(--ease),top .55s var(--ease),width .55s var(--ease),height .55s var(--ease)}
-  .tab{transition:color .55s var(--ease),border-color .55s var(--ease)}
+  .chip{transition:color .35s var(--ease),border-color .35s var(--ease),background-color .35s var(--ease)}
+  .spine{transition:transform .6s var(--ease),background-color .45s var(--ease),color .45s var(--ease),border-color .45s var(--ease)}
+  .rc-in{transition:transform .8s var(--ease)}
   /* Nav links: a line draws in from the left and leaves to the right. */
   .nav-links a:not(.btn){position:relative}
   .nav-links a:not(.btn)::after{content:"";position:absolute;left:0;right:0;bottom:-5px;height:1px;background:currentColor;
@@ -529,9 +629,10 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
 <header class="hero" id="top">
   <div class="wrap hero-in">
     <div>
-      <p class="kicker">For A-level students · free beta</p>
+      <p class="kicker">Public, private or homeschooled · free beta</p>
       <h1 class="split">Your notes, deadlines and revision — all in one calm place.</h1>
-      <p class="lead">notivlo gives every subject its own notebook, puts everything that's due on one week, and quizzes you on what you wrote.</p>
+      <p class="lead">notivlo gives every subject its own notebook, puts everything that's due on one week, and quizzes you on what you wrote — built around the exam you're actually sitting.</p>
+      <p class="hero-note">A levels · IGCSE · the bac &amp; brevet · GCSE · US diploma, AP &amp; SAT · IB · Abitur · CBSE · WASSCE · HKDSE · and more</p>
       <div class="cta-row">
         <a class="btn btn-primary" href="app/SignUp.dc.html">Open it in your browser
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
@@ -658,7 +759,7 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
     </div>
     <div class="inside">
       <div class="reveal"><span class="n">01</span><h3>Recall</h3><p>Cards made from your own chapters. What you keep missing comes back sooner than what you know.</p></div>
-      <div class="reveal"><span class="n">02</span><h3>Practice papers</h3><p>Short papers whenever you want one, and a full mock on a schedule. Every question is written for the app.</p></div>
+      <div class="reveal"><span class="n">02</span><h3>Practice papers for your exam</h3><p>Tell it your school system and the exam you're aiming at, and papers follow its format and its marks: the bac out of 20, GCSE 9–1, A level A*–U. Short ones whenever you like, a full mock on a schedule.</p></div>
       <div class="reveal"><span class="n">03</span><h3>Written lessons</h3><p>Seven lessons on the topics that trip people up, from the discriminant to two's complement.</p></div>
       <div class="reveal"><span class="n">04</span><h3>Mark schemes</h3><p>One line per mark, so you can see exactly where marks were won or lost.</p></div>
       <div class="reveal"><span class="n">05</span><h3>Sync</h3><p>Sign in on another device and everything is there. Or skip the account and keep it on one device.</p></div>
@@ -667,18 +768,40 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
   </div>
 </section>
 
-<!-- 6 · By subject -->
-<section aria-labelledby="sub-h" style="padding-top:0">
+<!-- 6 · Build your shelf -->
+<section id="shelf" aria-labelledby="sh-h" style="padding-top:0">
   <div class="wrap">
     <div class="subj-head">
-      <p class="kicker">By subject</p>
-      <h2 class="split" id="sub-h">See it with your subjects.</h2>
+      <p class="kicker">Build your shelf</p>
+      <h2 class="split" id="sh-h">Pick your subjects. Open your notebooks.</h2>
+      <p class="lead">Every notebook starts with notes written to its syllabus, at your level. Build your shelf here and it will be waiting for you when you sign up.</p>
     </div>
-    <div class="tabs" role="tablist" aria-label="Subjects" id="tabs"></div>
-    <div class="example" id="example" role="tabpanel" aria-live="polite">
-      <div class="ex"><i class="ex-line" aria-hidden="true"></i><p class="ex-k">Notebook chapter</p><p class="ex-t" data-f="chapter"></p><p class="ex-a" data-f="code"></p></div>
-      <div class="ex"><i class="ex-line" aria-hidden="true"></i><p class="ex-k">Recall card</p><p class="ex-t" data-f="q"></p><p class="ex-a" data-f="a"></p></div>
-      <div class="ex"><i class="ex-line" aria-hidden="true"></i><p class="ex-k" data-f="pk">Practice question</p><p class="ex-t" data-f="pq"></p><p class="ex-a" data-f="ps"></p></div>
+    <div class="sb">
+      <div class="sb-controls">
+        <div class="sb-q">
+          <p class="sb-l"><span>01</span> Where you are at school</p>
+          <label class="sb-sys"><span class="vh">School system</span><select id="sb-system"></select></label>
+          <div class="chips" id="sb-years" role="group" aria-label="Your year"></div>
+          <p class="sb-hint" id="sb-level"></p>
+        </div>
+        <div class="sb-q">
+          <p class="sb-l"><span>02</span> Your subjects <em id="sb-count"></em></p>
+          <div class="chips" id="sb-subjects" role="group" aria-label="Your subjects"></div>
+          <button class="sb-more" id="sb-more" type="button" aria-expanded="false">Show all subjects</button>
+          <p class="sb-hint" id="sb-cap" aria-live="polite"></p>
+        </div>
+      </div>
+      <div class="sb-stage">
+        <div class="shelf" id="sb-shelf" role="group" aria-label="Your shelf"></div>
+        <div class="nbk" id="sb-page" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="sb-go">
+      <p id="sb-sum"></p>
+      <div class="sb-go-r">
+        <a class="btn btn-primary" id="sb-cta" href="app/SignUp.dc.html"><span id="sb-cta-t">Make these notebooks</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <small>Free · no card</small>
+      </div>
     </div>
   </div>
 </section>
@@ -774,7 +897,7 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
 <footer>
   <div class="wrap foot-in">
     <span class="logo">notivlo</span>
-    <span>An early beta, built for A level.</span>
+    <span>An early beta, for A levels, the bac and school systems everywhere.</span>
     <span class="foot-links">
       <a href="app/SignUp.dc.html">Open the app</a>
       <a href="#download">Download</a>
@@ -795,111 +918,330 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
   addEventListener('scroll', navTick, { passive: true });
   navTick();
 
-  /* ---- Subjects: examples taken from the app's own lessons and papers --- */
-  /* Chapters are the lesson titles in lessons.js; practice questions and
-     their first mark line are the app's own originals from exam-bank.js
-     (Computer Science has no paper yet, so it shows a lesson exercise). */
+  /* ---- Build your shelf -------------------------------------------------- */
+  /* The chapters, levels and Recall cards below are generated from the app's
+     own notebooks (Notebook.dc.html, subject-notes.js, school-level.js) by
+     folio/setup/tests/shelf-pick-test.js, which fails when this copy falls
+     behind; run it with --write to refresh. Practice questions and their
+     first mark line are the app's own originals from exam-bank.js (Computer
+     Science has no paper yet, so it shows a lesson exercise). */
   (function () {
-    var SUBJ = [
-      { name: 'Mathematics', code: '9709', chapter: 'Quadratics: completed square and the discriminant',
-        q: 'What does b² − 4ac < 0 tell you about a quadratic?', a: 'It has no real roots — the curve never meets the x-axis.',
-        pq: 'Find the angle between the vectors a and b, giving your answer to one decimal place.', marks: 4, ps: 'M1 — a · b = 2(1) + (−3)(4) + (1)(−2) = −12' },
-      { name: 'Physics', code: '9702', chapter: 'Uniform acceleration and projectile motion',
-        q: 'Ignoring air resistance, what is the horizontal acceleration of a projectile?', a: 'Zero — its horizontal velocity stays the same throughout.',
-        pq: 'Distinguish between distance and displacement, and between speed and velocity.', marks: 2, ps: 'B1 — distance and speed are scalars, having magnitude only' },
-      { name: 'Chemistry', code: '9701', chapter: 'Moles, concentration and titration calculations',
-        q: 'How do you find a concentration from moles and volume?', a: 'c = n ÷ V, with the volume in dm³.',
-        pq: 'State the number of electrons, protons and neutrons in one atom of ⁵⁵Mn.', marks: 1, ps: '25 electrons, 25 protons and 30 neutrons — all three required for the mark.' },
-      { name: 'Biology', code: '9700', chapter: 'Enzymes: mode of action, rate and inhibition',
-        q: 'Where does a competitive inhibitor bind?', a: 'In the active site, competing with the substrate.',
-        pq: 'State three structural differences between a prokaryotic cell and a eukaryotic cell.', marks: 3, ps: 'A prokaryote has no nucleus; its DNA lies free in the cytoplasm.' },
-      { name: 'Economics', code: '9708', chapter: 'Price elasticity of demand and total revenue',
-        q: 'Demand is price elastic. What happens to total revenue if the price falls?', a: 'It rises — quantity demanded grows proportionally more than the price fell.',
-        pq: 'Define aggregate demand and state its components.', marks: 2, ps: 'The total planned expenditure on an economy’s goods and services at a given price level.' },
-      { name: 'Computer Science', code: '9618', chapter: 'Binary, hexadecimal and two’s complement',
-        q: 'What is the range of an n-bit two’s complement number?', a: '−2ⁿ⁻¹ to 2ⁿ⁻¹ − 1.',
-        pk: 'Lesson exercise', pq: 'Represent −45 in eight-bit two’s complement.', marks: 3, ps: '1101 0011 — show the inverted value as its own line of working.' }
+    var SHELF = /*SHELF-DATA*/{"mathematics":{"n":"Mathematics","foundation":{"s":"Cambridge IGCSE 0580 → 9709","u":[["IGCSE stage · Core ideas",["Expanding & Factorising","Solving Equations","Straight-Line Graphs"]],["Bridge to AS · Pure Mathematics 1",["Looking Ahead: Quadratics at AS"]]],"o":0,"d":["Factorise","write an expression as a product of brackets; the reverse of expanding.","Expanding & Factorising"]},"as":{"s":"Cambridge 9709","u":[["AS · Pure Mathematics 1",["Quadratics","Coordinate Geometry","Trigonometry"]]],"o":0,"d":["Discriminant","the quantity b² − 4ac for ax² + bx + c = 0; its sign gives the number of real roots.","Quadratics"]},"a2":{"s":"Cambridge 9709","u":[["AS · Pure Mathematics 1",["Quadratics","Coordinate Geometry","Trigonometry"]],["A Level · Pure Mathematics 3",["Differentiation","Integration"]]],"o":3,"d":["Discriminant","the quantity b² − 4ac for ax² + bx + c = 0; its sign gives the number of real roots.","Quadratics"]}},"further-mathematics":{"n":"Further Mathematics","foundation":{"s":"Cambridge IGCSE 0606 → 9231","u":[["IGCSE stage · Core ideas",["Functions","First Steps in Calculus"]],["Bridge to AS · Further Pure Mathematics 1",["Looking Ahead: Further Mathematics"]]],"o":0,"d":["Inverse function","the function that undoes f, so that f⁻¹(f(x)) = x.","Functions"]},"as":{"s":"Cambridge 9231","u":[["Paper 1 · Further Pure Mathematics 1",["Roots of Polynomial Equations","Matrices & Transformations"]]],"o":0,"d":["Symmetric function of the roots","an expression unchanged when the roots are swapped, such as α² + β² or 1/α + 1/β.","Roots of Polynomial Equations"]},"a2":{"s":"Cambridge 9231","u":[["Paper 1 · Further Pure Mathematics 1",["Roots of Polynomial Equations","Matrices & Transformations"]],["Paper 2 · Further Pure Mathematics 2",["Complex Numbers","Second-Order Differential Equations"]]],"o":2,"d":["Modulus–argument form","z = r(cos θ + i sin θ), where r is the modulus and θ the argument.","Complex Numbers"]}},"physics":{"n":"Physics","foundation":{"s":"Cambridge IGCSE 0625 → 9702","u":[["IGCSE stage · Core ideas",["Speed, Distance & Time","Forces & Motion","Electric Circuits"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Kinematics at AS"]]],"o":0,"d":["Acceleration","how quickly velocity changes: change in velocity ÷ time taken, measured in m/s².","Speed, Distance & Time"]},"as":{"s":"Cambridge 9702","u":[["AS · Papers 1–2",["Measurements & Uncertainties","Kinematics","Forces, Density & Pressure"]]],"o":0,"d":["Systematic error","an error of the same size and direction every time, which repeating a reading cannot reduce.","Measurements & Uncertainties"]},"a2":{"s":"Cambridge 9702","u":[["AS · Papers 1–2",["Measurements & Uncertainties","Kinematics","Forces, Density & Pressure"]],["A Level · Papers 4–5",["Electricity","Practical Skills"]]],"o":3,"d":["E.m.f.","the energy converted from another form to electrical energy per unit charge driven round the circuit.","Electricity"]}},"chemistry":{"n":"Chemistry","foundation":{"s":"Cambridge IGCSE 0620 → 9701","u":[["IGCSE stage · Core ideas",["Atoms & the Periodic Table","Bonding","Moles & Equations"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Stoichiometry at AS"]]],"o":0,"d":["Isotopes","atoms of the same element with the same number of protons but different numbers of neutrons.","Atoms & the Periodic Table"]},"as":{"s":"Cambridge 9701","u":[["AS · Papers 1–2",["Atoms, Molecules & Stoichiometry","Atomic Structure & Bonding"]]],"o":0,"d":["Concordant titres","titres agreeing within 0.10 cm³; only these are averaged.","Atoms, Molecules & Stoichiometry"]},"a2":{"s":"Cambridge 9701","u":[["AS · Papers 1–2",["Atoms, Molecules & Stoichiometry","Atomic Structure & Bonding"]],["A Level · Papers 3–5",["Energetics & Equilibria","Organic Chemistry","Practical & Planning"]]],"o":2,"d":["Concordant titres","titres agreeing within 0.10 cm³; only these are averaged.","Atoms, Molecules & Stoichiometry"]}},"biology":{"n":"Biology","foundation":{"s":"Cambridge IGCSE 0610 → 9700","u":[["IGCSE stage · Core ideas",["Cells","Movement In & Out of Cells","Enzymes"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Biological Molecules at AS"]]],"o":0,"d":["Mitochondria","where aerobic respiration happens, releasing energy for the cell.","Cells"]},"as":{"s":"Cambridge 9700","u":[["AS · Papers 1–2",["Cell Structure","Biological Molecules","Enzymes"]]],"o":0,"d":["Resolution","the ability to distinguish two points as separate; limited by the wavelength used.","Cell Structure"]},"a2":{"s":"Cambridge 9700","u":[["AS · Papers 1–2",["Cell Structure","Biological Molecules","Enzymes"]],["A Level · Papers 3–5",["Transport in Mammals","Inherited Change"]]],"o":3,"d":["Resolution","the ability to distinguish two points as separate; limited by the wavelength used.","Cell Structure"]}},"computer-science":{"n":"Computer Science","foundation":{"s":"Cambridge IGCSE 0478 → 9618","u":[["IGCSE stage · Core ideas",["Binary & Data","Algorithms","Networks & the Internet"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Data Representation at AS"]]],"o":0,"d":["Bit","a single binary digit, either 0 or 1.","Binary & Data"]},"as":{"s":"Cambridge 9618","u":[["AS · Papers 1–2",["Data Representation","Networks & the Internet"]]],"o":0,"d":["Overflow","a result too large for the available bits, so the value stored is wrong rather than rounded.","Data Representation"]},"a2":{"s":"Cambridge 9618","u":[["AS · Papers 1–2",["Data Representation","Networks & the Internet"]],["A Level · Papers 3–4",["Algorithm Design","Data Structures","Programming Project Notes"]]],"o":2,"d":["Overflow","a result too large for the available bits, so the value stored is wrong rather than rounded.","Data Representation"]}},"information-technology":{"n":"Information Technology","foundation":{"s":"Cambridge IGCSE 0417 → 9626","u":[["IGCSE stage · Core ideas",["Hardware & Software","Spreadsheets"]],["Bridge to AS · Papers 1–2",["Looking Ahead: IT at AS"]]],"o":0,"d":["Operating system","system software that manages the hardware and lets other programs run.","Hardware & Software"]},"as":{"s":"Cambridge 9626","u":[["AS · Papers 1–2",["Data, Information & Quality","Spreadsheets & Modelling"]]],"o":0,"d":["Validation","a check by the computer that data is reasonable, such as a range check. It cannot tell whether the data is correct.","Data, Information & Quality"]},"a2":{"s":"Cambridge 9626","u":[["AS · Papers 1–2",["Data, Information & Quality","Spreadsheets & Modelling"]],["A Level · Papers 3–4",["Emerging Technologies","Project Management & the System Life Cycle"]]],"o":2,"d":["Validation","a check by the computer that data is reasonable, such as a range check. It cannot tell whether the data is correct.","Data, Information & Quality"]}},"design-technology":{"n":"Design & Technology","foundation":{"s":"Cambridge IGCSE 0445 → 9705","u":[["IGCSE stage · Core ideas",["Designing for People","Materials & Tools"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Design & Technology at AS"]]],"o":0,"d":["Thermoplastic","a plastic that softens when heated and can be reshaped.","Materials & Tools"]},"as":{"s":"Cambridge 9705","u":[["AS · Papers 1–2",["The Design Process","Materials & Their Properties"]]],"o":0,"d":["Specification","a list of precise, testable requirements a design must meet.","The Design Process"]},"a2":{"s":"Cambridge 9705","u":[["AS · Papers 1–2",["The Design Process","Materials & Their Properties"]],["A Level · Papers 3–4",["Manufacturing Processes","Design & Society"]]],"o":2,"d":["Batch production","making a set number of identical products before changing over to another.","Manufacturing Processes"]}},"economics":{"n":"Economics","foundation":{"s":"Cambridge IGCSE 0455 → 9708","u":[["IGCSE stage · Core ideas",["Scarcity & Choice","Demand & Supply","Government & the Economy"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Elasticity at AS"]]],"o":0,"d":["Opportunity cost","the next best alternative given up when a choice is made.","Scarcity & Choice"]},"as":{"s":"Cambridge 9708","u":[["AS · Papers 1–2",["The Basic Economic Problem","Price Elasticity of Demand","Government Intervention"]]],"o":0,"d":["Opportunity cost","the benefit of the next best alternative forgone when a choice is made.","The Basic Economic Problem"]},"a2":{"s":"Cambridge 9708","u":[["AS · Papers 1–2",["The Basic Economic Problem","Price Elasticity of Demand","Government Intervention"]],["A Level · Papers 3–4",["Macroeconomic Policy","International Trade"]]],"o":3,"d":["Crowding out","increased government borrowing raising interest rates and reducing private investment.","Macroeconomic Policy"]}},"business":{"n":"Business","foundation":{"s":"Cambridge IGCSE 0450 → 9609","u":[["IGCSE stage · Core ideas",["Types of Business","Profit & Cash"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Business at AS"]]],"o":0,"d":["Sole trader","a business owned and run by one person, who has unlimited liability.","Types of Business"]},"as":{"s":"Cambridge 9609","u":[["AS · Papers 1–2",["Business & Its Environment","Marketing"]]],"o":0,"d":["Limited liability","owners can lose only what they invested, not their personal assets.","Business & Its Environment"]},"a2":{"s":"Cambridge 9609","u":[["AS · Papers 1–2",["Business & Its Environment","Marketing"]],["A Level · Papers 3–4",["Strategic Management","Finance & Investment Appraisal"]]],"o":2,"d":["Limited liability","owners can lose only what they invested, not their personal assets.","Business & Its Environment"]}},"accounting":{"n":"Accounting","foundation":{"s":"Cambridge IGCSE 0452 → 9706","u":[["IGCSE stage · Core ideas",["The Accounting Equation","Books of Prime Entry & Ledgers"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Accounting at AS"]]],"o":0,"d":["Liability","an amount the business owes to someone else.","The Accounting Equation"]},"as":{"s":"Cambridge 9706","u":[["AS · Papers 1–2",["Double Entry & the Trial Balance","Financial Statements & Adjustments"]]],"o":0,"d":["Error of principle","an entry made in the wrong class of account, such as recording a non-current asset as an expense.","Double Entry & the Trial Balance"]},"a2":{"s":"Cambridge 9706","u":[["AS · Papers 1–2",["Double Entry & the Trial Balance","Financial Statements & Adjustments"]],["A Level · Papers 3–4",["Limited Company Accounts","Costing & Budgeting"]]],"o":2,"d":["Error of principle","an entry made in the wrong class of account, such as recording a non-current asset as an expense.","Double Entry & the Trial Balance"]}},"psychology":{"n":"Psychology","foundation":{"s":"Before A level → Cambridge 9990","u":[["IGCSE stage · Core ideas",["What Psychology Studies","How Studies Are Done"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Psychology at AS"]]],"o":0,"d":["Hypothesis","a precise, testable prediction about what a study will find.","What Psychology Studies"]},"as":{"s":"Cambridge 9990","u":[["AS · Papers 1–2",["Research Methods","Core Studies & Approaches"]]],"o":0,"d":["Ecological validity","how far findings apply to real-life settings.","Research Methods"]},"a2":{"s":"Cambridge 9990","u":[["AS · Papers 1–2",["Research Methods","Core Studies & Approaches"]],["A Level · Papers 3–4",["Clinical Psychology","Evaluation & Debates"]]],"o":2,"d":["Diagnosis","identifying a disorder from its symptoms, using a classification system such as DSM or ICD.","Clinical Psychology"]}},"sociology":{"n":"Sociology","foundation":{"s":"Cambridge IGCSE 0495 → 9699","u":[["IGCSE stage · Core ideas",["Thinking Sociologically","The Family"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Sociology at AS"]]],"o":0,"d":["Social class","a group of people in a similar economic position, judged by income, wealth or occupation.","Thinking Sociologically"]},"as":{"s":"Cambridge 9699","u":[["AS · Papers 1–2",["Socialisation & Identity","Research Methods"]]],"o":0,"d":["Norms","the unwritten rules of behaviour expected in a society or group.","Socialisation & Identity"]},"a2":{"s":"Cambridge 9699","u":[["AS · Papers 1–2",["Socialisation & Identity","Research Methods"]],["A Level · Papers 3–4",["Education","Globalisation & the Media"]]],"o":2,"d":["Labelling","attaching a fixed identity to a pupil, which can become a self-fulfilling prophecy.","Education"]}},"law":{"n":"Law","foundation":{"s":"Before A level → Cambridge 9084","u":[["IGCSE stage · Core ideas",["What Law Is For","Courts & Cases"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Law at AS"]]],"o":0,"d":["Legislation","law made by a parliament or another law-making body.","What Law Is For"]},"as":{"s":"Cambridge 9084","u":[["AS · Papers 1–2",["The English Legal System","Criminal Law: Elements of a Crime"]]],"o":0,"d":["Precedent","the principle that judges follow earlier decisions of higher courts on similar facts.","The English Legal System"]},"a2":{"s":"Cambridge 9084","u":[["AS · Papers 1–2",["The English Legal System","Criminal Law: Elements of a Crime"]],["A Level · Papers 3–4",["Law of Contract","Law of Tort: Negligence"]]],"o":2,"d":["Consideration","something of value given by each party in return for the other’s promise.","Law of Contract"]}},"history":{"n":"History","foundation":{"s":"Cambridge IGCSE 0470 → 9489","u":[["IGCSE stage · Core ideas",["Causes & Consequences","Using Sources"]],["Bridge to AS · Papers 1–2",["Looking Ahead: History at AS"]]],"o":0,"d":["Trigger","the immediate event that sets off a larger change.","Causes & Consequences"]},"as":{"s":"Cambridge 9489","u":[["AS · Papers 1–2",["Working with Sources","Writing a Historical Argument"]]],"o":0,"d":["Provenance","where a source comes from: its author, date, audience and purpose.","Working with Sources"]},"a2":{"s":"Cambridge 9489","u":[["AS · Papers 1–2",["Working with Sources","Writing a Historical Argument"]],["A Level · Papers 3–4",["Interpretations","Depth Study Skills"]]],"o":2,"d":["Historiography","the study of how history has been written and interpreted.","Interpretations"]}},"geography":{"n":"Geography","foundation":{"s":"Cambridge IGCSE 0460 → 9696","u":[["IGCSE stage · Core ideas",["Rivers","Population & Migration"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Geography at AS"]]],"o":0,"d":["Discharge","the volume of water flowing past a point in a river each second.","Rivers"]},"as":{"s":"Cambridge 9696","u":[["AS · Papers 1–2",["Hydrology & Rivers","Population"]]],"o":0,"d":["Lag time","the time between peak rainfall and peak discharge.","Hydrology & Rivers"]},"a2":{"s":"Cambridge 9696","u":[["AS · Papers 1–2",["Hydrology & Rivers","Population"]],["A Level · Papers 3–4",["Coastal Environments","Global Interdependence"]]],"o":2,"d":["Longshore drift","the movement of sediment along a coast by waves that approach at an angle.","Coastal Environments"]}},"global-perspectives-research":{"n":"Global Perspectives & Research","foundation":{"s":"Cambridge IGCSE 0457 → 9239","u":[["IGCSE stage · Core ideas",["Global Issues","Evaluating Sources"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Global Perspectives at AS"]]],"o":0,"d":["Perspective","a point of view on an issue, shaped by values, beliefs and experience.","Global Issues"]},"as":{"s":"Cambridge 9239","u":[["AS · Papers 1–2",["Arguments & Evidence","Comparing Perspectives"]]],"o":0,"d":["Vested interest","a stake in an outcome that may influence what a source claims.","Arguments & Evidence"]},"a2":{"s":"Cambridge 9239","u":[["AS · Papers 1–2",["Arguments & Evidence","Comparing Perspectives"]],["A Level · Cambridge Research Report",["The Research Report","Research Methods & Reflection"]]],"o":2,"d":["Vested interest","a stake in an outcome that may influence what a source claims.","Arguments & Evidence"]}},"divinity":{"n":"Divinity","foundation":{"s":"Cambridge IGCSE 0490 → 9011","u":[["IGCSE stage · Core ideas",["Sacred Texts","Beliefs & Practices"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Divinity at AS"]]],"o":0,"d":["Interpretation","explaining what a text means, which can differ between readers and traditions.","Sacred Texts"]},"as":{"s":"Cambridge 9011","u":[["AS · Papers 1–2",["The Prophets","The Gospels"]]],"o":0,"d":["Covenant","a binding agreement between God and his people, central to the Old Testament.","The Prophets"]},"a2":{"s":"Cambridge 9011","u":[["AS · Papers 1–2",["The Prophets","The Gospels"]],["A Level · Papers 3–4",["The Early Church","Interpretation & Evaluation"]]],"o":2,"d":["Gentile","a person who is not Jewish.","The Early Church"]}},"english-literature":{"n":"English Literature","foundation":{"s":"Cambridge IGCSE 0475 → 9695","u":[["IGCSE stage · Core ideas",["Reading a Poem Closely","Character & Theme","Writing a Literature Essay"]],["Bridge to AS · Paper 1 Poetry & Prose",["Looking Ahead: Unseen Poetry at AS"]]],"o":0,"d":["Imagery","language that creates a picture in the reader’s mind, often by appealing to the senses.","Reading a Poem Closely"]},"as":{"s":"Cambridge 9695","u":[["AS · Paper 1 Poetry & Prose",["Reading an Unseen Poem","Form & Structure"]]],"o":0,"d":["Volta","the turn where a poem’s argument, mood or direction changes; in a sonnet often at line 9 or the couplet.","Reading an Unseen Poem"]},"a2":{"s":"Cambridge 9695","u":[["AS · Paper 1 Poetry & Prose",["Reading an Unseen Poem","Form & Structure"]],["A Level · Papers 3–4",["Prose: Character & Narrative Voice","Drama: Staging & Dramatic Irony","Essay Planning"]]],"o":2,"d":["Free indirect style","third-person narration that takes on the idiom and bias of a character’s own thought.","Prose: Character & Narrative Voice"]}},"english-language":{"n":"English Language","foundation":{"s":"Cambridge IGCSE 0500 → 9093","u":[["IGCSE stage · Core ideas",["Reading for Meaning","Writing for a Purpose"]],["Bridge to AS · Papers 1–2",["Looking Ahead: English Language at AS"]]],"o":0,"d":["Connotation","the ideas or feelings a word suggests beyond its literal meaning.","Reading for Meaning"]},"as":{"s":"Cambridge 9093","u":[["AS · Papers 1–2",["Reading: Language & Style","Writing: Directed & Imaginative"]]],"o":0,"d":["Register","the level of formality in language, chosen to suit audience and context.","Reading: Language & Style"]},"a2":{"s":"Cambridge 9093","u":[["AS · Papers 1–2",["Reading: Language & Style","Writing: Directed & Imaginative"]],["A Level · Papers 3–4",["Language Change","Child Language & World Englishes"]]],"o":2,"d":["Standardisation","the process by which one agreed form of spelling and grammar becomes established.","Language Change"]}},"classical-studies":{"n":"Classical Studies","foundation":{"s":"Before A level → Cambridge 9274","u":[["IGCSE stage · Core ideas",["The Classical World","Myths & Heroes"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Classical Studies at AS"]]],"o":0,"d":["Primary source","evidence from the ancient world itself, such as a text, an inscription or an object.","The Classical World"]},"as":{"s":"Cambridge 9274","u":[["AS · Papers 1–2",["Epic Poetry","Ancient Historians"]]],"o":0,"d":["Epic","a long narrative poem about heroic deeds, often involving the gods.","Epic Poetry"]},"a2":{"s":"Cambridge 9274","u":[["AS · Papers 1–2",["Epic Poetry","Ancient Historians"]],["A Level · Papers 3–4",["Greek Drama","Art & Architecture"]]],"o":2,"d":["Chorus","a group of performers in Greek drama who sing, dance and comment on the action.","Greek Drama"]}},"french":{"n":"French","foundation":{"s":"Cambridge IGCSE 0520 → 9898","u":[["IGCSE stage · Core ideas",["Present & Past Tenses","Describing & Giving Opinions"]],["Bridge to AS · Papers 1–2",["Looking Ahead: French at AS"]]],"o":0,"d":["Passé composé","the perfect tense, used for single completed actions in the past.","Present & Past Tenses"]},"as":{"s":"Cambridge 9898","u":[["AS · Papers 1–2",["Reading & Translation","Writing & Grammar"]]],"o":0,"d":["Le subjonctif","the subjunctive mood, used after expressions of wish, doubt, emotion and necessity: « il faut que tu viennes ».","Reading & Translation"]},"a2":{"s":"Cambridge 9898","u":[["AS · Papers 1–2",["Reading & Translation","Writing & Grammar"]],["A Level · Papers 3–4",["Literature in French","Discussion & Debate"]]],"o":2,"d":["Le subjonctif","the subjunctive mood, used after expressions of wish, doubt, emotion and necessity: « il faut que tu viennes ».","Reading & Translation"]}},"spanish":{"n":"Spanish","foundation":{"s":"Cambridge IGCSE 0530 → 9844","u":[["IGCSE stage · Core ideas",["Ser, Estar & the Present Tense","Talking About the Past"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Spanish at AS"]]],"o":0,"d":["Ser","\"to be\" for identity, origin and permanent characteristics.","Ser, Estar & the Present Tense"]},"as":{"s":"Cambridge 9844","u":[["AS · Papers 1–2",["Reading & Translation","Writing & Grammar"]]],"o":0,"d":["El subjuntivo","the subjunctive mood, used after wishes, doubt and emotion: « espero que vengas ».","Reading & Translation"]},"a2":{"s":"Cambridge 9844","u":[["AS · Papers 1–2",["Reading & Translation","Writing & Grammar"]],["A Level · Papers 3–4",["Literature in Spanish","Discussion & Debate"]]],"o":2,"d":["El subjuntivo","the subjunctive mood, used after wishes, doubt and emotion: « espero que vengas ».","Reading & Translation"]}},"german":{"n":"German","foundation":{"s":"Cambridge IGCSE 0525 → 9897","u":[["IGCSE stage · Core ideas",["Word Order","Cases & Articles"]],["Bridge to AS · Papers 1–2",["Looking Ahead: German at AS"]]],"o":0,"d":["Subordinate clause","a clause introduced by a conjunction such as weil or dass, which sends the verb to the end.","Word Order"]},"as":{"s":"Cambridge 9897","u":[["AS · Papers 1–2",["Reading & Translation","Writing & Grammar"]]],"o":0,"d":["Konjunktiv II","the subjunctive used for hypothetical situations and polite requests: « wenn ich Zeit hätte, würde ich reisen ».","Reading & Translation"]},"a2":{"s":"Cambridge 9897","u":[["AS · Papers 1–2",["Reading & Translation","Writing & Grammar"]],["A Level · Papers 3–4",["Literature in German","Discussion & Debate"]]],"o":2,"d":["Konjunktiv II","the subjunctive used for hypothetical situations and polite requests: « wenn ich Zeit hätte, würde ich reisen ».","Reading & Translation"]}},"chinese":{"n":"Chinese","foundation":{"s":"Before A level → Cambridge 9868","u":[["IGCSE stage · Core ideas",["Tones & Characters","Sentence Patterns"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Chinese at AS"]]],"o":0,"d":["Radical","the part of a character that often shows its meaning and is used to look it up.","Tones & Characters"]},"as":{"s":"Cambridge 9868","u":[["AS · Papers 1–2",["Reading & Translation","Writing"]]],"o":0,"d":["把 construction","a structure that puts the object before the verb to show what is done to it: 我把书放在桌子上。","Reading & Translation"]},"a2":{"s":"Cambridge 9868","u":[["AS · Papers 1–2",["Reading & Translation","Writing"]],["A Level · Papers 3–4",["Literature & Culture","Discussion & Debate"]]],"o":2,"d":["把 construction","a structure that puts the object before the verb to show what is done to it: 我把书放在桌子上。","Reading & Translation"]}},"arabic":{"n":"Arabic","foundation":{"s":"Cambridge IGCSE 0544 → 9680","u":[["IGCSE stage · Core ideas",["Roots & Patterns","Verbs & Sentences"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Arabic at AS"]]],"o":0,"d":["Root","the three consonants that carry the basic meaning of a family of Arabic words.","Roots & Patterns"]},"as":{"s":"Cambridge 9680","u":[["AS · Papers 1–2",["Reading & Translation","Writing"]]],"o":0,"d":["Verb form (وزن)","one of the patterns, such as Form II فعّل, that change a root’s meaning in regular ways.","Reading & Translation"]},"a2":{"s":"Cambridge 9680","u":[["AS · Papers 1–2",["Reading & Translation","Writing"]],["A Level · Papers 3–4",["Literature & Culture","Discussion & Debate"]]],"o":2,"d":["Verb form (وزن)","one of the patterns, such as Form II فعّل, that change a root’s meaning in regular ways.","Reading & Translation"]}},"art-design":{"n":"Art & Design","foundation":{"s":"Cambridge IGCSE 0400 → 9479","u":[["IGCSE stage · Core ideas",["Drawing from Observation","The Formal Elements"]],["Bridge to AS · Components 1–2",["Looking Ahead: Art & Design at AS"]]],"o":0,"d":["Tone","how light or dark something is.","Drawing from Observation"]},"as":{"s":"Cambridge 9479","u":[["AS · Components 1–2",["Observation & Recording","Contextual Research"]]],"o":0,"d":["Composition","the arrangement of the elements within a work.","Observation & Recording"]},"a2":{"s":"Cambridge 9479","u":[["AS · Components 1–2",["Observation & Recording","Contextual Research"]],["A Level · Components 3–4",["Personal Investigation","Developing & Resolving Ideas"]]],"o":2,"d":["Composition","the arrangement of the elements within a work.","Observation & Recording"]}},"music":{"n":"Music","foundation":{"s":"Cambridge IGCSE 0410 → 9483","u":[["IGCSE stage · Core ideas",["Reading Music","Listening & Describing"]],["Bridge to AS · Components 1–2",["Looking Ahead: Music at AS"]]],"o":0,"d":["Time signature","the two numbers at the start of a piece that show how many beats are in a bar and what kind of beat.","Reading Music"]},"as":{"s":"Cambridge 9483","u":[["AS · Components 1–2",["Listening","Performing"]]],"o":0,"d":["Texture","how the layers of sound combine: monophonic, homophonic or polyphonic.","Listening"]},"a2":{"s":"Cambridge 9483","u":[["AS · Components 1–2",["Listening","Performing"]],["A Level · Components 3–4",["Composing","Investigation & Report"]]],"o":2,"d":["Idiomatic writing","music written to suit how an instrument or voice is actually played.","Composing"]}},"drama":{"n":"Drama","foundation":{"s":"Cambridge IGCSE 0411 → 9482","u":[["IGCSE stage · Core ideas",["Performance Skills","Reading a Script"]],["Bridge to AS · Components 1–2",["Looking Ahead: Drama at AS"]]],"o":0,"d":["Proxemics","the use of space and distance between performers to show relationships.","Performance Skills"]},"as":{"s":"Cambridge 9482","u":[["AS · Components 1–2",["Text in Performance","Devising"]]],"o":0,"d":["Blocking","the planned movement and positioning of actors on stage.","Text in Performance"]},"a2":{"s":"Cambridge 9482","u":[["AS · Components 1–2",["Text in Performance","Devising"]],["A Level · Components 3–4",["Theatre Practitioners","Critical Analysis"]]],"o":2,"d":["Verfremdungseffekt","Brecht’s distancing effect, which reminds the audience they are watching a play so that they think critically.","Theatre Practitioners"]}},"media-studies":{"n":"Media Studies","foundation":{"s":"Before A level → Cambridge 9607","u":[["IGCSE stage · Core ideas",["How Media Make Meaning","Audiences"]],["Bridge to AS · Components 1–2",["Looking Ahead: Media Studies at AS"]]],"o":0,"d":["Connotation","the associations an image, colour or word carries beyond its literal meaning.","How Media Make Meaning"]},"as":{"s":"Cambridge 9607","u":[["AS · Components 1–2",["Media Language & Representation","The Production Portfolio"]]],"o":0,"d":["Mise-en-scène","everything placed in the frame: setting, props, costume, lighting and performance.","Media Language & Representation"]},"a2":{"s":"Cambridge 9607","u":[["AS · Components 1–2",["Media Language & Representation","The Production Portfolio"]],["A Level · Components 3–4",["Institutions & Audiences","Critical Perspectives"]]],"o":2,"d":["Uses and gratifications","the theory that audiences actively choose media to meet needs such as information or entertainment.","Institutions & Audiences"]}},"environmental-management":{"n":"Environmental Management","foundation":{"s":"Cambridge IGCSE 0680 → 8291","u":[["IGCSE stage · Core ideas",["Resources & Sustainability","Fieldwork & Data"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Environmental Management at AS"]]],"o":0,"d":["Sustainable development","development that meets present needs without compromising the ability of future generations to meet their own.","Resources & Sustainability"]},"as":{"s":"Cambridge 8291","u":[["AS · Papers 1–2",["Ecosystems & Biodiversity","Water & Pollution","Energy & Climate"]]],"o":0,"d":["Biodiversity","the variety of life in an area, including genetic, species and ecosystem diversity.","Ecosystems & Biodiversity"]},"a2":{"s":"Cambridge 8291","u":[["AS · Papers 1–2",["Ecosystems & Biodiversity","Water & Pollution","Energy & Climate"]]],"o":0,"d":["Biodiversity","the variety of life in an area, including genetic, species and ecosystem diversity.","Ecosystems & Biodiversity"]}},"marine-science":{"n":"Marine Science","foundation":{"s":"Before A level → Cambridge 9693","u":[["IGCSE stage · Core ideas",["Life in the Sea","Oceans & Climate"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Marine Science at AS"]]],"o":0,"d":["Food web","a diagram showing how energy passes between organisms through feeding.","Life in the Sea"]},"as":{"s":"Cambridge 9693","u":[["AS · Papers 1–2",["Marine Ecosystems","The Ocean & Its Water"]]],"o":0,"d":["Phytoplankton","microscopic photosynthetic organisms that drift near the ocean surface.","Marine Ecosystems"]},"a2":{"s":"Cambridge 9693","u":[["AS · Papers 1–2",["Marine Ecosystems","The Ocean & Its Water"]],["A Level · Papers 3–4",["Fisheries & Aquaculture","Human Impacts on the Ocean"]]],"o":2,"d":["Maximum sustainable yield","the largest catch that can be taken from a stock indefinitely.","Fisheries & Aquaculture"]}},"physical-education":{"n":"Physical Education","foundation":{"s":"Cambridge IGCSE 0413 → 9396","u":[["IGCSE stage · Core ideas",["The Body in Exercise","Principles of Training"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Physical Education at AS"]]],"o":0,"d":["Aerobic exercise","exercise that uses oxygen, sustained at a moderate intensity.","The Body in Exercise"]},"as":{"s":"Cambridge 9396","u":[["AS · Papers 1–2",["Anatomy & Physiology","Skill Acquisition"]]],"o":0,"d":["Cardiac output","the volume of blood pumped by the heart per minute.","Anatomy & Physiology"]},"a2":{"s":"Cambridge 9396","u":[["AS · Papers 1–2",["Anatomy & Physiology","Skill Acquisition"]],["A Level · Papers 3–4",["Exercise Physiology","Sport Psychology"]]],"o":2,"d":["EPOC","excess post-exercise oxygen consumption: the extra oxygen used after exercise to return the body to its resting state.","Exercise Physiology"]}},"travel-tourism":{"n":"Travel & Tourism","foundation":{"s":"Cambridge IGCSE 0471 → 9395","u":[["IGCSE stage · Core ideas",["Why People Travel","Tourism & Communities"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Travel & Tourism at AS"]]],"o":0,"d":["Domestic tourism","travel within a person’s own country.","Why People Travel"]},"as":{"s":"Cambridge 9395","u":[["AS · Papers 1–2",["The Travel & Tourism Industry","Impacts of Tourism"]]],"o":0,"d":["Vertical integration","when one organisation owns businesses at different stages of the chain, such as a tour operator owning an airline.","The Travel & Tourism Industry"]},"a2":{"s":"Cambridge 9395","u":[["AS · Papers 1–2",["The Travel & Tourism Industry","Impacts of Tourism"]],["A Level · Papers 3–4",["Destination Management","Marketing & Customer Service"]]],"o":2,"d":["Carrying capacity","the number of visitors a destination can take before it is damaged.","Destination Management"]}},"thinking-skills":{"n":"Thinking Skills","foundation":{"s":"Before A level → Cambridge 9694","u":[["IGCSE stage · Core ideas",["Reading Arguments","Solving Puzzles Systematically"]],["Bridge to AS · Papers 1–2",["Looking Ahead: Thinking Skills at AS"]]],"o":0,"d":["Conclusion","the claim an argument is trying to persuade you of.","Reading Arguments"]},"as":{"s":"Cambridge 9694","u":[["AS · Papers 1–2",["Problem Solving","Critical Thinking"]]],"o":0,"d":["Assumption","an unstated step that an argument relies on.","Critical Thinking"]},"a2":{"s":"Cambridge 9694","u":[["AS · Papers 1–2",["Problem Solving","Critical Thinking"]],["A Level · Papers 3–4",["Applied Reasoning","Constructing Arguments"]]],"o":2,"d":["Assumption","an unstated step that an argument relies on.","Critical Thinking"]}}}/*/SHELF-DATA*/;
+    var SYSTEMS = /*SHELF-SYSTEMS*/[{"id":"cambridge","label":"International school (Cambridge, Edexcel)","regions":[],"grades":[["pre-igcse","Before IGCSE","foundation"],["igcse-1","IGCSE, first year","foundation"],["igcse-2","IGCSE, second year","foundation"],["as","AS Level","as"],["a2","A Level (A2)","a2"]]},{"id":"uk","label":"England, Wales or Northern Ireland","regions":["GB","IM","JE","GG","GI"],"grades":[["y9","Year 9 or below","foundation"],["y10","Year 10","foundation"],["y11","Year 11","foundation"],["y12","Year 12 (Lower Sixth)","as"],["y13","Year 13 (Upper Sixth)","a2"]]},{"id":"scotland","label":"Scotland","regions":[],"grades":[["s3","S3 or below","foundation"],["s4","S4","foundation"],["s5","S5","as"],["s6","S6","a2"]]},{"id":"ireland","label":"Ireland","regions":["IE"],"grades":[["y3","Third Year or below","foundation"],["ty","Transition Year","foundation"],["y5","Fifth Year","as"],["y6","Sixth Year","a2"]]},{"id":"us","label":"United States","regions":["US","PR","GU","VI","AS","MP"],"grades":[["g8","Grade 8 or below","foundation"],["g9","Grade 9 (Freshman)","foundation"],["g10","Grade 10 (Sophomore)","foundation"],["g11","Grade 11 (Junior)","as"],["g12","Grade 12 (Senior)","a2"]]},{"id":"canada","label":"Canada","regions":["CA"],"grades":[["g8","Grade 8 or below","foundation"],["g9","Grade 9","foundation"],["g10","Grade 10","foundation"],["g11","Grade 11","as"],["g12","Grade 12","a2"]]},{"id":"grades","label":"Grades 1–12 (the Gulf, the Philippines, Latin America…)","regions":["PH","SA","AE","QA","KW","BH","OM","JO","LB","LK","CO","CL","PE","AR","UY","EC","BO","PY","VE","TH","ID"],"grades":[["g8","Grade 8 or below","foundation"],["g9","Grade 9","foundation"],["g10","Grade 10","foundation"],["g11","Grade 11","as"],["g12","Grade 12","a2"]]},{"id":"classes","label":"India or Nepal","regions":["IN","NP"],"grades":[["c8","Class 8 or below","foundation"],["c9","Class 9","foundation"],["c10","Class 10","foundation"],["c11","Class 11","as"],["c12","Class 12","a2"]]},{"id":"pakistan","label":"Pakistan","regions":["PK"],"grades":[["c8","Class 8 or below","foundation"],["c9","Class 9 (Matric, part 1)","foundation"],["c10","Class 10 (Matric)","foundation"],["c11","First year (FSc / FA, part 1)","as"],["c12","Second year (FSc / FA, part 2)","a2"]]},{"id":"bangladesh","label":"Bangladesh","regions":["BD"],"grades":[["c8","Class 8 or below","foundation"],["c9","Class 9","foundation"],["c10","Class 10 (SSC)","foundation"],["c11","Class 11 (HSC, first year)","as"],["c12","Class 12 (HSC)","a2"]]},{"id":"australia","label":"Australia","regions":["AU"],"grades":[["y9","Year 9 or below","foundation"],["y10","Year 10","foundation"],["y11","Year 11","as"],["y12","Year 12","a2"]]},{"id":"nz","label":"New Zealand","regions":["NZ"],"grades":[["y10","Year 10 or below","foundation"],["y11","Year 11 (NCEA Level 1)","foundation"],["y12","Year 12 (NCEA Level 2)","as"],["y13","Year 13 (NCEA Level 3)","a2"]]},{"id":"singapore","label":"Singapore","regions":["SG"],"grades":[["sec3","Secondary 3 or below","foundation"],["sec4","Secondary 4","foundation"],["jc1","JC1","as"],["jc2","JC2","a2"]]},{"id":"forms","label":"Malaysia or Brunei","regions":["MY","BN"],"grades":[["f3","Form 3 or below","foundation"],["f4","Form 4","foundation"],["f5","Form 5 (SPM)","foundation"],["l6","Form 6 lower / first pre-university year","as"],["u6","Form 6 upper / second pre-university year","a2"]]},{"id":"hong-kong","label":"Hong Kong or Macau","regions":["HK","MO"],"grades":[["s3","S3 or below","foundation"],["s4","S4","foundation"],["s5","S5","as"],["s6","S6","a2"]]},{"id":"china","label":"China (mainland)","regions":["CN"],"grades":[["cz3","Junior 3 (初三) or below","foundation"],["gz1","Senior 1 (高一)","foundation"],["gz2","Senior 2 (高二)","as"],["gz3","Senior 3 (高三)","a2"]]},{"id":"japan","label":"Japan","regions":["JP"],"grades":[["c3","Junior high 3 (中学3年) or below","foundation"],["k1","High school 1 (高校1年)","foundation"],["k2","High school 2 (高校2年)","as"],["k3","High school 3 (高校3年)","a2"]]},{"id":"korea","label":"South Korea","regions":["KR"],"grades":[["m3","Middle school 3 (중3) or below","foundation"],["h1","High school 1 (고1)","foundation"],["h2","High school 2 (고2)","as"],["h3","High school 3 (고3)","a2"]]},{"id":"vietnam","label":"Vietnam","regions":["VN"],"grades":[["l9","Lớp 9 or below","foundation"],["l10","Lớp 10","foundation"],["l11","Lớp 11","as"],["l12","Lớp 12","a2"]]},{"id":"west-africa","label":"Nigeria, Ghana and West Africa","regions":["NG","GH","SL","GM","LR","CM"],"grades":[["jss3","JSS 3 / JHS 3 or below","foundation"],["ss1","SS 1 / SHS 1","foundation"],["ss2","SS 2 / SHS 2","as"],["ss3","SS 3 / SHS 3","a2"]]},{"id":"east-africa","label":"Kenya, Uganda, Tanzania","regions":["KE","UG","TZ","RW","ZM","ZW","MW"],"grades":[["form2","Form 2 or below","foundation"],["form3","Form 3","foundation"],["form4","Form 4","foundation"],["form5","Form 5 / Senior 5","as"],["form6","Form 6 / Senior 6","a2"]]},{"id":"south-africa","label":"South Africa","regions":["ZA","NA","BW","LS","SZ"],"grades":[["gr9","Grade 9 or below","foundation"],["gr10","Grade 10","foundation"],["gr11","Grade 11","as"],["gr12","Grade 12 (Matric)","a2"]]},{"id":"egypt","label":"Egypt","regions":["EG"],"grades":[["p3","Third preparatory or below","foundation"],["s1","First secondary","foundation"],["s2","Second secondary","as"],["s3","Third secondary (Thanaweya Amma)","a2"]]},{"id":"ib","label":"International Baccalaureate","regions":[],"grades":[["myp3","MYP 3 or below","foundation"],["myp4","MYP 4","foundation"],["myp5","MYP 5","foundation"],["dp1","Diploma, first year","as"],["dp2","Diploma, second year","a2"]]},{"id":"france","label":"France (and French schools abroad)","regions":["FR","MC","LU","MA","TN","DZ","SN","CI","RE","GP","MQ","GF","YT","NC","PF"],"grades":[["3e","Troisième or below","foundation"],["2de","Seconde","foundation"],["1re","Première","as"],["tle","Terminale","a2"]]},{"id":"germany","label":"Germany","regions":["DE"],"grades":[["k9","Klasse 9 or below","foundation"],["k10","Klasse 10","foundation"],["k11","Klasse 11","as"],["k12","Klasse 12","a2"],["k13","Klasse 13","a2"]]},{"id":"austria","label":"Austria","regions":["AT"],"grades":[["k5","5. Klasse (9. Schulstufe) or below","foundation"],["k6","6. Klasse","foundation"],["k7","7. Klasse","as"],["k8","8. Klasse (Maturaklasse)","a2"]]},{"id":"switzerland","label":"Switzerland or Liechtenstein","regions":["CH","LI"],"grades":[["y9","9th school year (11H) or below","foundation"],["y10","10th school year","foundation"],["y11","11th school year","as"],["y12","12th school year (Maturajahr)","a2"]]},{"id":"spain","label":"Spain","regions":["ES","AD"],"grades":[["eso3","3º ESO or below","foundation"],["eso4","4º ESO","foundation"],["bach1","1º Bachillerato","as"],["bach2","2º Bachillerato","a2"]]},{"id":"italy","label":"Italy","regions":["IT","SM","VA"],"grades":[["m3","Terza media or below","foundation"],["s1","Primo anno di superiori","foundation"],["s2","Secondo anno","foundation"],["s3","Terzo anno","as"],["s4","Quarto anno","a2"],["s5","Quinto anno (Maturità)","a2"]]},{"id":"portugal","label":"Portugal","regions":["PT"],"grades":[["a9","9.º ano or below","foundation"],["a10","10.º ano","foundation"],["a11","11.º ano","as"],["a12","12.º ano","a2"]]},{"id":"netherlands","label":"Netherlands","regions":["NL"],"grades":[["k3","Klas 3 or below","foundation"],["k4","Klas 4","foundation"],["k5","Klas 5","as"],["k6","Klas 6 (vwo)","a2"]]},{"id":"poland","label":"Poland","regions":["PL"],"grades":[["k8","Klasa 8 (szkoła podstawowa) or below","foundation"],["l1","Liceum, klasa 1","foundation"],["l2","Liceum, klasa 2","as"],["l3","Liceum, klasa 3","a2"],["l4","Liceum, klasa 4","a2"]]},{"id":"russia","label":"Russia or Belarus","regions":["RU","BY"],"grades":[["k8","8th grade (8 класс) or below","foundation"],["k9","9th grade (9 класс)","foundation"],["k10","10th grade (10 класс)","as"],["k11","11th grade (11 класс)","a2"]]},{"id":"turkey","label":"Türkiye","regions":["TR"],"grades":[["s8","8. sınıf or below","foundation"],["s9","9. sınıf","foundation"],["s10","10. sınıf","foundation"],["s11","11. sınıf","as"],["s12","12. sınıf","a2"]]},{"id":"brazil","label":"Brazil","regions":["BR"],"grades":[["ef9","9º ano (Ensino Fundamental) or below","foundation"],["em1","1ª série (Ensino Médio)","foundation"],["em2","2ª série","as"],["em3","3ª série","a2"]]},{"id":"mexico","label":"Mexico","regions":["MX"],"grades":[["s3","3º de secundaria or below","foundation"],["p1","1º de preparatoria / bachillerato","foundation"],["p2","2º de preparatoria","as"],["p3","3º de preparatoria","a2"]]},{"id":"age","label":"None of these — go by my age","regions":[],"grades":[["14","14 or younger","foundation"],["15","15","foundation"],["16","16","as"],["17","17","a2"],["18","18 or older","a2"]]}]/*/SHELF-SYSTEMS*/;
+    /* Read once by the setup guide when it opens (setup-service.js). */
+    var SHELF_KEY = 'notivlo_shelf_pick';
+    var MAX = 8;
+    var START = ['Mathematics', 'Physics', 'Chemistry'];
+    var FIRST = ['Mathematics', 'Further Mathematics', 'Physics', 'Chemistry', 'Biology', 'Computer Science',
+      'Economics', 'Business', 'Psychology', 'History', 'Geography', 'English Literature'];
+    var LEVEL_NOTE = {
+      '': 'Showing the full A level notebook. Pick your year to see where yours start.',
+      foundation: 'Your notebooks start at the IGCSE stage and end on a bridge to AS.',
+      as: 'Your notebooks hold the AS chapters, ready for this year.',
+      a2: 'Your notebooks hold every chapter and open on the first A Level one, with AS kept for revision.'
+    };
+    var PRACTICE = {
+      'Mathematics': { pq: 'Find the angle between the vectors a and b, giving your answer to one decimal place.', marks: 4, ps: 'M1 — a · b = 2(1) + (−3)(4) + (1)(−2) = −12' },
+      'Physics': { pq: 'Distinguish between distance and displacement, and between speed and velocity.', marks: 2, ps: 'B1 — distance and speed are scalars, having magnitude only' },
+      'Chemistry': { pq: 'State the number of electrons, protons and neutrons in one atom of ⁵⁵Mn.', marks: 1, ps: '25 electrons, 25 protons and 30 neutrons — all three required for the mark.' },
+      'Biology': { pq: 'State three structural differences between a prokaryotic cell and a eukaryotic cell.', marks: 3, ps: 'A prokaryote has no nucleus; its DNA lies free in the cytoplasm.' },
+      'Economics': { pq: 'Define aggregate demand and state its components.', marks: 2, ps: 'The total planned expenditure on an economy’s goods and services at a given price level.' },
+      'Computer Science': { pk: 'Lesson exercise', pq: 'Represent −45 in eight-bit two’s complement.', marks: 3, ps: '1101 0011 — show the inverted value as its own line of working.' }
+    };
+
+    var $ = function (id) { return document.getElementById(id); };
+    var sysSel = $('sb-system'), yearsEl = $('sb-years'), levelEl = $('sb-level'), subjEl = $('sb-subjects'),
+      moreBtn = $('sb-more'), capEl = $('sb-cap'), countEl = $('sb-count'), shelfEl = $('sb-shelf'),
+      pageEl = $('sb-page'), sumEl = $('sb-sum'), cta = $('sb-cta'), ctaT = $('sb-cta-t');
+    if (!shelfEl || !pageEl || !SYSTEMS.length) return;
+    // The menu is grouped by continent, Europe first, and trimmed to where
+    // notivlo's audience is: mostly Europe and North America, then a few of
+    // the larger systems elsewhere. Anyone left out picks "go by my age" (or
+    // an international school). The app keeps every system; only this menu
+    // is trimmed.
+    var GROUPS = [
+      ['Europe', ['uk', 'scotland', 'ireland', 'france', 'germany', 'austria', 'switzerland', 'netherlands',
+        'spain', 'italy', 'portugal', 'poland']],
+      ['North America', ['us', 'canada']],
+      ['Latin America', ['mexico', 'brazil']],
+      ['Asia', ['classes', 'china', 'japan', 'korea', 'singapore', 'hong-kong']],
+      ['Oceania', ['australia', 'nz']],
+      ['Africa', ['south-africa', 'west-africa']],
+      ['International', ['cambridge', 'ib']]
     ];
-    var tabs = document.getElementById('tabs'), panel = document.getElementById('example');
-    if (!tabs || !panel) return;
-    var btns = SUBJ.map(function (s, i) {
-      var b = document.createElement('button');
-      b.type = 'button'; b.className = 'tab'; b.id = 'tab-' + i;
-      b.setAttribute('role', 'tab'); b.setAttribute('aria-controls', 'example');
-      b.textContent = s.name;
-      b.addEventListener('click', function () { select(i, true); });
-      b.addEventListener('keydown', function (e) {
-        var k = e.key, j = null;
-        if (k === 'ArrowRight') j = (i + 1) % SUBJ.length;
-        else if (k === 'ArrowLeft') j = (i - 1 + SUBJ.length) % SUBJ.length;
-        else if (k === 'Home') j = 0;
-        else if (k === 'End') j = SUBJ.length - 1;
-        if (j !== null) { e.preventDefault(); select(j, true); btns[j].focus(); }
-      });
-      tabs.appendChild(b);
-      return b;
+    var byId = {};
+    SYSTEMS.forEach(function (s) { byId[s.id] = s; });
+    GROUPS = GROUPS.map(function (g) { return [g[0], g[1].map(function (id) { return byId[id]; }).filter(Boolean)]; })
+      .filter(function (g) { return g[1].length; });
+    SYSTEMS = [].concat.apply([], GROUPS.map(function (g) { return g[1]; })).concat(byId.age ? [byId.age] : []);
+
+    var slugOf = {}, names = [];
+    Object.keys(SHELF).forEach(function (k) { slugOf[SHELF[k].n] = k; names.push(SHELF[k].n); });
+
+    /* The browser's region picks the school system, as the guide does; the
+       year is never guessed. */
+    function guessSystem() {
+      var list = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ''];
+      for (var i = 0; i < list.length; i++) {
+        var m = /^[a-z]{2,3}(?:-[A-Za-z]{4})?-([A-Za-z]{2})\b/.exec(String(list[i] || ''));
+        if (!m) continue;
+        for (var j = 0; j < SYSTEMS.length; j++) if (SYSTEMS[j].regions.indexOf(m[1].toUpperCase()) !== -1) return SYSTEMS[j].id;
+      }
+      // A region whose system isn't in the menu starts on an international school.
+      return byId.cambridge ? 'cambridge' : SYSTEMS[0].id;
+    }
+
+    var st = { system: guessSystem(), grade: '', picked: START.slice(), open: START[0], all: false, touched: false };
+    function system() { for (var i = 0; i < SYSTEMS.length; i++) if (SYSTEMS[i].id === st.system) return SYSTEMS[i]; return SYSTEMS[0]; }
+    function level() {
+      var g = system().grades.filter(function (x) { return x[0] === st.grade; })[0];
+      return g ? g[2] : '';
+    }
+    function nb(name) { var e = SHELF[slugOf[name]]; return e ? e[level() || 'a2'] : null; }
+    function chapterCount(d) { return d.u.reduce(function (n, u) { return n + u[1].length; }, 0); }
+    function el(tag, cls, text) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text != null) n.textContent = text;
+      return n;
+    }
+    function code(d) { var m = String(d.s).match(/\d{4}/g); return m ? m[m.length - 1] : ''; }
+    /* Spines differ a little in height and width, as real ones do, and keep
+       their size from one visit to the next. */
+    function dims(name) {
+      var h = 0;
+      for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+      return { h: 212 + (h % 46), w: 50 + ((h >> 8) % 13) };
+    }
+    var calm = function () { return reduce || !document.body.animate; };
+
+    /* ---- 01 · Where you are ---- */
+    var addOpt = function (to, s) {
+      var o = document.createElement('option');
+      o.value = s.id; o.textContent = s.label;
+      to.appendChild(o);
+    };
+    GROUPS.forEach(function (g) {
+      var og = document.createElement('optgroup');
+      og.label = g[0];
+      g[1].forEach(function (s) { addOpt(og, s); });
+      sysSel.appendChild(og);
     });
-    function fill(s) {
-      var f = function (k, v) { var n = panel.querySelector('[data-f="' + k + '"]'); if (n) n.textContent = v; };
-      f('chapter', s.chapter);
-      f('code', 'Cambridge ' + s.code + ' · ' + s.name);
-      f('q', s.q);
-      f('pk', (s.pk || 'Practice question') + ' · ' + s.marks + (s.marks === 1 ? ' mark' : ' marks'));
-      f('pq', s.pq);
-      var a = panel.querySelector('[data-f="a"]'); a.innerHTML = '<b>Answer</b>'; a.appendChild(document.createTextNode(s.a));
-      var ps = panel.querySelector('[data-f="ps"]'); ps.innerHTML = '<b>Mark scheme</b>'; ps.appendChild(document.createTextNode(s.ps));
-    }
-    function select(i, animate) {
-      btns.forEach(function (b, j) {
-        b.setAttribute('aria-selected', j === i ? 'true' : 'false');
-        b.tabIndex = j === i ? 0 : -1;
-      });
-      panel.setAttribute('aria-labelledby', 'tab-' + i);
-      placeInd(true);
-      var from = current; current = i;
-      if (!animate || reduce || !panel.animate || from === i) { fill(SUBJ[i]); return; }
-      /* Out towards where you came from, in from where you are going:
-         each card's lines leave and arrive one after another, and a
-         signal line draws across the top as the new subject lands. */
-      var dir = i > from ? 1 : -1, token = ++swapToken;
-      var items = panel.querySelectorAll('.ex > p'), lines = panel.querySelectorAll('.ex-line');
-      var outs = Array.prototype.map.call(items, function (el, n) {
-        el.getAnimations().forEach(function (a) { a.cancel(); });
-        return el.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateX(' + (-dir * 16) + 'px)' }],
-          { duration: 180, delay: (n % 3) * 20 + Math.floor(n / 3) * 30, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
-      });
-      Promise.all(outs.map(function (a) { return a.finished.catch(function () {}); })).then(function () {
-        if (token !== swapToken) return;
-        fill(SUBJ[i]);
-        Array.prototype.forEach.call(items, function (el, n) {
-          el.getAnimations().forEach(function (a) { a.cancel(); });
-          el.animate([{ opacity: 0, transform: 'translateX(' + (dir * 22) + 'px)' }, { opacity: 1, transform: 'none' }],
-            { duration: 640, delay: Math.floor(n / 3) * 70 + (n % 3) * 45, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+    if (byId.age) addOpt(sysSel, byId.age);
+    sysSel.value = st.system;
+    sysSel.addEventListener('change', function () {
+      st.system = sysSel.value; st.grade = ''; st.touched = true;
+      renderYears(); renderLevel(); renderPage(true); renderSum();
+    });
+    function renderYears() {
+      yearsEl.textContent = '';
+      system().grades.forEach(function (g) {
+        var b = el('button', 'chip', g[1]);
+        b.type = 'button';
+        b.setAttribute('aria-pressed', st.grade === g[0] ? 'true' : 'false');
+        b.addEventListener('click', function () {
+          st.grade = st.grade === g[0] ? '' : g[0]; st.touched = true;
+          Array.prototype.forEach.call(yearsEl.children, function (c) { c.setAttribute('aria-pressed', c === b && st.grade ? 'true' : 'false'); });
+          renderLevel(); renderShelf(); renderPage(true); renderSum();
         });
-        Array.prototype.forEach.call(lines, function (l, n) {
-          l.animate([{ transform: 'scaleX(0)', opacity: 1 }, { transform: 'scaleX(1)', opacity: 1, offset: .6 },
-            { transform: 'scaleX(1)', opacity: 0 }], { duration: 1200, delay: n * 70, easing: 'cubic-bezier(.65,0,.35,1)' });
-        });
+        yearsEl.appendChild(b);
       });
     }
-    /* The ink block under the chosen tab. */
-    var ind = document.createElement('span');
-    ind.className = 'tab-ind'; ind.setAttribute('aria-hidden', 'true');
-    tabs.insertBefore(ind, tabs.firstChild);
-    tabs.classList.add('has-ind');
-    var current = 0, swapToken = 0;
-    function placeInd(moving) {
-      var b = btns[current === undefined ? 0 : current];
-      var sel = btns.filter(function (x) { return x.getAttribute('aria-selected') === 'true'; })[0] || b;
-      if (!moving) ind.style.transition = 'none';
-      ind.style.left = sel.offsetLeft + 'px'; ind.style.top = sel.offsetTop + 'px';
-      ind.style.width = sel.offsetWidth + 'px'; ind.style.height = sel.offsetHeight + 'px';
-      if (!moving) { void ind.offsetWidth; ind.style.transition = ''; }
+    function renderLevel() { levelEl.textContent = LEVEL_NOTE[level()] || LEVEL_NOTE['']; }
+
+    /* ---- 02 · Your subjects ---- */
+    var chipFor = {};
+    names.forEach(function (name) {
+      var b = el('button', 'chip', name);
+      b.type = 'button';
+      b.addEventListener('click', function () { toggle(name, b); });
+      chipFor[name] = b;
+      subjEl.appendChild(b);
+    });
+    moreBtn.addEventListener('click', function () {
+      st.all = !st.all;
+      renderChips();
+      if (st.all) { var first = names.filter(function (n) { return FIRST.indexOf(n) === -1 && st.picked.indexOf(n) === -1; })[0]; if (first) chipFor[first].focus(); }
+    });
+    function renderChips() {
+      names.forEach(function (n) {
+        chipFor[n].setAttribute('aria-pressed', st.picked.indexOf(n) !== -1 ? 'true' : 'false');
+        chipFor[n].hidden = !(st.all || FIRST.indexOf(n) !== -1 || st.picked.indexOf(n) !== -1);
+      });
+      moreBtn.textContent = st.all ? 'Show fewer' : 'Show all ' + names.length + ' subjects';
+      moreBtn.setAttribute('aria-expanded', st.all ? 'true' : 'false');
+      countEl.textContent = st.picked.length + ' of ' + MAX;
     }
-    addEventListener('resize', function () { placeInd(false); });
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { placeInd(false); });
-    select(0, false);
-    placeInd(false);
+    var capTimer = 0;
+    function toggle(name, chip) {
+      st.touched = true;
+      var at = st.picked.indexOf(name);
+      if (at !== -1) {
+        st.picked.splice(at, 1);
+        if (st.open === name) st.open = st.picked[Math.min(at, st.picked.length - 1)] || '';
+        capEl.textContent = '';
+      } else if (st.picked.length >= MAX) {
+        capEl.textContent = 'Eight fit on this shelf. Add the rest in the app, as many as you take.';
+        clearTimeout(capTimer); capTimer = setTimeout(function () { capEl.textContent = ''; }, 4000);
+        if (!calm()) chip.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(0)' }], { duration: 260 });
+        return;
+      } else {
+        st.picked.push(name);
+        st.open = name;
+      }
+      renderChips(); renderShelf(); renderPage(true); renderSum();
+    }
+
+    /* ---- The shelf ---- */
+    var spines = {};
+    function makeSpine(name) {
+      var d = dims(name), b = el('button', 'spine');
+      b.type = 'button';
+      b.style.setProperty('--h', d.h + 'px');
+      b.style.setProperty('--w', d.w + 'px');
+      b.appendChild(el('span', 'sp-t', name));
+      b.appendChild(el('span', 'sp-c', ''));
+      b.addEventListener('click', function () {
+        if (st.open === name) return;
+        st.open = name; renderShelf(); renderPage(true);
+      });
+      return b;
+    }
+    function renderShelf() {
+      var empty = shelfEl.querySelector('.shelf-empty');
+      Object.keys(spines).forEach(function (name) {
+        if (st.picked.indexOf(name) !== -1) return;
+        var s = spines[name]; delete spines[name];
+        if (calm()) { s.remove(); return; }
+        s.disabled = true;
+        var w = s.offsetWidth;
+        s.animate([{ transform: 'translateY(0)', opacity: 1, width: w + 'px', marginRight: '0px' },
+          { transform: 'translateY(40px)', opacity: 0, width: '0px', marginRight: '-6px' }],
+          { duration: 420, easing: 'cubic-bezier(.4,0,.2,1)' }).finished.then(function () { s.remove(); }, function () { s.remove(); });
+      });
+      st.picked.forEach(function (name) {
+        var s = spines[name], isNew = !s;
+        if (isNew) { s = spines[name] = makeSpine(name); }
+        shelfEl.appendChild(s);
+        var d = nb(name);
+        s.querySelector('.sp-c').textContent = d ? code(d) : '';
+        var open = st.open === name;
+        s.setAttribute('aria-pressed', open ? 'true' : 'false');
+        s.setAttribute('aria-label', name + (d ? ', ' + d.s + ', ' + chapterCount(d) + ' chapters' : '') + (open ? ', open' : ''));
+        if (isNew && !calm() && booted) {
+          s.animate([{ transform: 'translateY(-120px) rotate(-8deg)', opacity: 0 }, { transform: 'translateY(' + (open ? -22 : 0) + 'px)', opacity: 1 }],
+            { duration: 700, easing: 'cubic-bezier(.16,1,.3,1)' });
+        }
+        if (open && booted) s.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: calm() ? 'auto' : 'smooth' });
+      });
+      if (!st.picked.length && !empty) shelfEl.appendChild(empty = el('p', 'shelf-empty', 'Pick a subject and its notebook stands here.'));
+      else if (st.picked.length && empty) { empty.remove(); empty = null; }
+      /* The room left on the shelf, as dashed outlines after the last spine. */
+      Array.prototype.forEach.call(shelfEl.querySelectorAll('.slot'), function (g) { g.remove(); });
+      if (st.picked.length) {
+        for (var i = st.picked.length; i < MAX; i++) {
+          var g = el('span', 'slot'); g.setAttribute('aria-hidden', 'true');
+          g.style.setProperty('--h', (200 + ((i * 37) % 40)) + 'px');
+          shelfEl.appendChild(g);
+        }
+      }
+    }
+
+    /* ---- The open notebook ---- */
+    function renderPage(animate) {
+      var name = st.open, d = name ? nb(name) : null;
+      pageEl.textContent = '';
+      pageEl.hidden = !d;
+      if (!d) return;
+      /* With no year the notebook is the one everyone used to get, which
+         opens on its first chapter. */
+      var o = level() ? d.o : 0, opensAt = 0, unitAt = '';
+      d.u.forEach(function (u) { u[1].forEach(function () { if (opensAt++ === o) unitAt = u[0]; }); });
+      pageEl.appendChild(el('p', 'nbk-k', 'Opens on chapter ' + (o + 1) + ' · ' + unitAt));
+      pageEl.appendChild(el('h3', '', name));
+      pageEl.appendChild(el('p', 'nbk-s', d.s + ' · ' + chapterCount(d) + ' chapters to start from'));
+
+      var body = el('div', 'nbk-body'), list = el('ol', 'nbk-ch'), n = 0;
+      list.setAttribute('aria-label', 'Chapters');
+      d.u.forEach(function (u) {
+        var head = el('li', 'nbk-u', u[0]); head.setAttribute('role', 'presentation');
+        list.appendChild(head);
+        u[1].forEach(function (title) {
+          var li = el('li', 'nbk-c' + (n === o ? ' is-open' : ''));
+          li.appendChild(el('i', '', String(n + 1).padStart(2, '0')));
+          li.appendChild(el('span', '', title));
+          if (n === o) li.appendChild(el('b', '', 'Opens here'));
+          list.appendChild(li);
+          n++;
+        });
+      });
+      body.appendChild(list);
+
+      var side = el('div', 'nbk-side');
+      if (d.d) {
+        var rc = el('button', 'rc'), inner = el('span', 'rc-in'), f = el('span', 'rc-f'), bk = el('span', 'rc-b');
+        rc.type = 'button';
+        f.appendChild(el('span', 'nbk-k', 'Recall card · ' + d.d[2]));
+        f.appendChild(el('span', 'rc-t', d.d[0]));
+        f.appendChild(el('span', 'rc-h', 'Say it to yourself, then turn it over'));
+        bk.appendChild(el('span', 'nbk-k', d.d[0]));
+        var ans = d.d[1].charAt(0).toUpperCase() + d.d[1].slice(1);
+        bk.appendChild(el('span', 'rc-a', ans));
+        bk.appendChild(el('span', 'rc-h', 'Turn back'));
+        bk.setAttribute('aria-hidden', 'true');
+        inner.appendChild(f); inner.appendChild(bk); rc.appendChild(inner);
+        rc.setAttribute('aria-label', 'Recall card: ' + d.d[0] + '. Press to turn it over.');
+        rc.addEventListener('click', function () {
+          var over = rc.classList.toggle('over');
+          f.setAttribute('aria-hidden', over ? 'true' : 'false');
+          bk.setAttribute('aria-hidden', over ? 'false' : 'true');
+          rc.setAttribute('aria-label', over ? d.d[0] + ': ' + ans + '. Press to turn back.' : 'Recall card: ' + d.d[0] + '. Press to turn it over.');
+        });
+        side.appendChild(rc);
+      }
+      var p = PRACTICE[name];
+      if (p) {
+        var ex = el('div', 'ex');
+        ex.appendChild(el('p', 'ex-k', (p.pk || 'Practice question') + ' · ' + p.marks + (p.marks === 1 ? ' mark' : ' marks')));
+        ex.appendChild(el('p', 'ex-t', p.pq));
+        var a = el('p', 'ex-a'); a.appendChild(el('b', '', 'Mark scheme')); a.appendChild(document.createTextNode(p.ps));
+        ex.appendChild(a);
+        side.appendChild(ex);
+      }
+      body.appendChild(side);
+      pageEl.appendChild(body);
+
+      if (animate && !calm() && booted) {
+        var rows = pageEl.querySelectorAll('.nbk-k, h3, .nbk-s, .nbk-ch > li, .nbk-side > *');
+        Array.prototype.forEach.call(rows, function (r, i) {
+          r.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }],
+            { duration: 560, delay: Math.min(i, 14) * 32, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+        });
+      }
+    }
+
+    /* ---- The way in ---- */
+    function renderSum() {
+      var k = st.picked.length;
+      sumEl.textContent = '';
+      if (!k) { sumEl.textContent = 'Pick a subject or two to see what your notebooks start with.'; ctaT.textContent = 'Open notivlo'; return; }
+      var chapters = st.picked.reduce(function (t, nm) { var d = nb(nm); return t + (d ? chapterCount(d) : 0); }, 0);
+      sumEl.appendChild(el('b', '', k + (k === 1 ? ' notebook' : ' notebooks') + ', ' + chapters + ' chapters of notes'));
+      sumEl.appendChild(document.createTextNode(' to start from, already in them the first time you open the app.'));
+      ctaT.textContent = k === 1 ? 'Make this notebook' : 'Make these ' + k + ' notebooks';
+    }
+    /* Only a shelf the visitor has actually touched is handed over: the
+       three it starts with are an example, not an answer. */
+    cta.addEventListener('click', function () {
+      if (!st.touched || !st.picked.length) return;
+      try {
+        localStorage.setItem(SHELF_KEY, JSON.stringify({ subjects: st.picked.slice(), system: st.system, grade: st.grade, at: Date.now() }));
+      } catch (e) {}
+    });
+
+    var booted = false;
+    renderYears(); renderLevel(); renderChips(); renderShelf(); renderPage(false); renderSum();
+    booted = true;
   })();
 
   /* ---- Buttons: remember where the cursor came in and went out --------- */
