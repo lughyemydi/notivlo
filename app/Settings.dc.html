@@ -345,8 +345,12 @@
             <div class="field">
               <label for="set-school-system">Where you go to school</label>
               <select id="set-school-system" class="input" value="{{ schoolSystem }}" onChange="{{ onSchoolSystem }}" style="border-radius:14px;background:var(--color-surface)">
-                <sc-for list="{{ schoolSystems }}" as="ss" hint-placeholder-count="8">
-                  <option value="{{ ss.value }}">{{ ss.label }}</option>
+                <sc-for list="{{ schoolGroups }}" as="sg" hint-placeholder-count="7">
+                  <optgroup label="{{ sg.label }}">
+                    <sc-for list="{{ sg.options }}" as="ss" hint-placeholder-count="4">
+                      <option value="{{ ss.value }}">{{ ss.label }}</option>
+                    </sc-for>
+                  </optgroup>
                 </sc-for>
               </select>
             </div>
@@ -1732,7 +1736,11 @@ class Component extends DCLogic {
         return {
           schoolSystem: this.state.schoolSystem,
           schoolGrade: this.state.schoolGrade,
-          schoolSystems: sch ? sch.SYSTEMS.map(sy => ({ value: sy.id, label: sy.label })) : [],
+          // Grouped by continent, Europe first (school-level.js CONTINENTS).
+          schoolGroups: sch ? sch.CONTINENTS.map(c => ({
+            label: c.label,
+            options: c.ids.map(id => sch.systemById(id)).filter(Boolean).map(sy => ({ value: sy.id, label: sy.label })),
+          })).filter(c => c.options.length) : [],
           schoolGrades: [{ value: '', label: 'Not set' }].concat(sys ? sys.grades.map(g => ({ value: g.id, label: g.label })) : []),
           onSchoolSystem: (e) => this.setSchool(e.target.value, ''),
           onSchoolGrade: (e) => this.setSchool(this.state.schoolSystem, e.target.value),
