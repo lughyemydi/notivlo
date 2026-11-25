@@ -1736,10 +1736,14 @@ class Component extends DCLogic {
         return {
           schoolSystem: this.state.schoolSystem,
           schoolGrade: this.state.schoolGrade,
-          // Grouped by continent, Europe first (school-level.js CONTINENTS).
+          // Grouped by continent, Europe first, and trimmed like the schooling
+          // page (school-level.js CONTINENTS, MENU_HIDDEN). A system left out
+          // still shows when it is the one this account is on.
           schoolGroups: sch ? sch.CONTINENTS.map(c => ({
             label: c.label,
-            options: c.ids.map(id => sch.systemById(id)).filter(Boolean).map(sy => ({ value: sy.id, label: sy.label })),
+            options: c.ids
+              .filter(id => id === this.state.schoolSystem || sch.MENU_HIDDEN.indexOf(id) === -1)
+              .map(id => sch.systemById(id)).filter(Boolean).map(sy => ({ value: sy.id, label: sy.label })),
           })).filter(c => c.options.length) : [],
           schoolGrades: [{ value: '', label: 'Not set' }].concat(sys ? sys.grades.map(g => ({ value: g.id, label: g.label })) : []),
           onSchoolSystem: (e) => this.setSchool(e.target.value, ''),
