@@ -540,6 +540,20 @@
 
   var DEFAULT_SYSTEM = 'cambridge';
 
+  // The systems by continent, for menus: Europe first, since that is where
+  // most of notivlo's students are, then North America. Every system is in
+  // exactly one group (school-level-test checks); "go by my age" is last.
+  var CONTINENTS = [
+    { label: 'Europe', ids: ['uk', 'scotland', 'ireland', 'france', 'germany', 'austria', 'switzerland', 'netherlands', 'spain', 'italy', 'portugal', 'poland', 'russia', 'turkey'] },
+    { label: 'North America', ids: ['us', 'canada'] },
+    { label: 'Latin America', ids: ['mexico', 'brazil'] },
+    { label: 'Asia', ids: ['classes', 'pakistan', 'bangladesh', 'china', 'japan', 'korea', 'singapore', 'hong-kong', 'forms', 'vietnam'] },
+    { label: 'Oceania', ids: ['australia', 'nz'] },
+    { label: 'Africa', ids: ['south-africa', 'west-africa', 'east-africa', 'egypt'] },
+    { label: 'International', ids: ['cambridge', 'ib', 'grades'] },
+    { label: 'Other', ids: ['age'] },
+  ];
+
   function systemById(id) {
     for (var i = 0; i < SYSTEMS.length; i++) if (SYSTEMS[i].id === id) return SYSTEMS[i];
     return null;
@@ -1459,6 +1473,7 @@
   return {
     LEVELS: LEVELS,
     SYSTEMS: SYSTEMS,
+    CONTINENTS: CONTINENTS,
     GOALS: GOALS,
     goalById: goalById,
     readGoal: readGoal,
