@@ -133,6 +133,13 @@
     'unification':        'Italian and German unification',
     'ww1-origins':        'The origins of the First World War',
     'source-analysis':    'Source analysis',
+    // Topics the papers for other exams (bac, brevet, Algebra II, GCSE) add
+    'sequences':          'Sequences',
+    'exponentials':       'Exponentials and logarithms',
+    'probability':        'Probability',
+    'geometry':           'Geometry and measures',
+    'arithmetic':         'Number, fractions and percentages',
+    'statistics':         'Statistics',
   };
 
   /* Indicative grade boundaries, as a percentage of the paper.
@@ -2871,6 +2878,548 @@
      tasks they will actually do beat a revision plan they will not.
      ======================================================================= */
 
+  /* =======================================================================
+     Papers for other exams
+     =======================================================================
+
+     The papers above are written to the Cambridge International AS & A Level
+     format, and every subject has them. The ones below are written to the
+     format of another exam — the French bac and brevet, a US high school
+     Algebra II course, GCSE — and are offered instead to a student whose
+     chosen exam (school-level.js, "about your schooling") is that one.
+
+     `qual` lists the exams a paper is written for. A paper without one is an
+     A level paper. When a student's exam has no paper of a kind (section or
+     full) for a subject, they are given the A level paper of that kind, and
+     the page says so rather than dressing it up — see paperSetFor().
+
+     `lang` is the language the paper is set in. A French student sitting a
+     bac paper reads it in French, as they would on the day. Like everything
+     in this file these are originals, never past papers. */
+
+  // ---- Baccalauréat — spécialité mathématiques ---------------------------
+
+  PAPERS.push({
+    id: 'bac-math-sec-suites',
+    subject: 'mathematics',
+    qual: ['bac'],
+    lang: 'fr',
+    tex: true,
+    kind: 'section',
+    title: 'Exercice — Suites numériques',
+    component: 'Spécialité mathématiques, Terminale',
+    instructions: 'La calculatrice en mode examen est autorisée. Toute trace de recherche, même incomplète, sera prise en compte.',
+    minutes: 55,
+    questions: [
+      {
+        n: 1, topic: 'sequences',
+        stem: 'On considère la suite $(u_n)$ définie par $u_0 = 2$ et, pour tout entier naturel $n$, $u_{n+1} = \\frac{1}{2}u_n + 3$.',
+        parts: [
+          { ref: '1.', command: 'Calculer', marks: 1,
+            text: 'Calculer $u_1$ et $u_2$.',
+            scheme: ['$u_1 = 4$ et $u_2 = 5$ — les deux valeurs exactes'] },
+          { ref: '2.', command: 'Démontrer', marks: 2,
+            text: 'Démontrer par récurrence que, pour tout entier naturel $n$, $u_n \\le u_{n+1} \\le 6$.',
+            scheme: ['Initialisation : $u_0 = 2 \\le u_1 = 4 \\le 6$',
+                     'Hérédité : si $u_n \\le u_{n+1} \\le 6$, en multipliant par $\\frac{1}{2}$ puis en ajoutant $3$ on obtient $u_{n+1} \\le u_{n+2} \\le 6$ ; conclusion rédigée'],
+            note: 'L’hérédité sans la phrase de conclusion ne rapporte pas le second point.' },
+          { ref: '3.', command: 'En déduire', marks: 1,
+            text: 'En déduire que la suite $(u_n)$ est convergente.',
+            scheme: ['La suite est croissante et majorée par $6$, donc elle converge (théorème de convergence monotone)'] },
+          { ref: '4. a)', command: 'Montrer', marks: 2,
+            text: 'On pose, pour tout entier naturel $n$, $v_n = u_n - 6$. Montrer que $(v_n)$ est une suite géométrique dont on précisera la raison et le premier terme.',
+            scheme: ['$v_{n+1} = \\frac{1}{2}u_n + 3 - 6 = \\frac{1}{2}(u_n - 6) = \\frac{1}{2}v_n$',
+                     'Raison $q = \\frac{1}{2}$ et premier terme $v_0 = -4$'] },
+          { ref: '4. b)', command: 'Exprimer', marks: 1,
+            text: 'Exprimer $u_n$ en fonction de $n$.',
+            scheme: ['$u_n = 6 - 4\\left(\\frac{1}{2}\\right)^n$'] },
+          { ref: '4. c)', command: 'Déterminer', marks: 1,
+            text: 'Déterminer la limite de la suite $(u_n)$.',
+            scheme: ['$\\left(\\frac{1}{2}\\right)^n \\to 0$ car $0 < \\frac{1}{2} < 1$, donc $u_n \\to 6$'] },
+          { ref: '5.', command: 'Déterminer', marks: 1,
+            text: 'Déterminer le plus petit entier $n$ tel que $u_n > 5{,}99$.',
+            scheme: ['$4\\left(\\frac{1}{2}\\right)^n < 0{,}01$, soit $2^n > 400$, donc $n = 9$'],
+            note: 'Accepter une résolution par la calculatrice (tableau de valeurs) si $u_8 \\approx 5{,}984$ et $u_9 \\approx 5{,}992$ sont donnés.' },
+        ],
+      },
+    ],
+  });
+
+  PAPERS.push({
+    id: 'bac-math-full-1',
+    subject: 'mathematics',
+    qual: ['bac'],
+    lang: 'fr',
+    tex: true,
+    kind: 'full',
+    title: 'Sujet d’entraînement n° 1',
+    component: 'Épreuve écrite de spécialité mathématiques, Terminale',
+    instructions: 'Le sujet comporte quatre exercices indépendants. La calculatrice en mode examen est autorisée. La qualité de la rédaction, la clarté et la précision des raisonnements entrent pour une part importante dans l’appréciation des copies.',
+    minutes: 240,
+    questions: [
+      {
+        n: 1, topic: 'exponentials',
+        stem: 'Exercice 1 — Questionnaire à choix multiples. Pour chaque question, une seule des quatre réponses est exacte. Indiquer la réponse choisie ; aucune justification n’est demandée.',
+        parts: [
+          { ref: '1.', command: 'Choisir', marks: 1,
+            text: 'La solution de l’équation $e^{2x} = 3$ est : (a) $\\frac{3}{2}$ (b) $\\ln\\frac{3}{2}$ (c) $\\frac{\\ln 3}{2}$ (d) $2\\ln 3$.',
+            scheme: ['(c) $\\frac{\\ln 3}{2}$'] },
+          { ref: '2.', command: 'Choisir', marks: 1,
+            text: 'Soit $f$ définie sur $\\mathbb{R}$ par $f(x) = x e^{-x}$. Alors $f\'(x) =$ (a) $e^{-x}$ (b) $(1 - x)e^{-x}$ (c) $-xe^{-x}$ (d) $(1 + x)e^{-x}$.',
+            scheme: ['(b) $(1 - x)e^{-x}$'] },
+          { ref: '3.', command: 'Choisir', marks: 1,
+            text: '$\\ln\\left(e^2 \\times \\sqrt{e}\\right)$ est égal à : (a) $2$ (b) $\\frac{5}{2}$ (c) $e^{5/2}$ (d) $1$.',
+            scheme: ['(b) $\\frac{5}{2}$'] },
+          { ref: '4.', command: 'Choisir', marks: 1,
+            text: '$\\lim_{n \\to +\\infty} \\frac{3n^2 + 1}{n^2 - n}$ est égale à : (a) $0$ (b) $1$ (c) $3$ (d) $+\\infty$.',
+            scheme: ['(c) $3$'] },
+        ],
+      },
+      {
+        n: 2, topic: 'probability',
+        stem: 'Exercice 2. Dans un lycée, 60 % des élèves pratiquent un sport. Parmi ceux qui pratiquent un sport, 70 % dorment plus de huit heures par nuit ; parmi ceux qui n’en pratiquent pas, 45 % dorment plus de huit heures. On choisit un élève au hasard et on note $S$ l’événement « l’élève pratique un sport » et $H$ l’événement « l’élève dort plus de huit heures ».',
+        parts: [
+          { ref: '1.', command: 'Représenter', marks: 1,
+            text: 'Représenter la situation par un arbre pondéré.',
+            scheme: ['Arbre complet : $P(S) = 0{,}6$, $P_S(H) = 0{,}7$, $P_{\\overline{S}}(H) = 0{,}45$ et les probabilités complémentaires'] },
+          { ref: '2.', command: 'Calculer', marks: 1,
+            text: 'Calculer $P(S \\cap H)$.',
+            scheme: ['$P(S \\cap H) = 0{,}6 \\times 0{,}7 = 0{,}42$'] },
+          { ref: '3.', command: 'Montrer', marks: 1,
+            text: 'Montrer que $P(H) = 0{,}6$.',
+            scheme: ['Formule des probabilités totales : $0{,}42 + 0{,}4 \\times 0{,}45 = 0{,}42 + 0{,}18 = 0{,}6$'] },
+          { ref: '4.', command: 'Calculer', marks: 1,
+            text: 'L’élève choisi dort plus de huit heures. Quelle est la probabilité qu’il pratique un sport ?',
+            scheme: ['$P_H(S) = \\frac{0{,}42}{0{,}6} = 0{,}7$'] },
+          { ref: '5.', command: 'Calculer', marks: 2,
+            text: 'On choisit dix élèves au hasard ; le nombre d’élèves est assez grand pour assimiler ce choix à un tirage avec remise. On note $X$ le nombre d’élèves parmi eux qui dorment plus de huit heures. Préciser la loi de $X$, puis calculer $P(X \\ge 8)$ arrondie au millième.',
+            scheme: ['$X$ suit la loi binomiale de paramètres $n = 10$ et $p = 0{,}6$ (répétition de dix épreuves de Bernoulli identiques et indépendantes)',
+                     '$P(X \\ge 8) \\approx 0{,}167$'] },
+        ],
+      },
+      {
+        n: 3, topic: 'differentiation',
+        stem: 'Exercice 3. Soit $f$ la fonction définie sur $[0 ; +\\infty[$ par $f(x) = (2x + 1)e^{-x}$.',
+        parts: [
+          { ref: '1.', command: 'Déterminer', marks: 1,
+            text: 'Déterminer la limite de $f$ en $+\\infty$.',
+            scheme: ['$f(x) = 2xe^{-x} + e^{-x}$ ; par croissances comparées $xe^{-x} \\to 0$, donc $f(x) \\to 0$'] },
+          { ref: '2.', command: 'Montrer', marks: 2,
+            text: 'Montrer que, pour tout $x \\ge 0$, $f\'(x) = (1 - 2x)e^{-x}$.',
+            scheme: ['Dérivée d’un produit : $f\'(x) = 2e^{-x} - (2x + 1)e^{-x}$',
+                     '$f\'(x) = (1 - 2x)e^{-x}$'] },
+          { ref: '3.', command: 'Étudier', marks: 2,
+            text: 'Étudier les variations de $f$ sur $[0 ; +\\infty[$ et donner la valeur exacte de son maximum.',
+            scheme: ['$e^{-x} > 0$, donc $f\'(x)$ a le signe de $1 - 2x$',
+                     '$f$ croissante sur $[0 ; \\frac{1}{2}]$, décroissante sur $[\\frac{1}{2} ; +\\infty[$ ; maximum $f(\\frac{1}{2}) = 2e^{-1/2}$'] },
+          { ref: '4.', command: 'Vérifier', marks: 2,
+            text: 'Vérifier que la fonction $F$ définie par $F(x) = (-2x - 3)e^{-x}$ est une primitive de $f$, puis calculer $\\int_0^1 f(x)\\,dx$.',
+            scheme: ['$F\'(x) = -2e^{-x} + (2x + 3)e^{-x} = (2x + 1)e^{-x} = f(x)$',
+                     '$\\int_0^1 f(x)\\,dx = F(1) - F(0) = 3 - 5e^{-1} \\approx 1{,}16$'] },
+        ],
+      },
+      {
+        n: 4, topic: 'vectors',
+        stem: 'Exercice 4. L’espace est muni d’un repère orthonormé. On considère les points $A(1 ; 0 ; 2)$, $B(3 ; 1 ; 0)$ et $C(0 ; 2 ; 1)$, et la droite $d$ de représentation paramétrique $x = 1 + t$, $y = 2t$, $z = 2 - t$ ($t \\in \\mathbb{R}$).',
+        parts: [
+          { ref: '1.', command: 'Montrer', marks: 1,
+            text: 'Montrer que les points $A$, $B$ et $C$ ne sont pas alignés.',
+            scheme: ['$\\vec{AB}(2 ; 1 ; -2)$ et $\\vec{AC}(-1 ; 2 ; -1)$ ne sont pas colinéaires'] },
+          { ref: '2.', command: 'Montrer', marks: 2,
+            text: 'Montrer que le vecteur $\\vec{n}(3 ; 4 ; 5)$ est normal au plan $(ABC)$, puis en déduire une équation cartésienne de ce plan.',
+            scheme: ['$\\vec{n} \\cdot \\vec{AB} = 6 + 4 - 10 = 0$ et $\\vec{n} \\cdot \\vec{AC} = -3 + 8 - 5 = 0$',
+                     '$3x + 4y + 5z - 13 = 0$'] },
+          { ref: '3.', command: 'Déterminer', marks: 2,
+            text: 'Déterminer les coordonnées du point d’intersection de la droite $d$ et du plan $(ABC)$.',
+            scheme: ['En remplaçant : $3(1 + t) + 8t + 5(2 - t) - 13 = 6t = 0$',
+                     '$t = 0$ : le point est $(1 ; 0 ; 2)$, c’est-à-dire $A$'] },
+        ],
+      },
+    ],
+  });
+
+  // ---- Diplôme national du brevet — mathématiques ------------------------
+
+  PAPERS.push({
+    id: 'brevet-math-sec-1',
+    subject: 'mathematics',
+    qual: ['brevet'],
+    lang: 'fr',
+    tex: true,
+    kind: 'section',
+    title: 'Trois exercices : pourcentages, Pythagore, probabilités',
+    component: 'Épreuve de mathématiques, Troisième',
+    instructions: 'La calculatrice est autorisée. Toutes les réponses doivent être justifiées.',
+    minutes: 35,
+    questions: [
+      {
+        n: 1, topic: 'arithmetic',
+        stem: 'Un article coûte 45 €. Son prix augmente de 20 %, puis le nouveau prix baisse de 20 %.',
+        parts: [
+          { ref: '1.', command: 'Calculer', marks: 1,
+            text: 'Calculer le prix de l’article après l’augmentation.',
+            scheme: ['$45 \\times 1{,}2 = 54$ €'] },
+          { ref: '2.', command: 'Calculer', marks: 1,
+            text: 'Calculer le prix final de l’article.',
+            scheme: ['$54 \\times 0{,}8 = 43{,}20$ €'] },
+          { ref: '3.', command: 'Justifier', marks: 2,
+            text: 'Paul affirme : « Le prix final est égal au prix de départ. » A-t-il raison ? Justifier.',
+            scheme: ['Non : $43{,}20 \\neq 45$',
+                     'Coefficient global $1{,}2 \\times 0{,}8 = 0{,}96$, soit une baisse de 4 %'] },
+        ],
+      },
+      {
+        n: 2, topic: 'geometry',
+        stem: 'Une échelle de 5 m est appuyée contre un mur vertical. Son pied est posé sur le sol horizontal, à 1,4 m du mur.',
+        parts: [
+          { ref: '1.', command: 'Calculer', marks: 2,
+            text: 'À quelle hauteur l’échelle touche-t-elle le mur ?',
+            scheme: ['Le triangle est rectangle (mur perpendiculaire au sol) ; théorème de Pythagore : $h^2 = 5^2 - 1{,}4^2 = 23{,}04$',
+                     '$h = \\sqrt{23{,}04} = 4{,}8$ m'] },
+          { ref: '2.', command: 'Justifier', marks: 2,
+            text: 'Pour être stable, l’angle entre l’échelle et le sol doit être compris entre 65° et 75°. L’échelle est-elle stable ?',
+            scheme: ['$\\cos \\alpha = \\frac{1{,}4}{5} = 0{,}28$',
+                     '$\\alpha \\approx 74°$, compris entre 65° et 75° : l’échelle est stable'] },
+        ],
+      },
+      {
+        n: 3, topic: 'probability',
+        stem: 'Un sac contient 5 boules rouges, 3 boules vertes et 2 boules bleues, indiscernables au toucher. On tire une boule au hasard.',
+        parts: [
+          { ref: '1.', command: 'Calculer', marks: 1,
+            text: 'Quelle est la probabilité de tirer une boule verte ?',
+            scheme: ['$\\frac{3}{10}$'] },
+          { ref: '2.', command: 'Calculer', marks: 1,
+            text: 'Quelle est la probabilité de ne pas tirer une boule rouge ?',
+            scheme: ['$\\frac{5}{10} = \\frac{1}{2}$'] },
+          { ref: '3.', command: 'Déterminer', marks: 2,
+            text: 'On ajoute $n$ boules vertes dans le sac. Combien faut-il en ajouter pour que la probabilité de tirer une boule verte soit égale à $\\frac{1}{2}$ ?',
+            scheme: ['Équation $\\frac{3 + n}{10 + n} = \\frac{1}{2}$',
+                     '$6 + 2n = 10 + n$, donc $n = 4$'],
+            note: 'Accepter une recherche par essais successifs correctement justifiée.' },
+        ],
+      },
+    ],
+  });
+
+  PAPERS.push({
+    id: 'brevet-math-full-1',
+    subject: 'mathematics',
+    qual: ['brevet'],
+    lang: 'fr',
+    tex: true,
+    kind: 'full',
+    title: 'Sujet d’entraînement n° 1',
+    component: 'Épreuve de mathématiques du brevet',
+    instructions: 'Le sujet comporte cinq exercices indépendants. La calculatrice est autorisée. Toute réponse doit être justifiée ; une trace de recherche, même incomplète, sera prise en compte.',
+    minutes: 120,
+    questions: [
+      {
+        n: 1, topic: 'arithmetic',
+        stem: 'Exercice 1.',
+        parts: [
+          { ref: '1.', command: 'Calculer', marks: 1,
+            text: 'Calculer $\\frac{2}{3} + \\frac{5}{6}$ et donner le résultat sous forme de fraction irréductible.',
+            scheme: ['$\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$'] },
+          { ref: '2.', command: 'Décomposer', marks: 1,
+            text: 'Décomposer 252 en produit de facteurs premiers.',
+            scheme: ['$252 = 2^2 \\times 3^2 \\times 7$'] },
+          { ref: '3.', command: 'Déterminer', marks: 2,
+            text: 'Un fleuriste dispose de 252 roses et 180 tulipes. Il veut réaliser le plus grand nombre possible de bouquets identiques en utilisant toutes ses fleurs. Combien de bouquets peut-il faire, et quelle est la composition de chacun ?',
+            scheme: ['$180 = 2^2 \\times 3^2 \\times 5$, donc le plus grand diviseur commun est $36$',
+                     '36 bouquets, chacun de 7 roses et 5 tulipes'] },
+        ],
+      },
+      {
+        n: 2, topic: 'quadratics',
+        stem: 'Exercice 2. On considère les fonctions $f$ et $g$ définies par $f(x) = 3x - 2$ et $g(x) = -x + 6$.',
+        parts: [
+          { ref: '1.', command: 'Calculer', marks: 1,
+            text: 'Calculer l’image de 4 par la fonction $f$.',
+            scheme: ['$f(4) = 3 \\times 4 - 2 = 10$'] },
+          { ref: '2.', command: 'Déterminer', marks: 1,
+            text: 'Déterminer l’antécédent de 0 par la fonction $g$.',
+            scheme: ['$-x + 6 = 0$, donc $x = 6$'] },
+          { ref: '3.', command: 'Résoudre', marks: 2,
+            text: 'Résoudre l’équation $f(x) = g(x)$. Que représente la solution pour les droites représentant $f$ et $g$ ?',
+            scheme: ['$3x - 2 = -x + 6$, donc $4x = 8$ et $x = 2$',
+                     'Les deux droites se coupent au point de coordonnées $(2 ; 4)$'] },
+        ],
+      },
+      {
+        n: 3, topic: 'geometry',
+        stem: 'Exercice 3. Les droites $(BD)$ et $(CE)$ se coupent en $A$ ; les points $A$, $B$, $D$ sont alignés, ainsi que $A$, $C$, $E$, et les droites $(BC)$ et $(DE)$ sont parallèles. On donne $AB = 4$ cm, $AD = 10$ cm, $BC = 3$ cm et $AC = 5$ cm.',
+        parts: [
+          { ref: '1.', command: 'Calculer', marks: 2,
+            text: 'Calculer la longueur $DE$.',
+            scheme: ['Théorème de Thalès : $\\frac{AB}{AD} = \\frac{BC}{DE}$',
+                     '$DE = \\frac{3 \\times 10}{4} = 7{,}5$ cm'] },
+          { ref: '2.', command: 'Justifier', marks: 1,
+            text: 'Le triangle $ABC$ est-il rectangle ? Justifier.',
+            scheme: ['$AB^2 + BC^2 = 16 + 9 = 25 = AC^2$ : d’après la réciproque du théorème de Pythagore, $ABC$ est rectangle en $B$'] },
+        ],
+      },
+      {
+        n: 4, topic: 'statistics',
+        stem: 'Exercice 4. Voici les notes obtenues par Léa aux sept contrôles du trimestre : 12 ; 15 ; 8 ; 14 ; 11 ; 16 ; 9.',
+        parts: [
+          { ref: '1.', command: 'Calculer', marks: 1,
+            text: 'Calculer la moyenne de ces notes, arrondie au dixième.',
+            scheme: ['$\\frac{85}{7} \\approx 12{,}1$'] },
+          { ref: '2.', command: 'Déterminer', marks: 1,
+            text: 'Déterminer la médiane de cette série.',
+            scheme: ['Série rangée : 8 ; 9 ; 11 ; 12 ; 14 ; 15 ; 16 — médiane 12'] },
+          { ref: '3.', command: 'Calculer', marks: 1,
+            text: 'Calculer l’étendue de la série.',
+            scheme: ['$16 - 8 = 8$'] },
+          { ref: '4.', command: 'Déterminer', marks: 2,
+            text: 'Quelle note Léa doit-elle obtenir au huitième contrôle pour que sa moyenne soit exactement 12,5 ?',
+            scheme: ['Total nécessaire : $12{,}5 \\times 8 = 100$',
+                     'Note : $100 - 85 = 15$'] },
+        ],
+      },
+      {
+        n: 5, topic: 'geometry',
+        stem: 'Exercice 5. Un aquarium a la forme d’un pavé droit de dimensions intérieures 60 cm × 30 cm × 40 cm. On rappelle que 1 L = 1 dm³.',
+        parts: [
+          { ref: '1.', command: 'Calculer', marks: 1,
+            text: 'Calculer le volume de l’aquarium, en litres.',
+            scheme: ['$60 \\times 30 \\times 40 = 72\\,000$ cm³ $= 72$ L'] },
+          { ref: '2.', command: 'Calculer', marks: 2,
+            text: 'On le remplit aux trois quarts avec un robinet dont le débit est de 6 L par minute. Combien de temps faut-il ?',
+            scheme: ['$\\frac{3}{4} \\times 72 = 54$ L',
+                     '$54 \\div 6 = 9$ minutes'] },
+        ],
+      },
+    ],
+  });
+
+  // ---- United States — high school Algebra II ----------------------------
+  // What a student working towards their diploma actually sits: a course's
+  // unit tests and its final, multiple choice then free response, graded A–F.
+
+  PAPERS.push({
+    id: 'us-alg2-sec-1',
+    subject: 'mathematics',
+    qual: ['us-diploma', 'ged'],
+    kind: 'section',
+    title: 'Unit test — quadratic and exponential functions',
+    component: 'Algebra II',
+    instructions: 'A graphing calculator is allowed. For free-response questions, show your work: an answer with no work earns at most one point.',
+    minutes: 30,
+    questions: [
+      {
+        n: 1, topic: 'quadratics',
+        stem: 'Multiple choice. Write the letter of the correct answer.',
+        parts: [
+          { ref: '(a)', command: 'Choose', marks: 1,
+            text: 'What is the vertex of y = (x − 3)² + 2?   A. (−3, 2)   B. (3, 2)   C. (3, −2)   D. (2, 3)',
+            scheme: ['B. (3, 2)'] },
+          { ref: '(b)', command: 'Choose', marks: 1,
+            text: 'What are the solutions of x² − 5x + 6 = 0?   A. 2 and 3   B. −2 and −3   C. 1 and 6   D. −1 and 6',
+            scheme: ['A. 2 and 3'] },
+        ],
+      },
+      {
+        n: 2, topic: 'quadratics',
+        stem: 'A ball is thrown upward from a platform. Its height in feet after t seconds is h(t) = −16t² + 48t + 4.',
+        parts: [
+          { ref: '(a)', command: 'Find', marks: 2,
+            text: 'Find the maximum height of the ball and when it is reached.',
+            scheme: ['t = −b/(2a) = −48/(−32) = 1.5 seconds',
+                     'h(1.5) = 40 feet'] },
+          { ref: '(b)', command: 'Find', marks: 2,
+            text: 'To the nearest hundredth of a second, when does the ball hit the ground?',
+            scheme: ['Sets h(t) = 0 and uses the quadratic formula: t = (12 ± √160) / 8 (or equivalent)',
+                     't ≈ 3.08 seconds, rejecting the negative root'] },
+        ],
+      },
+      {
+        n: 3, topic: 'exponentials',
+        stem: 'A deposit of $2,000 earns 5% interest compounded once a year.',
+        parts: [
+          { ref: '(a)', command: 'Write', marks: 1,
+            text: 'Write a function B(t) for the balance after t years.',
+            scheme: ['B(t) = 2000(1.05)^t'] },
+          { ref: '(b)', command: 'Find', marks: 1,
+            text: 'Find the balance after 10 years, to the nearest cent.',
+            scheme: ['$3,257.79'] },
+          { ref: '(c)', command: 'Find', marks: 2,
+            text: 'After how many full years will the balance first be more than $5,000?',
+            scheme: ['1.05^t > 2.5, so t > log 2.5 / log 1.05 ≈ 18.8 (or a table of values)',
+                     '19 years'] },
+          { ref: '(d)', command: 'State', marks: 1,
+            text: 'Is B(t) exponential growth or decay? State the growth or decay factor.',
+            scheme: ['Growth, with factor 1.05'] },
+        ],
+      },
+    ],
+  });
+
+  PAPERS.push({
+    id: 'us-alg2-full-1',
+    subject: 'mathematics',
+    qual: ['us-diploma', 'ged'],
+    kind: 'full',
+    title: 'Final exam — practice',
+    component: 'Algebra II',
+    instructions: 'Part I is multiple choice; Part II is free response. A graphing calculator is allowed. Show your work on Part II.',
+    minutes: 90,
+    questions: [
+      {
+        n: 1, topic: 'quadratics',
+        stem: 'Part I — multiple choice.',
+        parts: [
+          { ref: '(a)', command: 'Choose', marks: 1,
+            text: 'Which is equivalent to (2x + 3)(x − 4)?   A. 2x² − 5x − 12   B. 2x² + 5x − 12   C. 2x² − 11x − 12   D. 2x² − 5x + 12',
+            scheme: ['A. 2x² − 5x − 12'] },
+          { ref: '(b)', command: 'Choose', marks: 1,
+            text: 'Which is equivalent to √(−49)?   A. −7   B. 7i   C. −7i   D. 49i',
+            scheme: ['B. 7i'] },
+          { ref: '(c)', command: 'Choose', marks: 1,
+            text: 'What is the discriminant of 2x² + 3x + 5 = 0?   A. 49   B. −31   C. 31   D. −49',
+            scheme: ['B. −31'] },
+          { ref: '(d)', command: 'Choose', marks: 1,
+            text: 'If f(x) = 2x − 1 and g(x) = x², what is f(g(3))?   A. 25   B. 17   C. 18   D. 35',
+            scheme: ['B. 17'] },
+        ],
+      },
+      {
+        n: 2, topic: 'exponentials',
+        stem: 'Part I — multiple choice, continued.',
+        parts: [
+          { ref: '(a)', command: 'Choose', marks: 1,
+            text: 'What is log₂ 32?   A. 4   B. 5   C. 16   D. 6',
+            scheme: ['B. 5'] },
+          { ref: '(b)', command: 'Choose', marks: 1,
+            text: 'Solve 3^(x + 1) = 81.   A. 3   B. 4   C. 2   D. 27',
+            scheme: ['A. 3'] },
+        ],
+      },
+      {
+        n: 3, topic: 'quadratics',
+        stem: 'Part II — free response.',
+        parts: [
+          { ref: '', command: 'Solve', marks: 3,
+            text: 'Solve x² + 4x − 21 = 0 by completing the square.',
+            scheme: ['x² + 4x = 21',
+                     '(x + 2)² = 25',
+                     'x = 3 or x = −7'] },
+        ],
+      },
+      {
+        n: 4, topic: 'exponentials',
+        stem: 'A town has 12,000 residents, and its population falls by 3% each year.',
+        parts: [
+          { ref: '(a)', command: 'Write', marks: 1,
+            text: 'Write a function P(t) for the population after t years.',
+            scheme: ['P(t) = 12000(0.97)^t'] },
+          { ref: '(b)', command: 'Find', marks: 1,
+            text: 'Find the population after 5 years, to the nearest person.',
+            scheme: ['10,305'] },
+          { ref: '(c)', command: 'Find', marks: 2,
+            text: 'After how many full years will the population first be below 9,000?',
+            scheme: ['0.97^t < 0.75, so t > log 0.75 / log 0.97 ≈ 9.4',
+                     '10 years'] },
+        ],
+      },
+      {
+        n: 5, topic: 'trigonometry',
+        stem: 'The unit circle.',
+        parts: [
+          { ref: '(a)', command: 'Convert', marks: 1,
+            text: 'Convert 150° to radians, in terms of π.',
+            scheme: ['5π/6'] },
+          { ref: '(b)', command: 'Find', marks: 2,
+            text: 'Find the exact values of sin(5π/6) and cos(5π/6).',
+            scheme: ['sin(5π/6) = 1/2',
+                     'cos(5π/6) = −√3/2'] },
+        ],
+      },
+      {
+        n: 6, topic: 'statistics',
+        stem: 'Scores on a state test are normally distributed with mean 70 and standard deviation 8.',
+        parts: [
+          { ref: '(a)', command: 'Estimate', marks: 1,
+            text: 'About what percent of students scored between 62 and 78?',
+            scheme: ['About 68% (within one standard deviation of the mean)'] },
+          { ref: '(b)', command: 'Find', marks: 1,
+            text: 'How many standard deviations above the mean is a score of 86?',
+            scheme: ['(86 − 70) / 8 = 2'] },
+        ],
+      },
+    ],
+  });
+
+  // ---- GCSE mathematics, Higher tier ------------------------------------
+
+  PAPERS.push({
+    id: 'gcse-math-sec-higher-1',
+    subject: 'mathematics',
+    qual: ['gcse'],
+    tex: true,
+    kind: 'section',
+    title: 'Algebra, number, trigonometry and probability',
+    component: 'Higher tier, calculator',
+    instructions: 'You may use a calculator. Show your working: marks may be given for a correct method even if the answer is wrong.',
+    minutes: 30,
+    questions: [
+      {
+        n: 1, topic: 'quadratics',
+        parts: [
+          { ref: '(a)', command: 'Solve', marks: 2,
+            text: 'Solve $x^2 - 2x - 15 = 0$.',
+            scheme: ['M1 — $(x - 5)(x + 3) = 0$',
+                     'A1 — $x = 5$ or $x = -3$'] },
+          { ref: '(b)', command: 'Solve', marks: 3,
+            text: 'Solve the simultaneous equations $3x + 2y = 12$ and $x - y = -1$.',
+            scheme: ['M1 — eliminates one variable, e.g. $2(x - y) = -2$ added to the first equation: $5x = 10$',
+                     'A1 — $x = 2$',
+                     'A1 — $y = 3$'] },
+        ],
+      },
+      {
+        n: 2, topic: 'arithmetic',
+        parts: [
+          { ref: '(a)', command: 'Write', marks: 2,
+            text: 'Write $0.\\dot{3}\\dot{6}$ as a fraction in its simplest form.',
+            scheme: ['M1 — $100x - x = 36$ (or equivalent)',
+                     'A1 — $\\frac{4}{11}$'] },
+          { ref: '(b)', command: 'Work out', marks: 2,
+            text: 'Work out $(2.4 \\times 10^5) \\times (5 \\times 10^{-2})$. Give your answer in standard form.',
+            scheme: ['M1 — $12 \\times 10^3$ seen',
+                     'A1 — $1.2 \\times 10^4$'] },
+          { ref: '(c)', command: 'Evaluate', marks: 2,
+            text: 'Evaluate $8^{\\frac{2}{3}}$ and $27^{-\\frac{1}{3}}$.',
+            scheme: ['B1 — $8^{\\frac{2}{3}} = 4$',
+                     'B1 — $27^{-\\frac{1}{3}} = \\frac{1}{3}$'] },
+        ],
+      },
+      {
+        n: 3, topic: 'geometry',
+        stem: 'Triangle $ABC$ has a right angle at $B$. $AB = 7$ cm and angle $BAC = 35°$.',
+        parts: [
+          { ref: '', command: 'Calculate', marks: 3,
+            text: 'Calculate the length of $BC$. Give your answer to 1 decimal place.',
+            scheme: ['M1 — $\\tan 35° = \\frac{BC}{7}$',
+                     'M1 — $BC = 7\\tan 35°$',
+                     'A1 — $4.9$ cm'] },
+        ],
+      },
+      {
+        n: 4, topic: 'probability',
+        stem: 'A bag contains 4 red counters and 6 blue counters. Two counters are taken at random, without replacement.',
+        parts: [
+          { ref: '', command: 'Work out', marks: 3,
+            text: 'Work out the probability that both counters are the same colour.',
+            scheme: ['M1 — $\\frac{4}{10} \\times \\frac{3}{9}$ or $\\frac{6}{10} \\times \\frac{5}{9}$',
+                     'M1 — adds the two products',
+                     'A1 — $\\frac{42}{90} = \\frac{7}{15}$'] },
+        ],
+      },
+    ],
+  });
+
   var EXERCISES = {
     'atomic-structure': [
       'Write out the full electronic configuration of every element from H to Kr from memory, then check the two that break the pattern — chromium and copper.',
@@ -3077,6 +3626,36 @@
       'For five sources, write one sentence on provenance that changes how you read the content. Who wrote it, to whom, and when, and therefore what they would emphasise.',
       'Practise answering a source question using only the sources, then again adding own knowledge. Knowing which the question wants is half the mark.',
     ],
+    'sequences': [
+      'For six recurrence relations, compute the first four terms by hand, then say whether the sequence looks increasing, decreasing or neither before proving it.',
+      'Write out three full proofs by induction — initialisation, heredity, conclusion — and check each heredity step uses the hypothesis exactly once.',
+      'For four sequences of the form u(n+1) = a·u(n) + b, find the fixed point and show that u(n) minus it is geometric.',
+    ],
+    'exponentials': [
+      'Solve eight equations and inequalities with e and ln, taking logs of both sides and checking the domain each time.',
+      'Learn the five laws of logarithms and use each one twice on simplification questions.',
+      'For three growth or decay situations, write the model, then find when it first passes a given value — both with logs and with a table of values.',
+    ],
+    'probability': [
+      'Draw tree diagrams for four two-stage situations, labelling every branch, and check each set of branches adds to 1.',
+      'Do six conditional probability questions, writing the event you are conditioning on before you calculate.',
+      'For three binomial situations, justify the model in one sentence (independent, identical trials), then find P(X = k) and P(X ≥ k).',
+    ],
+    'geometry': [
+      'Work through eight right-angled triangle questions, choosing Pythagoras or sine, cosine or tangent and saying why before you calculate.',
+      'Do four Thales (intercept theorem / similar triangles) questions, writing the equal ratios out in full before substituting.',
+      'Practise unit conversions for area and volume — cm³ to litres, m² to cm² — until you can do them without a calculator.',
+    ],
+    'arithmetic': [
+      'Do ten percentage change questions using multipliers, including two successive changes and one reverse percentage.',
+      'Practise fraction arithmetic and prime factorisation, then use it for highest common factor and lowest common multiple word problems.',
+      'Convert six recurring decimals to fractions and six numbers to standard form, and multiply two in standard form each time.',
+    ],
+    'statistics': [
+      'For five small data sets, find the mean, median, mode and range, then say which average best describes each and why.',
+      'Practise "what score is needed for a mean of …" questions: work from the total, not the mean.',
+      'For the normal distribution, learn the 68–95–99.7 rule and use it on six questions about percentages within 1, 2 and 3 standard deviations.',
+    ],
   };
 
   /* Words that suggest a notebook chapter covers a topic.
@@ -3127,6 +3706,12 @@
     'unification':      ['unification', 'bismarck', 'cavour', 'garibaldi', 'italy', 'german', 'prussia'],
     'ww1-origins':      ['first world war', 'ww1', 'july crisis', 'alliance', '1914'],
     'source-analysis':  ['source', 'document', 'historiograph', 'evidence'],
+    'sequences':        ['sequence', 'suite', 'series', 'recurren', 'induction', 'récurrence'],
+    'exponentials':     ['exponent', 'logarithm', 'growth', 'decay', 'logarithme'],
+    'probability':      ['probab', 'chance', 'binomial', 'random'],
+    'geometry':         ['geometr', 'géométr', 'pythag', 'thalès', 'thales', 'triangle', 'volume', 'area', 'aire'],
+    'arithmetic':       ['number', 'nombre', 'fraction', 'percent', 'pourcentage', 'arithmeti', 'calcul'],
+    'statistics':       ['statisti', 'mean', 'median', 'moyenne', 'médiane', 'data'],
   };
 
   /* -----------------------------------------------------------------------
@@ -3216,7 +3801,19 @@
     return null;
   }
 
+  /* The exams whose papers are the A level ones above: asking for any of
+   * them is asking for the default set. */
+  var A_LEVEL_LIKE = ['a-level', 'as-level', 'sg-a'];
+
+  function currentQualId() {
+    try {
+      var q = window.notivloSchool && window.notivloSchool.qualification && window.notivloSchool.qualification();
+      return q ? q.id : '';
+    } catch (e) { return ''; }
+  }
+
   window.notivloExamBank = {
+    currentQualId: currentQualId,
     SUBJECTS: SUBJECTS,
     TOPIC_LESSON: TOPIC_LESSON,
     TOPICS: TOPICS,
@@ -3237,6 +3834,44 @@
       return subj ? { key: key, name: subj.name, board: subj.board, code: subj.code } : null;
     },
 
+    /* Which papers a student gets, given the exam they are working towards.
+     *
+     * For each kind — sections and full mocks — the papers written for their
+     * exam if there are any, otherwise the A level ones. So a bac student
+     * sits bac papers in Mathematics and A level papers in Chemistry, and a
+     * GCSE student with a section paper but no GCSE mock yet still gets a
+     * mock. `native` says whether the student's own exam has papers here at
+     * all, so the page can say so honestly when it does not.
+     *
+     * `qualId` defaults to the student's own (school-level.js); with none, or
+     * with an exam whose papers are the A level ones anyway, this is the A
+     * level set the app always had. */
+    paperSetFor: function (slug, title, qualId) {
+      var key = resolveSubject(slug, title);
+      var qid = qualId === undefined ? currentQualId() : (qualId || '');
+      var out = { papers: [], native: false, qual: qid, nativeKinds: {} };
+      if (!key) return out;
+      var order = {};
+      PAPERS.forEach(function (p, i) { order[p.id] = i; });
+      var mine = PAPERS.filter(function (p) { return p.subject === key; });
+      var aLevel = mine.filter(function (p) { return !p.qual; });
+      var forQual = qid && A_LEVEL_LIKE.indexOf(qid) === -1
+        ? mine.filter(function (p) { return p.qual && p.qual.indexOf(qid) !== -1; })
+        : [];
+      var picked = [];
+      ['section', 'full'].forEach(function (kind) {
+        var own = forQual.filter(function (p) { return p.kind === kind; });
+        if (own.length) out.nativeKinds[kind] = true;
+        picked = picked.concat(own.length ? own : aLevel.filter(function (p) { return p.kind === kind; }));
+      });
+      out.native = forQual.length > 0 || !qid || A_LEVEL_LIKE.indexOf(qid) !== -1;
+      out.papers = picked.sort(function (a, b) {
+        if (a.kind !== b.kind) return a.kind === 'section' ? -1 : 1;
+        return order[a.id] - order[b.id];
+      });
+      return out;
+    },
+
     /* Sections first, then the mocks: the order the picker shows them in, and
      * the order a student is likely to want them.
      *
@@ -3246,16 +3881,18 @@
      * student who had sat nothing was handed the second Chemistry mock purely
      * because "calculations" precedes "structured". Declaration order puts
      * that back in the hands of whoever writes the papers. */
-    papersForSlug: function (slug, title) {
-      var key = resolveSubject(slug, title);
-      if (!key) return [];
-      var order = {};
-      PAPERS.forEach(function (p, i) { order[p.id] = i; });
-      return PAPERS.filter(function (p) { return p.subject === key; })
-                   .sort(function (a, b) {
-                     if (a.kind !== b.kind) return a.kind === 'section' ? -1 : 1;
-                     return order[a.id] - order[b.id];
-                   });
+    papersForSlug: function (slug, title, qualId) {
+      return this.paperSetFor(slug, title, qualId).papers;
+    },
+
+    // The exam a paper was written for, as school-level.js describes it, or
+    // null for the A level papers.
+    paperQual: function (paper) {
+      if (!paper || !paper.qual || !paper.qual.length) return null;
+      var school = window.notivloSchool;
+      var mine = currentQualId();
+      var id = paper.qual.indexOf(mine) !== -1 ? mine : paper.qual[0];
+      try { return school && school.qualById ? school.qualById(id) : null; } catch (e) { return null; }
     },
 
     /* Which mock to offer when one falls due.
@@ -3320,10 +3957,21 @@
       return out;
     },
 
-    // Indicative only, and the surface says so where it is shown.
-    gradeFor: function (earned, total) {
+    // Indicative only, and the surface says so where it is shown. Reported on
+    // the scale of the student's own exam — /20 with a mention for the bac,
+    // 9–1 for GCSE, A–F for a US course — and on the A level boundaries above
+    // when they have not said, or school-level.js is not on the page.
+    gradeFor: function (earned, total, qualId) {
       if (!total) return { grade: '—', pct: 0 };
       var pct = (earned / total) * 100;
+      var school = window.notivloSchool;
+      var qid = qualId === undefined ? currentQualId() : qualId;
+      var qual = null;
+      try { qual = school && school.qualById ? school.qualById(qid) : null; } catch (e) { qual = null; }
+      if (qual && school.markOn) {
+        var r = school.markOn(qual.scale, pct);
+        return { grade: r.text, pct: pct, scale: qual.scale, qual: qual.id, passed: r.passed };
+      }
       for (var i = 0; i < BOUNDARIES.length; i++) {
         if (pct >= BOUNDARIES[i].pct) return { grade: BOUNDARIES[i].grade, pct: pct };
       }

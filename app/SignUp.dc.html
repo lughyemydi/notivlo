@@ -262,7 +262,8 @@ class Component extends DCLogic {
       // A new account has nothing to pull; this is what puts its
       // preferences up there in the first place.
       if (window.notivloSync) await window.notivloSync.sync();
-      window.location.href = 'Welcome.dc.html';
+      // First, where they study and the exam they are aiming at.
+      window.location.href = 'School.dc.html';
       return;
     }
 
@@ -276,8 +277,9 @@ class Component extends DCLogic {
     writeUsers([...users, user]);
     if (window.notivloSetup) window.notivloSetup.startFresh();
     setSession({ email, name });
-    // A brand new account picks its appearance and text size first.
-    window.location.href = 'Welcome.dc.html';
+    // A brand new account says first where it studies and which exam it is
+    // aiming at (School.dc.html), then picks its appearance and text size.
+    window.location.href = 'School.dc.html';
   }
 
   // What the miniature on the left is showing right now. Each detail the

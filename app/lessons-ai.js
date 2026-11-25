@@ -135,6 +135,33 @@
 
   /* ---- The call -------------------------------------------------------- */
 
+  // { id, name, body, paper, scale, lang, schooling, year } or {} when the
+  // student has not said, or is aiming at A levels (the lesson writer's
+  // default, so nothing needs saying).
+  function examContext() {
+    try {
+      var sch = window.notivloSchool;
+      if (!sch || !sch.profile) return {};
+      var p = sch.profile();
+      var q = p.qualification;
+      var sys = sch.systemById(p.system);
+      var yr = sys ? sys.grades.filter(function (g) { return g.id === p.grade; })[0] : null;
+      var out = {
+        schooling: p.schooling || '',
+        year: yr && sys ? yr.label + ', ' + sys.label : '',
+      };
+      if (q && q.id !== 'none') {
+        out.id = q.id;
+        out.name = q.label;
+        out.body = q.body;
+        out.paper = q.paper;
+        out.scale = sch.scaleSummary(q.scale);
+        out.lang = q.lang || 'en';
+      }
+      return out.id || out.schooling === 'home' ? out : {};
+    } catch (e) { return {}; }
+  }
+
   function generate(request) {
     var req = request || {};
     if (!ready()) return Promise.resolve(null);
@@ -146,7 +173,12 @@
     // school-level.js. 'organised' changes nothing about a lesson, so it is
     // not sent.
     var goal = /^(exams|keep-up|catch-up)$/.test(String(req.goal || '')) ? req.goal : '';
-    var cacheKey = [req.subject || '', req.code || '', req.topic || '', slug, level, goal].join('|');
+    // The exam the student is working towards, how they are schooled and
+    // their year, from "about your schooling" (School.dc.html). A bac student
+    // gets a bac lesson, in French; a homeschooler gets every step spelled
+    // out. Read here rather than passed in, so every caller sends it.
+    var exam = examContext();
+    var cacheKey = [req.subject || '', req.code || '', req.topic || '', slug, level, goal, exam.id || ''].join('|');
     if (made[cacheKey]) return Promise.resolve(made[cacheKey]);
 
     var weak = (req.weak && req.weak.length ? req.weak : weakFromRecall(slug))
@@ -163,6 +195,7 @@
         weak: weak,
         level: level,
         goal: goal,
+        exam: exam.id ? exam : undefined,
       },
     }).then(function (res) {
       if (res.error) {

@@ -330,7 +330,16 @@
         <div class="set-card">
           <div>
             <div class="card-kicker">Preferences</div>
-            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">Your year and goal</h2>
+            <h2 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px;margin:2px 0 0">Your schooling, exam and goal</h2>
+          </div>
+          <!-- Public, private or home, and the exam aimed at: asked on its own
+               page (School.dc.html), which this opens to change them. -->
+          <div style="display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap;padding:var(--space-4);border:1px solid var(--color-border);border-radius:18px;background:var(--color-bg)">
+            <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:2px">
+              <span style="font-weight:600">{{ examLine }}</span>
+              <span style="font-size:13px;color:var(--color-neutral-600)">{{ examNote }}</span>
+            </div>
+            <a href="School.dc.html?next=settings" class="btn btn-ghost glass-btn-ghost" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">Change</a>
           </div>
           <div class="set-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-4)">
             <div class="field">
@@ -1727,6 +1736,18 @@ class Component extends DCLogic {
           schoolGrades: [{ value: '', label: 'Not set' }].concat(sys ? sys.grades.map(g => ({ value: g.id, label: g.label })) : []),
           onSchoolSystem: (e) => this.setSchool(e.target.value, ''),
           onSchoolGrade: (e) => this.setSchool(this.state.schoolSystem, e.target.value),
+          ...(() => {
+            const p = sch ? sch.profile() : null;
+            const q = p && p.qualification;
+            const kind = p && sch.schoolingById(p.schooling);
+            const how = kind ? (p.schooling === 'home' ? 'Homeschooled' : kind.label.replace(/^An? /, '').replace(/^./, c => c.toUpperCase())) : 'School type not set';
+            return {
+              examLine: how + ' · ' + (q ? (q.id === 'none' ? 'no target exam' : 'working towards ' + q.short) : 'no exam chosen'),
+              examNote: q && q.id !== 'none'
+                ? 'Practice papers are written for ' + q.short + ' and ' + sch.scaleSummary(q.scale) + '; lessons are aimed at it too.'
+                : 'Practice papers are marked as a percentage until you choose an exam.',
+            };
+          })(),
           studyGoal: this.state.studyGoal,
           studyGoals: [{ value: '', label: 'Not set' }].concat(sch ? Object.keys(sch.GOALS).map(k => ({ value: k, label: sch.GOALS[k].label })) : []),
           onStudyGoal: (e) => this.setStudyGoal(e.target.value),
@@ -1738,7 +1759,7 @@ class Component extends DCLogic {
           })(),
           schoolNote: year
             ? sch.LEVELS[year.level].label + '. Notebooks you have not written in yet start with notes for this stage; anything you have written stays as it is.'
-            : 'Not set, so built-in notebooks start with the full A level set. Notebooks you have written in keep what you wrote either way.',
+            : 'Not set, so built-in notebooks start with every chapter. Notebooks you have written in keep what you wrote either way.',
         };
       })(),
       defaultSort: this.state.defaultSort,

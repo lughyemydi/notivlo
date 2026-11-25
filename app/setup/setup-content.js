@@ -210,9 +210,9 @@
     introSkipNote: 'Skipping leaves the example A level notebooks and agenda in place, so there is something to poke at. Delete them whenever you like.',
 
     // The goal
-    goalKicker: 'Your year and goal',
-    goalHeading: 'Where are you, and what are you here to do?',
-    goalBody: 'Two quick questions. Your year decides what your notebooks start with; your goal shapes what the guide shows you first. Neither locks anything.',
+    goalKicker: 'Your goal',
+    goalHeading: 'One more question: your goal',
+    goalBody: 'Your school, year and exam are already set — they decide your practice papers and where your notebooks start. Your goal shapes what the guide shows you first. Nothing here locks anything.',
     goalQuestion: 'What are you here to do?',
     goalNone: 'Not sure? Skip this one — the guide works the same without it.',
 

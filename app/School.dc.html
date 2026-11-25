@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file: blob: 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob:; font-src 'self' file: data:; connect-src 'self' file: data: blob: https://tftwbhkypzsrhwaxkgbr.supabase.co; worker-src 'none'; child-src 'none'; media-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="no-referrer">
+<!-- The landing page's live demo. Must stay the first script on the page: it
+     swaps localStorage for an in-memory one before anything below reads it.
+     Does nothing unless this page is framed by the demo host. -->
+<script src="./demo.js"></script>
+<title>notivlo — About your schooling</title>
+<script>
+  // The first page a new account sees, and the page Home sends any account
+  // to while it has not answered. Anyone without an account belongs on the
+  // sign-in page.
+  try {
+    if (!localStorage.getItem('folio_session')) {
+      location.replace('SignIn.dc.html');
+    }
+  } catch (e) {}
+</script>
+<script src="./theme.js"></script>
+<script src="./text-size.js"></script>
+<script src="./support.js"></script>
+<!-- The backend, in the order auth.js explains. folio_prefs — where the
+     answers below are kept — is synced, so they follow the account. -->
+<script src="./supabase-config.js"></script>
+<script src="./supabase-client.js"></script>
+<script src="./supabase-auth.js"></script>
+<script src="./supabase-sync.js"></script>
+<!-- The setup guide, only so Continue knows whether to offer it next. -->
+<script src="./setup/setup-flag.js"></script>
+<script src="./setup/setup-store.js"></script>
+<script src="./setup/setup-content.js"></script>
+<script src="./setup/setup-service.js"></script>
+<!-- The school systems, their years, and the exams each one leads to. -->
+<script src="./school-level.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="stylesheet" href="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/styles.css">
+<link rel="stylesheet" href="soft-clay.css">
+<!-- Flat theme over the clay one. See the file head; remove this line to go back. -->
+<link rel="stylesheet" href="concrete-signal.css">
+<link rel="stylesheet" href="setup/setup.css">
+<script src="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/_ds_bundle.js"></script>
+<style>
+  body{margin:0;background:var(--color-bg);color:var(--color-text)}
+  .sc-q{display:flex;flex-direction:column;gap:var(--space-3);padding-bottom:var(--space-5);border-bottom:1px solid var(--color-border)}
+  .sc-q:last-of-type{border-bottom:0;padding-bottom:0}
+  .sc-n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:8px;border-radius:50%;font-size:12px;font-weight:700;background:var(--color-accent-300);color:var(--color-accent-700);vertical-align:2px}
+  .sc-types{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3)}
+  .sc-group{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-600);margin:var(--space-2) 0 0}
+  .sc-quals{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
+  .sc-quals .su-goal{padding:var(--space-3) var(--space-4)}
+  .sc-quals .su-goal-title{font-size:15px}
+  .sc-tag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;font-size:11px;font-family:var(--font-body);font-weight:600;vertical-align:2px;background:var(--color-accent-300);color:var(--color-accent-700)}
+  .sc-summary{margin:0;padding:var(--space-4);border-radius:18px;background:var(--color-bg);border:1px solid var(--color-border);font-size:14px;line-height:1.55;color:var(--color-neutral-700)}
+  .sc-summary strong{color:var(--color-text)}
+  .sc-missing{margin:0;font-size:13px;color:var(--color-neutral-600)}
+  .sc-more{align-self:flex-start;font:inherit;font-size:13px;background:none;border:0;padding:0;color:var(--color-accent-700);text-decoration:underline;cursor:pointer}
+  .glass-btn-primary{transition:background .18s ease, transform .12s ease}
+  .glass-btn-primary:hover{background:var(--color-primary-hover) !important;transform:translateY(-1px)}
+  .glass-btn-primary:active{transform:translateY(0px) scale(.98)}
+  .glass-btn-primary[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+  @keyframes floatA{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,50px) scale(1.08)}}
+  @keyframes floatB{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-50px,30px) scale(.94)}}
+  @media (max-width: 760px){
+    .sc-types,.sc-quals{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .glass-btn-primary{transition:none}
+    .glass-btn-primary:hover{transform:none}
+  }
+</style>
+</helmet>
+
+<div style="position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none">
+  <div style="position:absolute;width:560px;height:560px;top:-160px;right:-120px;border-radius:50%;background:radial-gradient(circle at 30% 30%,var(--color-accent-300),transparent 70%);filter:blur(60px);opacity:.55;animation:floatA 18s ease-in-out infinite alternate"></div>
+  <div style="position:absolute;width:460px;height:460px;bottom:-160px;left:-100px;border-radius:50%;background:radial-gradient(circle at 40% 40%,var(--color-accent-2-300),transparent 70%);filter:blur(60px);opacity:.5;animation:floatB 22s ease-in-out infinite alternate"></div>
+</div>
+
+<div class="su-wrap">
+  <div class="su-card">
+
+    <div style="text-align:center">
+      <div class="nav-brand" style="font-size:22px"><span class="brand-logo brand-logo--lg">notivlo</span></div>
+    </div>
+
+    <div class="su-head">
+      <div class="card-kicker">{{ kicker }}</div>
+      <h1 class="su-h1" tabindex="-1">Where you study, and what you’re aiming for</h1>
+      <p class="su-body">This decides what your practice papers look like, how they are marked, and what your lessons build towards — the bac if you’re going for the bac, A levels if it’s A levels. You can change it any time in Settings.</p>
+    </div>
+
+    <!-- 1. Public, private or home -->
+    <div class="sc-q">
+      <h2 class="su-h2" id="sc-type-q"><span class="sc-n" aria-hidden="true">1</span>How do you go to school?</h2>
+      <div class="sc-types" role="group" aria-labelledby="sc-type-q">
+        <sc-for list="{{ typeCards }}" as="tc" hint-placeholder-count="3">
+          <button type="button" class="su-goal {{ tc.cls }}" onClick="{{ tc.pick }}" aria-pressed="{{ tc.pressed }}">
+            <span class="su-goal-mark" aria-hidden="true">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </span>
+            <span class="su-goal-text">
+              <span class="su-goal-title">{{ tc.label }}</span>
+              <span class="su-goal-note">{{ tc.note }}</span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- 2. System and year -->
+    <div class="sc-q">
+      <h2 class="su-h2" id="sc-year-q"><span class="sc-n" aria-hidden="true">2</span>{{ systemHeading }}</h2>
+      <p class="su-hint">{{ systemHint }}</p>
+      <div class="field" style="max-width:440px">
+        <label for="sc-system">School system</label>
+        <select id="sc-system" class="input" value="{{ systemId }}" onChange="{{ onSystem }}" style="border-radius:14px;background:var(--color-surface)">
+          <sc-for list="{{ systemOptions }}" as="so" hint-placeholder-count="12">
+            <option value="{{ so.value }}">{{ so.label }}</option>
+          </sc-for>
+        </select>
+      </div>
+      <div class="su-chips" role="group" aria-labelledby="sc-year-q">
+        <sc-for list="{{ gradeChips }}" as="gr" hint-placeholder-count="5">
+          <button type="button" class="su-chip {{ gr.cls }}" onClick="{{ gr.pick }}" aria-pressed="{{ gr.pressed }}">{{ gr.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- 3. The exam -->
+    <div class="sc-q">
+      <h2 class="su-h2" id="sc-qual-q"><span class="sc-n" aria-hidden="true">3</span>What are you working towards?</h2>
+      <p class="su-hint">{{ qualHint }}</p>
+
+      <sc-if value="{{ hasNational }}" hint-placeholder-val="{{ true }}">
+        <p class="sc-group">{{ nationalHeading }}</p>
+        <div class="sc-quals" role="group" aria-labelledby="sc-qual-q">
+          <sc-for list="{{ nationalCards }}" as="qc" hint-placeholder-count="3">
+            <button type="button" class="su-goal {{ qc.cls }}" onClick="{{ qc.pick }}" aria-pressed="{{ qc.pressed }}">
+              <span class="su-goal-mark" aria-hidden="true">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              </span>
+              <span class="su-goal-text">
+                <span class="su-goal-title">{{ qc.label }}<sc-if value="{{ qc.suggested }}" hint-placeholder-val="{{ false }}"><span class="sc-tag">For your year</span></sc-if></span>
+                <span class="su-goal-note">{{ qc.note }}</span>
+              </span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <p class="sc-group">{{ intlHeading }}</p>
+      <div class="sc-quals" role="group" aria-labelledby="sc-qual-q">
+        <sc-for list="{{ intlCards }}" as="qc" hint-placeholder-count="4">
+          <button type="button" class="su-goal {{ qc.cls }}" onClick="{{ qc.pick }}" aria-pressed="{{ qc.pressed }}">
+            <span class="su-goal-mark" aria-hidden="true">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </span>
+            <span class="su-goal-text">
+              <span class="su-goal-title">{{ qc.label }}<sc-if value="{{ qc.suggested }}" hint-placeholder-val="{{ false }}"><span class="sc-tag">For your year</span></sc-if></span>
+              <span class="su-goal-note">{{ qc.note }}</span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+      <sc-if value="{{ canShowMore }}" hint-placeholder-val="{{ false }}">
+        <button type="button" class="sc-more" onClick="{{ showMore }}">{{ moreLabel }}</button>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{ hasSummary }}" hint-placeholder-val="{{ false }}">
+      <p class="sc-summary" aria-live="polite">{{ summaryLead }} <strong>{{ summaryQual }}</strong>{{ summaryRest }}</p>
+    </sc-if>
+
+    <div class="su-foot">
+      <p class="sc-missing" aria-live="polite">{{ missing }}</p>
+      <div class="su-foot-spacer"></div>
+      <sc-if value="{{ hasBack }}" hint-placeholder-val="{{ false }}">
+        <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ back }}" style="border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border)">Cancel</button>
+      </sc-if>
+      <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ go }}" disabled="{{ notReady }}" style="border-radius:999px;padding-inline:var(--space-6);background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .35)">{{ goLabel }}</button>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+// Where Continue goes. A brand-new account came from the sign-up page and
+// goes on to the welcome page; Home, Settings and the setup guide send
+// people here with ?next= and get them back.
+const NEXTS = { home: 'Home.dc.html', settings: 'Settings.dc.html?section=preferences', setup: 'Setup.dc.html', welcome: 'Welcome.dc.html' };
+function nextParam() {
+  try { return new URLSearchParams(location.search).get('next') || ''; } catch (e) { return ''; }
+}
+
+// How many international exams show before "Show more": the three almost
+// everyone means, then the rest on request.
+const INTL_FIRST = 4;
+
+function initialState() {
+  const sch = window.notivloSchool;
+  const p = sch ? sch.profile() : {};
+  // A system and year picked on the landing page's shelf before signing up
+  // are offered here first. Only read: the setup guide consumes the pick
+  // (with its subjects) afterwards.
+  let shelf = null;
+  try {
+    const raw = JSON.parse(localStorage.getItem('notivlo_shelf_pick') || 'null');
+    if (raw && sch && sch.systemById(raw.system) && Date.now() - Number(raw.at) < 24 * 3600 * 1000) shelf = raw;
+  } catch (e) {}
+  const system = p.system || (shelf ? shelf.system : '') || (sch ? sch.guessSystem(sch.browserLocales()) : 'cambridge');
+  const grade = p.grade || (shelf && !p.system && sch && sch.levelFor(shelf.system, shelf.grade) ? shelf.grade : '');
+  return {
+    schooling: p.schooling || '',
+    system: system,
+    grade: grade,
+    qual: p.qual || (grade && sch ? sch.suggestQual(system, grade) : ''),
+    // Until the student picks an exam themselves, the one their year points
+    // at is picked for them and moves when the year does.
+    qualTouched: !!p.qual,
+    showAllIntl: false,
+    next: nextParam(),
+  };
+}
+
+class Component extends DCLogic {
+  state = initialState();
+
+  componentDidMount() {
+    try { const h = document.querySelector('.su-h1'); if (h) h.focus({ preventScroll: true }); } catch (e) {}
+  }
+
+  sch() { return window.notivloSchool; }
+
+  pickType(id) {
+    this.setState({ schooling: id });
+  }
+
+  onSystem(e) {
+    const id = e && e.target ? e.target.value : '';
+    const sch = this.sch();
+    if (!sch || !sch.systemById(id) || id === this.state.system) return;
+    // Years are named differently in every system, so the old one cannot
+    // carry over; nor can an exam that belonged to the old system.
+    const keepQual = this.state.qualTouched && this.isOffered(id, this.state.qual);
+    this.setState({ system: id, grade: '', qual: keepQual ? this.state.qual : '', qualTouched: keepQual });
+  }
+
+  pickGrade(id) {
+    const sch = this.sch();
+    const grade = id === this.state.grade ? '' : id;
+    const patch = { grade: grade };
+    if (!this.state.qualTouched) patch.qual = grade ? sch.suggestQual(this.state.system, grade) : '';
+    this.setState(patch);
+  }
+
+  pickQual(id) {
+    this.setState({ qual: id, qualTouched: true });
+  }
+
+  isOffered(systemId, qualId) {
+    const sch = this.sch();
+    if (!sch || !qualId) return false;
+    if (qualId === 'none') return true;
+    const g = sch.qualsFor(systemId);
+    return g.national.concat(g.international).some(x => x.id === qualId);
+  }
+
+  missingText() {
+    const s = this.state;
+    const left = [];
+    if (!s.schooling) left.push('how you go to school');
+    if (!s.grade) left.push('your year');
+    if (!s.qual) left.push('what you’re working towards');
+    if (!left.length) return '';
+    return 'Still to pick: ' + left.join(', ') + '.';
+  }
+
+  save() {
+    const sch = this.sch();
+    if (!sch) return false;
+    const s = this.state;
+    sch.write(s.system, s.grade);
+    sch.writeSchooling(s.schooling, s.qual);
+    // The goal the setup guide asks for follows the exam: someone working
+    // towards one is, first of all, preparing for it — unless they already
+    // said something else.
+    try {
+      if (s.qual && s.qual !== 'none' && !sch.readGoal()) {
+        sch.writeGoal('exams');
+        // The guide keeps its own copy of the goal; set it too, so its goal
+        // step opens with the card already picked.
+        if (window.notivloSetup && window.notivloSetup.setGoal && !window.notivloSetup.goal()) window.notivloSetup.setGoal('exams');
+      }
+    } catch (e) {}
+    try { if (window.notivloSync && window.notivloSync.enabled()) window.notivloSync.sync(); } catch (e) {}
+    return sch.profile().complete;
+  }
+
+  go() {
+    if (this.missingText()) return;
+    if (!this.save()) return;
+    const n = this.state.next;
+    if (NEXTS[n]) { window.location.href = NEXTS[n]; return; }
+    // Straight from sign-up: the welcome page's two quick choices come next.
+    window.location.href = 'Welcome.dc.html';
+  }
+
+  back() {
+    const n = this.state.next;
+    window.location.href = NEXTS[n] || 'Home.dc.html';
+  }
+
+  card(x, suggestedId) {
+    const on = this.state.qual === x.id;
+    const sch = this.sch();
+    const how = sch.scaleSummary(x.scale);
+    return {
+      label: x.label,
+      note: x.id === 'none' ? 'Notebooks and practice papers without a target exam — you can add one later.' : (x.body ? x.body + ' · ' : '') + how,
+      suggested: x.id === suggestedId,
+      cls: on ? 'su-goal-on' : '',
+      pressed: on ? 'true' : 'false',
+      pick: () => this.pickQual(x.id),
+    };
+  }
+
+  renderVals() {
+    const sch = this.sch();
+    const s = this.state;
+    if (!sch) return { kicker: 'About your schooling', typeCards: [], systemOptions: [], gradeChips: [], nationalCards: [], intlCards: [], notReady: true, goLabel: 'Continue' };
+    const system = sch.systemById(s.system);
+    const groups = sch.qualsFor(s.system);
+    const suggested = s.grade ? sch.suggestQual(s.system, s.grade) : '';
+    const home = s.schooling === 'home';
+    const priv = s.schooling === 'private';
+
+    // A homeschooler or a private-school student is as likely to be heading
+    // for an international exam as a national one, so for them the
+    // international list opens in full; a state-school student sees the
+    // first few, and the rest on request.
+    let intl = groups.international.concat([sch.NO_EXAM]);
+    const openAll = s.showAllIntl || home || priv;
+    const hidden = intl.length - INTL_FIRST;
+    if (!openAll) {
+      const firstFew = intl.slice(0, INTL_FIRST);
+      // Never hide the one that is picked.
+      const picked = intl.filter(x => x.id === s.qual && firstFew.indexOf(x) === -1);
+      intl = firstFew.concat(picked);
+    }
+
+    const qual = sch.qualById(s.qual);
+    let summaryLead = '', summaryQual = '', summaryRest = '';
+    if (qual && qual.id !== 'none') {
+      summaryLead = 'Your practice papers will be written for';
+      summaryQual = qual.short;
+      summaryRest = ', in its format and timings, and ' + sch.scaleSummary(qual.scale) + '. Lessons are aimed at it too.';
+    } else if (qual) {
+      summaryLead = 'No target exam for now:';
+      summaryQual = 'practice papers are marked as a percentage';
+      summaryRest = '. Pick an exam here any time and they will follow it.';
+    }
+
+    const missing = this.missingText();
+    const n = s.next;
+    return {
+      kicker: n ? 'Your schooling' : 'Before anything else',
+      typeCards: sch.SCHOOLING.map(t => {
+        const on = s.schooling === t.id;
+        return { label: t.label, note: t.note, cls: on ? 'su-goal-on' : '', pressed: on ? 'true' : 'false', pick: () => this.pickType(t.id) };
+      }),
+      systemHeading: home ? 'Which system do you follow, and what year would you be in?' : 'Which school system, and which year?',
+      systemHint: home
+        ? 'Pick the country whose school years you go by — usually where you live — and the year you’d be in at school. It sets the level your notebooks start at.'
+        : 'Years are named differently everywhere, so pick your system first, then your year in its own words.',
+      systemId: s.system,
+      systemOptions: sch.SYSTEMS.map(sy => ({ value: sy.id, label: sy.label })),
+      gradeChips: (system ? system.grades : []).map(g => {
+        const on = s.grade === g.id;
+        return { label: g.label, cls: on ? 'su-chip-on' : '', pressed: on ? 'true' : 'false', pick: () => this.pickGrade(g.id) };
+      }),
+      qualHint: home
+        ? 'The exam you plan to sit — as a private candidate, through a distance school, or however you are entering.'
+        : 'The exam at the end of what you’re studying now. Your practice papers and lessons are built around it.',
+      hasNational: groups.national.length > 0,
+      nationalHeading: system ? (system.id === 'cambridge' || system.id === 'ib' ? system.label : 'Exams in ' + system.label.replace(/ \(.*\)$/, '')) : '',
+      nationalCards: groups.national.map(x => this.card(x, suggested)),
+      intlHeading: groups.national.length ? 'International exams' : 'Exams',
+      intlCards: intl.map(x => this.card(x, suggested)),
+      canShowMore: !openAll && hidden > 0,
+      moreLabel: 'Show ' + hidden + ' more',
+      showMore: () => this.setState({ showAllIntl: true }),
+      hasSummary: !!qual,
+      summaryLead: summaryLead,
+      summaryQual: summaryQual,
+      summaryRest: summaryRest,
+      missing: missing,
+      notReady: !!missing,
+      hasBack: !!NEXTS[n] && n !== 'welcome',
+      back: () => this.back(),
+      goLabel: n === 'settings' || n === 'home' ? 'Save' : 'Continue',
+      go: () => this.go(),
+      onSystem: (e) => this.onSystem(e),
+    };
+  }
+}
+</script>
+</body>
+</html>

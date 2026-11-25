@@ -45,6 +45,21 @@
 <script src="./setup/setup-store.js"></script>
 <script src="./setup/setup-content.js"></script>
 <script src="./setup/setup-service.js"></script>
+<!-- Where the student studies and which exam they are aiming at. -->
+<script src="./school-level.js"></script>
+<script>
+  // Every account answers "about your schooling" before anything else: the
+  // exam it names decides what practice papers and lessons are built for.
+  // Accounts made before the page existed are asked once, here. Never in the
+  // landing page's demo, which has no account to ask.
+  try {
+    if (!window.notivloDemo && localStorage.getItem('folio_session') && window.notivloSchool
+        && !window.notivloSchool.profile().complete) {
+      window.notivloLeavingForSetup = true;
+      location.replace('School.dc.html?next=home');
+    }
+  } catch (e) {}
+</script>
 <script>
   // An account with no notebooks that has neither finished nor skipped the
   // guide is sent to it, whichever door it came in by — signing up, signing
@@ -53,7 +68,7 @@
   // window is what stops readStore (below) writing the example notebooks in
   // the moment between this line and the page actually leaving.
   try {
-    if (window.notivloSetup && localStorage.getItem('folio_session') && window.notivloSetup.shouldOffer()) {
+    if (!window.notivloLeavingForSetup && window.notivloSetup && localStorage.getItem('folio_session') && window.notivloSetup.shouldOffer()) {
       window.notivloLeavingForSetup = true;
       location.replace('Setup.dc.html');
     }

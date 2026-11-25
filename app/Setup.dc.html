@@ -49,6 +49,14 @@
 <!-- The school systems and years asked about on the first step, and what each
      one means for the text the student's notebooks start with. -->
 <script src="./school-level.js"></script>
+<script>
+  // The guide comes after "about your schooling", never instead of it.
+  try {
+    if (!window.notivloDemo && window.notivloSchool && !window.notivloSchool.profile().complete) {
+      location.replace('School.dc.html?next=setup');
+    }
+  } catch (e) {}
+</script>
 <!-- Only asked whether a subject starts with notes, for the shelf preview. -->
 <script src="./subject-notes.js"></script>
 </head>
@@ -134,23 +142,13 @@
           <p class="su-body">{{ goalBody }}</p>
         </div>
 
+        <!-- Where they study and the exam they are aiming at, asked on its own
+             page straight after sign-up (School.dc.html). Shown here so the
+             goal below is picked with it in view, and changeable from here. -->
         <div class="su-school">
-          <h2 class="su-h2" id="su-year-q">{{ yearHeading }}</h2>
-          <p class="su-hint">{{ yearBody }}</p>
-          <div class="field">
-            <label for="su-system">{{ systemLabel }}</label>
-            <select id="su-system" class="input" value="{{ systemId }}" onChange="{{ onSystem }}" style="border-radius:14px;background:var(--color-surface)">
-              <sc-for list="{{ systemOptions }}" as="so" hint-placeholder-count="8">
-                <option value="{{ so.value }}">{{ so.label }}</option>
-              </sc-for>
-            </select>
-          </div>
-          <div class="su-chips" role="group" aria-labelledby="su-year-q">
-            <sc-for list="{{ gradeChips }}" as="gr" hint-placeholder-count="5">
-              <button type="button" class="su-chip {{ gr.cls }}" onClick="{{ gr.pick }}" aria-pressed="{{ gr.pressed }}">{{ gr.label }}</button>
-            </sc-for>
-          </div>
-          <p class="su-effect" aria-live="polite">{{ yearEffect }}</p>
+          <h2 class="su-h2">{{ yearHeading }}</h2>
+          <p class="su-effect">{{ schoolSummary }}</p>
+          <a href="School.dc.html?next=setup" class="su-hint" style="color:var(--color-accent-700);text-decoration:underline">Change where you study or your exam</a>
         </div>
 
         <h2 class="su-h2">{{ goalQuestion }}</h2>
@@ -449,6 +447,35 @@ function urlStep() {
   } catch (e) { return null; }
 }
 
+// "Seconde in France (public school) · working towards the Bac, marked out
+// of 20, with mentions. Your notebooks will start with …"
+function schoolSummary(sch) {
+  if (!sch) return '';
+  const p = sch.profile();
+  const system = sch.systemById(p.system);
+  const year = system ? system.grades.filter(gr => gr.id === p.grade)[0] : null;
+  const kind = sch.schoolingById(p.schooling);
+  const where = year && system ? year.label + ' · ' + system.label : (system ? system.label : '');
+  const how = { public: 'public school', private: 'private school', home: 'homeschooled' }[p.schooling] || '';
+  const parts = [];
+  if (where) parts.push(where.replace(/ \(.*\)$/, '') + (how ? ', ' + how : ''));
+  const q = p.qualification;
+  if (q && q.id !== 'none') parts.push('working towards ' + q.short + ' — practice papers in its format, ' + sch.scaleSummary(q.scale));
+  else if (q) parts.push('no target exam for now');
+  let out = parts.join(' · ');
+  out = out ? out + '.' : 'Not answered yet.';
+  // The built-in notebooks are written to the Cambridge syllabuses, whatever
+  // the exam; say so to anyone aiming at something else rather than let
+  // "IGCSE stage" read as a mistake.
+  const aLevelish = !q || ['a-level', 'as-level', 'igcse', 'o-level', 'sg-a', 'sg-o', 'none'].indexOf(q.id) !== -1;
+  if (year && sch.LEVELS[year.level]) {
+    out += aLevelish
+      ? ' ' + sch.LEVELS[year.level].effect
+      : ' The example notebooks start at the level for your year; their notes follow the Cambridge syllabuses for now, so use them alongside your own course.';
+  }
+  return out;
+}
+
 function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
 
 class Component extends DCLogic {
@@ -740,20 +767,9 @@ class Component extends DCLogic {
       goalQuestion: COPY.goalQuestion,
       goalNextLabel: goal || year ? 'Next' : 'Skip for now',
 
-      // --- the year at school
-      yearHeading: COPY.yearHeading,
-      yearBody: COPY.yearBody,
-      systemLabel: COPY.systemLabel,
-      systemId: s.schoolSystem,
-      systemOptions: sch ? sch.SYSTEMS.map(sy => ({ value: sy.id, label: sy.label })) : [],
-      onSystem: (e) => this.pickSystem(e.target.value),
-      gradeChips: system ? system.grades.map(gr => ({
-        label: gr.label,
-        cls: s.schoolGrade === gr.id ? 'su-chip-on' : '',
-        pressed: s.schoolGrade === gr.id,
-        pick: () => this.pickGrade(gr.id),
-      })) : [],
-      yearEffect: year ? sch.LEVELS[year.level].effect : COPY.yearNone,
+      // --- the year at school and the exam, as School.dc.html recorded them
+      yearHeading: 'Where you are now',
+      schoolSummary: schoolSummary(sch),
       goalBack: () => this.go(STEPS.INTRO),
       goalNext: () => this.go(STEPS.SUBJECTS),
 

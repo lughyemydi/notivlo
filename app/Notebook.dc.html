@@ -1273,6 +1273,9 @@
                 </div>
               </sc-if>
 
+              <sc-if value="{{ testHasExamNote }}" hint-placeholder-val="{{ false }}">
+                <p style="margin:0;font-size:13px;line-height:1.5;color:var(--color-neutral-700);padding:10px 14px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-bg)">{{ testExamNote }}</p>
+              </sc-if>
               <div>
                 <div class="card-kicker">{{ testSectionsLabel }}</div>
                 <ul class="tx-list" style="margin-top:8px">
@@ -1365,14 +1368,16 @@
               </div>
 
               <div class="tx-sheet-name">
-                <span>Name</span>
-                <span>Date</span>
+                <span>{{ paperNameLabel }}</span>
+                <span>{{ paperDateLabel }}</span>
               </div>
 
+              <!-- The standing rules, in the paper's own language: a bac paper
+                   is read in French on the day, so it is printed in French. -->
               <ul class="tx-sheet-rules">
-                <li>Answer <strong>all</strong> questions unless told otherwise.</li>
-                <li>Write your working as well as your answer &mdash; method carries marks.</li>
-                <li>The number of marks is given in brackets <strong>[ ]</strong> at the end of each question or part question.</li>
+                <sc-for list="{{ paperRules }}" as="rule" hint-placeholder-count="3">
+                  <li>{{ rule }}</li>
+                </sc-for>
                 <sc-if value="{{ paperHasInstructions }}" hint-placeholder-val="{{ false }}">
                   <li>{{ paperInstructions }}</li>
                 </sc-if>
@@ -4770,6 +4775,30 @@ class Component extends DCLogic {
     const txSectionList = txPapers.filter(pp => pp.kind === 'section');
     const txStatus = (txApi && txPapers.length) ? txApi.mockStatus(this.state.slug) : null;
     const txSched = txApi ? txApi.readSchedule() : { cadence: 'monthly' };
+    // The exam the student is working towards (School.dc.html), and which of
+    // these papers were written for it. A paper with no exam of its own is an
+    // A level paper; for a student aiming at something else it is labelled as
+    // one, and its mark is still converted to their exam's scale.
+    const txSchool = window.notivloSchool || null;
+    const txQual = txSchool ? txSchool.qualification() : null;
+    const txSet = txBank && txBank.paperSetFor ? txBank.paperSetFor(this.state.slug, this.state.title) : null;
+    const txPaperQual = txBank && txBank.paperQual && txPaper ? txBank.paperQual(txPaper) : null;
+    const txOtherExam = !!(txQual && txQual.id !== 'none' && ['a-level', 'as-level', 'sg-a'].indexOf(txQual.id) === -1);
+    // A paper set in French (bac, brevet) prints its fixed wording in French.
+    const txFr = !!(txPaper && txPaper.lang === 'fr');
+    const txFrMins = (n) => n >= 60 ? (Math.floor(n / 60) + ' h' + (n % 60 ? ' ' + String(n % 60).padStart(2, '0') : '')) : (n + ' min');
+    const FR_SUBJECT = { mathematics: 'Mathématiques', physics: 'Physique-chimie', chemistry: 'Physique-chimie', biology: 'SVT', economics: 'SES', history: 'Histoire-géographie' };
+    const txALevelTag = (pp) => (txOtherExam && pp && !pp.qual) ? 'A level paper' : '';
+    const txScaleWords = txQual && txSchool ? txSchool.scaleSummary(txQual.scale) : '';
+    const txExamNote = (() => {
+      if (!txQual || !txSet || !txPapers.length) return '';
+      if (txQual.id === 'none') return 'You have not chosen an exam, so results are shown as a percentage. Choose one in Settings and papers and marks will follow it.';
+      if (!txOtherExam) return '';
+      const k = txSet.nativeKinds || {};
+      if (k.section && k.full) return 'Written for ' + txQual.short + ': the same layout, question style and timings, and ' + txScaleWords + '.';
+      if (k.section || k.full) return 'Papers marked ' + txQual.short + ' are written for it. There is no ' + txQual.short + ' ' + (k.section ? 'mock' : 'short paper') + ' for this subject yet, so that one is an A level paper — your mark on it is still converted to ' + txQual.short + ' (' + txScaleWords + ').';
+      return 'There are no ' + txQual.short + ' papers for this subject yet, so these are A level papers (Cambridge International format). Your mark is converted to the ' + txQual.short + ' scale — ' + txScaleWords + ' — as a rough guide.';
+    })();
 
     const txPlural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
     const txMinsLabel = (n) => n >= 60 && n % 60 === 0 ? txPlural(n / 60, 'hour', 'hours')
@@ -4934,9 +4963,12 @@ class Component extends DCLogic {
       testMockNotDue: !!(txStatus && !txStatus.due && txMock),
       testProgress: txProgress + '%',
 
-      testKicker: txSubject
-        ? (txSubject.board + ' · ' + txSubject.name + ' ' + txSubject.code)
-        : 'Test',
+      testKicker: !txSubject ? 'Test'
+        : (txPaperQual && txStage !== 'list') ? (txPaperQual.short + ' · ' + txSubject.name)
+        : (txOtherExam && txSet && txSet.nativeKinds && (txSet.nativeKinds.section || txSet.nativeKinds.full)) ? (txQual.short + ' · ' + txSubject.name)
+        : (txSubject.board + ' · ' + txSubject.name + ' ' + txSubject.code),
+      testHasExamNote: txStage === 'list' && !!txExamNote,
+      testExamNote: txExamNote,
       testHeading: txStage === 'list' ? this.state.title
         : txStage === 'paper' ? (txPaper ? txPaper.title : '')
         : txStage === 'marking' ? 'Mark your paper'
@@ -4969,7 +5001,7 @@ class Component extends DCLogic {
         const sat = txResults.filter(r => r.paperId === pp.id)[0] || null;
         return {
           title: pp.title,
-          component: pp.component || '',
+          component: [txALevelTag(pp), pp.component || ''].filter(Boolean).join(' · '),
           minutes: txMinsLabel(pp.minutes),
           marks: pp.marks + ' marks',
           sat: !!sat,
@@ -4981,7 +5013,7 @@ class Component extends DCLogic {
       // Joined rather than concatenated: a paper with no component would
       // otherwise print a leading separator.
       testMockComponent: txMock
-        ? [txMock.component || '', txMockCount > 1 ? ('one of ' + txMockCount + ' mocks, rotated') : '']
+        ? [txALevelTag(txMock), txMock.component || '', txMockCount > 1 ? ('one of ' + txMockCount + ' mocks, rotated') : '']
             .filter(Boolean).join(' \u00b7 ')
         : '',
       testMockMinutes: txMock ? txMinsLabel(txMock.minutes) : '',
@@ -5007,20 +5039,28 @@ class Component extends DCLogic {
       })),
 
       // the paper
-      paperBoard: txSubject ? txSubject.board : '',
-      paperSubject: txSubject ? txSubject.name : '',
-      paperCode: txSubject ? txSubject.code : '',
+      paperBoard: txPaperQual ? txPaperQual.label : (txSubject ? txSubject.board : ''),
+      paperSubject: txSubject ? (txFr && FR_SUBJECT[txSubject.key] ? FR_SUBJECT[txSubject.key] : txSubject.name) : '',
+      paperCode: txPaperQual ? '' : (txSubject ? txSubject.code : ''),
       paperTitle: txPaper ? txPaper.title : '',
       paperComponent: txPaper ? (txPaper.component || '') : '',
-      paperTimeLabel: txPaper ? ('Time: ' + txMinsLabel(txPaper.minutes)) : '',
-      paperMarksLabel: txPaper ? ('Total: ' + txPaper.marks + ' marks') : '',
+      paperTimeLabel: txPaper ? ((txFr ? 'Durée : ' : 'Time: ') + (txFr ? txFrMins(txPaper.minutes) : txMinsLabel(txPaper.minutes))) : '',
+      paperMarksLabel: txPaper ? (txFr ? ('Total : ' + txPaper.marks + ' points') : ('Total: ' + txPaper.marks + ' marks')) : '',
+      paperNameLabel: txFr ? 'Nom' : 'Name',
+      paperDateLabel: 'Date',
+      paperRules: txFr
+        ? ['Traiter toutes les questions, sauf indication contraire.', 'Rédiger les calculs et les raisonnements : la démarche est prise en compte dans la notation.', 'Le nombre de points de chaque question est indiqué entre crochets [ ].']
+        : ['Answer all questions unless told otherwise.', 'Write your working as well as your answer — method carries marks.', 'The number of marks is given in brackets [ ] at the end of each question or part question.'],
       paperHasInstructions: !!(txPaper && txPaper.instructions),
       paperInstructions: txPaper ? (txPaper.instructions || '') : '',
       paperQuestions: txSheetQs,
-      paperFootLabel: txPaper ? ('End of paper · ' + txPaper.title) : '',
+      paperFootLabel: txPaper ? ((txFr ? 'Fin du sujet · ' : 'End of paper · ') + txPaper.title) : '',
       paperHasSynthetic: txHasSynthetic,
       paperSyntheticNote: 'The sources in this paper were written for it, to represent positions that were genuinely held at the time. They are not quotations from real documents, and should not be cited as such.',
-      paperOriginNote: 'Written for notivlo in the style and format of a Cambridge International AS & A Level paper. Not a past paper, and not endorsed by any examination board. Grade boundaries shown after marking are indicative only.',
+      paperOriginNote: txPaperQual
+        ? ('Written for notivlo in the style and format of a ' + txPaperQual.label + ' paper. Not a past paper, and not endorsed by ' + (txPaperQual.body || 'any examination board') + ' or any examination board. The grade shown after marking is indicative only.')
+        : ('Written for notivlo in the style and format of a Cambridge International AS & A Level paper. Not a past paper, and not endorsed by any examination board. Grade boundaries shown after marking are indicative only.'
+           + (txOtherExam ? (' There is no ' + txQual.short + ' paper of this kind for this subject yet; your mark is converted to the ' + txQual.short + ' scale as a rough guide.') : '')),
       printPaper: () => this.printPaper(),
       startTestClock: () => this.startTestClock(),
       testStartLabel: 'I have printed it — start the clock',
@@ -5047,7 +5087,7 @@ class Component extends DCLogic {
       // the result
       resultScore: txR ? (txR.earned + ' / ' + txR.total) : '',
       resultGrade: txR ? txR.grade : '',
-      resultGradeNote: txR ? (txR.pct + '% · indicative grade') : '',
+      resultGradeNote: txR ? (txR.pct + '% · indicative ' + (txQual && txQual.id !== 'none' ? txQual.short + ' ' : '') + 'grade') : '',
       resultTimeNote: !txR ? ''
         : (txR.minutes != null
             ? ('You took ' + txMinsLabel(txR.minutes) + ' of the ' + (txPaper ? txMinsLabel(txPaper.minutes) : '') + ' allowed'
@@ -5055,7 +5095,7 @@ class Component extends DCLogic {
                + (txR.awaySeconds > 60 ? (' You were away from the app for about ' + txPlural(Math.round(txR.awaySeconds / 60), 'minute', 'minutes') + '.') : ''))
             : ''),
       resultTopics: txTopicRows,
-      resultBoundaryNote: 'Real boundaries are set per series against how the cohort did, and move a few marks either way every time. Read this as "around a ' + (txR ? txR.grade : 'grade') + '", not as a result.',
+      resultBoundaryNote: 'Real boundaries are set each exam session against how everyone did, and move a few marks either way every time. Read this as "around ' + (txR ? txR.grade : 'this grade') + '", not as a result.',
       goWork: () => this.goWork(),
       goWorkLabel: txWeak.length
         ? ('What to work on (' + txWeak.length + ')')
