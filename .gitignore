@@ -1,0 +1,17 @@
+# Secrets. Nothing in this repo needs one: the Supabase publishable key in
+# app/supabase-config.js is meant to be public. The service-role key, the Stripe
+# keys and the model key live only in Supabase function secrets.
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.key
+*.secret
+secrets.*
+
+# Machine-local state from the source folder, if it is ever copied across.
+supabase/.temp/
+.claude/
+
+.DS_Store
