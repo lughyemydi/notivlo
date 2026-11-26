@@ -27,6 +27,10 @@
 <script src="./text-size.js"></script>
 <script src="./agenda-timegrid.js"></script>
 <script src="./support.js"></script>
+<!-- Shared movement: rolling numbers, the study heatmap, hold-to-confirm,
+     the sliding tab marker. Defines custom elements, so it only has to be
+     loaded before the page is looked at, not before it renders. -->
+<script src="./motion.js"></script>
 <script src="./quick.js" defer></script>
 <script src="./session.js" defer></script>
 <!-- The backend. Inert while supabase-config.js holds no project: with it
@@ -46,6 +50,7 @@
 <link rel="stylesheet" href="soft-clay.css">
 <!-- Flat theme over the clay one. See the file head; remove this line to go back. -->
 <link rel="stylesheet" href="concrete-signal.css">
+<link rel="stylesheet" href="motion.css">
 <script src="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/_ds_bundle.js"></script>
 <style>
   body{margin:0;background:var(--color-bg);color:var(--color-text)}

@@ -29,6 +29,10 @@
 <script src="./text-size.js"></script>
 <script src="./agenda-timegrid.js"></script>
 <script src="./support.js"></script>
+<!-- Shared movement: rolling numbers, the study heatmap, hold-to-confirm,
+     the sliding tab marker. Defines custom elements, so it only has to be
+     loaded before the page is looked at, not before it renders. -->
+<script src="./motion.js"></script>
 <script src="./quick.js" defer></script>
 <script src="./session.js" defer></script>
 <!-- The backend. Inert while supabase-config.js holds no project: with it
@@ -85,6 +89,7 @@
 <link rel="stylesheet" href="soft-clay.css">
 <!-- Flat theme over the clay one. See the file head; remove this line to go back. -->
 <link rel="stylesheet" href="concrete-signal.css">
+<link rel="stylesheet" href="motion.css">
 <!-- The setup guide's getting-started card. Styles only; the card itself is
      not rendered unless the guide says so. -->
 <link rel="stylesheet" href="setup/setup.css">
@@ -161,6 +166,10 @@
   @media (max-width: 880px){
     .home-row{grid-template-columns:1fr !important}
   }
+  /* A notebook card's progress: the meter, then its number in the label face. */
+  .nb-progress{display:flex;align-items:center;gap:8px}
+  .nb-progress nv-meter{flex:1;--nv-meter-h:3px}
+  .nb-progress-n{font-family:var(--cs-mono, inherit);font-size:11px;letter-spacing:.04em;color:var(--color-neutral-500);font-variant-numeric:tabular-nums;min-width:3.2em;text-align:right}
 </style>
 </helmet>
 
@@ -241,7 +250,10 @@
   <sc-if value="{{ hasUpcoming }}" hint-placeholder-val="{{ false }}">
     <section style="max-width:1180px;margin:0 auto;padding:var(--space-4) var(--space-6) 0">
       <div style="font-size:13px;color:var(--color-neutral-500);letter-spacing:.04em;text-transform:uppercase;margin-bottom:var(--space-3)">Coming up</div>
-      <div class="no-scrollbar shadow-safe" style="display:flex;gap:var(--space-3);overflow-x:auto">
+      <!-- The strip's cut-off edge blurs away on whichever side has more
+           (motion.js, data-mo-edges). -->
+      <div data-mo-edges-host>
+      <div class="no-scrollbar shadow-safe" data-mo-edges style="display:flex;gap:var(--space-3);overflow-x:auto">
         <sc-for list="{{ upcoming }}" as="u" hint-placeholder-count="4">
           <a href="{{ u.href }}" class="due-chip" style="flex:none;min-width:200px;padding:var(--space-3) var(--space-4);text-decoration:none;color:inherit;background:var(--color-surface);border:1px solid var(--color-border);border-radius:18px;box-shadow:0 8px 20px rgba(72,62,50,.08),inset 0 1px 0 rgb(var(--clay-edge) / .6)">
             <div style="display:flex;align-items:baseline;gap:var(--space-2);margin-bottom:4px">
@@ -252,6 +264,7 @@
             <div style="font-size:13px;color:var(--color-neutral-600);margin-top:2px;font-variant-numeric:tabular-nums">{{ u.time }}</div>
           </a>
         </sc-for>
+      </div>
       </div>
     </section>
   </sc-if>
@@ -292,6 +305,12 @@
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
             </span>
             <div class="card-title" style="font-size:19px;flex:1">{{ nb.title }}</div>
+            <!-- How far through the notebook's chapters, filling as the card
+                 arrives (motion.js). -->
+            <div class="nb-progress">
+              <nv-meter value="{{ nb.percent }}" label="{{ nb.meterLabel }}"></nv-meter>
+              <span class="nb-progress-n">{{ nb.percentStr }}</span>
+            </div>
             <div class="card-meta" style="margin-top:0">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
               <span>{{ nb.updated }}</span>
@@ -452,12 +471,10 @@
     <div style="padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4);background:var(--color-surface);border:1px solid var(--color-border);border-radius:26px;box-shadow:0 14px 32px rgba(72,62,50,.09),inset 0 1px 0 rgb(var(--clay-edge) / .65)">
       <div class="card-kicker">This week</div>
       <div>
-        <div style="font-family:var(--font-heading);font-weight:400;font-size:52px;line-height:1;font-variant-numeric:tabular-nums">{{ progressPercent }}%</div>
+        <div style="font-family:var(--font-heading);font-weight:400;font-size:52px;line-height:1;font-variant-numeric:tabular-nums"><nv-odometer value="{{ progressPercentStr }}"></nv-odometer></div>
         <p style="margin:var(--space-1) 0 0;color:var(--color-neutral-700);font-size:14px">of your weekly plan complete</p>
       </div>
-      <div style="height:6px;border-radius:999px;background:rgba(72,62,50,.10);overflow:hidden;border:1px solid rgba(72,62,50,.14)">
-        <div style="height:100%;border-radius:999px;background:linear-gradient(90deg,var(--color-accent-400),var(--color-accent-600));width:{{ progressPercentStr }}"></div>
-      </div>
+      <nv-meter value="{{ progressPercent }}" label="{{ progressMeterLabel }}" style="--nv-meter-h:6px"></nv-meter>
       <div class="hr" style="opacity:.5"></div>
       <div style="display:flex;align-items:center;gap:var(--space-2)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
@@ -470,6 +487,14 @@
             <div style="width:16px;height:16px;border-radius:50%;border:1.5px solid {{ dot.border }};background:{{ dot.bg }}"></div>
           </div>
         </sc-for>
+      </div>
+      <!-- The last twelve weeks of study time, from the same record the week
+           dots and the streak read (motion.js, nv-heatmap). -->
+      <div class="hr" style="opacity:.5"></div>
+      <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+        <div class="card-kicker">Last 12 weeks</div>
+        <nv-heatmap minutes="{{ studyMinutesJson }}" weeks="12"></nv-heatmap>
+        <div class="nv-heat-legend" aria-hidden="true"><span>Less</span><i class="nv-heat-cell" data-level="0"></i><i class="nv-heat-cell" data-level="1"></i><i class="nv-heat-cell" data-level="2"></i><i class="nv-heat-cell" data-level="3"></i><i class="nv-heat-cell" data-level="4"></i><span>More</span></div>
       </div>
     </div>
 
@@ -670,6 +695,7 @@ function decorateNotebook(nb) {
     percent: pct(nb.done, nb.total),
     updated: relLabel(nb.minutesAgo),
     percentStr: pct(nb.done, nb.total) + '%',
+    meterLabel: nb.total ? nb.done + ' of ' + nb.total + ' chapters done' : 'No chapters yet',
     category: nb.category || 'Uncategorized',
     href: 'Notebook.dc.html?nb=' + nb.slug + (nb.userCreated ? '&title=' + encodeURIComponent(nb.title) : ''),
   };
@@ -1101,6 +1127,8 @@ class Component extends DCLogic {
       weekRange: formatWeekRange(weekStart, addDays(weekStart, 6)),
       progressPercent,
       progressPercentStr: progressPercent + '%',
+      progressMeterLabel: progressPercent + '% of this week\'s plan done',
+      studyMinutesJson: JSON.stringify(studyMinutes),
       streakLabel: streak + '-day streak',
       weekDots,
 

@@ -534,9 +534,51 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
 .foot-links a:hover{color:var(--ink)}
 
 /* ======================================================================
+   Borrowed movement (app/motion.js; MIT credits in the app's Legal page)
+   ====================================================================== */
+/* A departure board for the exams it is built for (Kokonut UI's split-flap
+   text). Ink tiles with a hinge line; the letters flip, the tiles never move. */
+.hero-board{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:22px;font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.mo-flap{display:inline-flex;gap:3px;font-family:var(--mono);font-size:19px;font-weight:600;line-height:1;letter-spacing:0}
+.mo-flap-t{position:relative;display:inline-block;width:.9em;height:1.3em;perspective:5em;background:var(--ink)}
+.mo-flap-t>span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--ink);color:var(--surface);backface-visibility:hidden;transform-origin:50% 50%}
+.mo-flap-top,.mo-flap-ft{clip-path:inset(0 0 50% 0)}
+.mo-flap-bot,.mo-flap-fb{clip-path:inset(50% 0 0 0)}
+.mo-flap-ft,.mo-flap-fb{z-index:1}
+.mo-flap-t::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;margin-top:-.5px;background:var(--surface);opacity:.55;z-index:2}
+/* What's inside: the hairline above each item lights up under the cursor
+   (motion-primitives' spotlight, as a line: this system has no glows). */
+.inside>div{position:relative}
+.inside>div::before{content:"";position:absolute;left:0;right:0;top:-1px;height:2px;pointer-events:none;opacity:0;
+  background:radial-gradient(closest-side,var(--signal),transparent) no-repeat;background-size:260px 100%;background-position:calc(var(--mo-x,50%) - 130px) 0}
+/* The live demo's frame: while the app is loading into it, a light runs
+   round the border (motion-primitives' border trail), and stops once it is
+   live. */
+@property --mo-a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes mo-trail{to{--mo-a:360deg}}
+.demo-stage::after{content:"";position:absolute;inset:-1px;padding:2px;pointer-events:none;z-index:2;opacity:0;
+  background:conic-gradient(from var(--mo-a),transparent 0deg 290deg,var(--signal) 350deg,transparent 360deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+/* How it works: a thread down the steps that draws itself with the scroll
+   (anime.js). Desktop only, where the steps sit beside the pinned picture. */
+.how-steps{position:relative}
+.how-thread{position:absolute;top:0;left:-34px;width:24px;height:100%;overflow:visible;pointer-events:none;display:none}
+.how-thread path{fill:none;stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke}
+.how-thread rect{fill:var(--surface);stroke:var(--ink);stroke-width:1;transition:fill .3s var(--ease),stroke .3s var(--ease)}
+.how-thread rect.lit{fill:var(--signal);stroke:var(--signal)}
+.status .mo-check{width:1em;height:1em;vertical-align:-2px;margin-right:6px}
+.status .mo-check path{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:square}
+.status nv-loader{vertical-align:-3px;margin-right:8px}
+
+/* ======================================================================
    Motion
    ====================================================================== */
 @media (prefers-reduced-motion: no-preference){
+  .inside>div::before{transition:opacity .3s var(--ease)}
+  .inside>div.mo-lit::before{opacity:1}
+  .demo.is-loading:not(.is-live) .demo-stage::after{opacity:1;animation:mo-trail 4s linear infinite}
+  .motion .how-thread.on{display:block}
   html{scroll-behavior:smooth}
   @keyframes rise{from{transform:translateY(105%)}to{transform:none}}
   @keyframes fade-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -632,6 +674,7 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
       <p class="kicker">Public, private or homeschooled · free beta</p>
       <h1 class="split">Your notes, deadlines and revision — all in one calm place.</h1>
       <p class="lead">notivlo gives every subject its own notebook, puts everything that's due on one week, and quizzes you on what you wrote — built around the exam you're actually sitting.</p>
+      <p class="hero-note hero-board"><span>Built for</span><span class="mo-flap" id="flap"></span></p>
       <p class="hero-note">A levels · IGCSE · the bac &amp; brevet · GCSE · US diploma, AP &amp; SAT · IB · Abitur · CBSE · WASSCE · HKDSE · and more</p>
       <div class="cta-row">
         <a class="btn btn-primary" href="app/SignUp.dc.html">Open it in your browser
@@ -906,6 +949,9 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
   </div>
 </footer>
 
+<!-- The app's own movement layer: the departure board, the lit hairlines,
+     the feedback check. Same file the app loads, so the two never drift. -->
+<script src="app/motion.js"></script>
 <script>
 (function () {
   'use strict';
@@ -1496,6 +1542,7 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
       return;
     }
     frame.setAttribute('src', 'app/Home.dc.html');
+    demo.classList.add('is-loading');
   }
 
   window.addEventListener('message', function (e) {
@@ -1584,6 +1631,13 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
 
     btn.disabled = true;
     say('Sending…');
+    if (window.customElements && customElements.get('nv-loader')) {
+      var spin = document.createElement('nv-loader');
+      spin.setAttribute('data-small', '');
+      spin.setAttribute('label', 'Sending');
+      spin.style.cssText = '--nv-size:14px;color:currentColor';
+      status.insertBefore(spin, status.firstChild);
+    }
 
     var body = {
       message: message.slice(0, 4000),
@@ -1612,6 +1666,7 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
       if (r.ok) {
         form.reset();
         say('Got it — thank you. That genuinely helps.', 'ok');
+        if (window.notivloMotion) status.insertBefore(window.notivloMotion.checkmark(status), status.firstChild);
       } else {
         say('That did not send (error ' + r.status + '). Try again in a moment.', 'err');
       }
@@ -1623,6 +1678,89 @@ footer{border-top:1px solid var(--rule-faint);padding:28px 0}
     });
   });
 })();
+</script>
+<script>
+/* ---- Borrowed movement: the board, the lit hairlines ------------------- */
+(function () {
+  'use strict';
+  var M = window.notivloMotion;
+  if (!M) return;
+  var flap = document.getElementById('flap');
+  if (flap) {
+    // The list below the board says the same in words, so the tiles are
+    // hidden from screen readers and this label stands in for them.
+    flap.parentNode.setAttribute('aria-label', 'Built for A levels, IGCSE, the bac, GCSE, AP and SAT, IB, Abitur, CBSE, WASSCE and HKDSE');
+    M.splitFlap(flap, ['A LEVELS', 'IGCSE', 'THE BAC', 'GCSE', 'AP & SAT', 'IB', 'ABITUR', 'CBSE', 'WASSCE', 'HKDSE']);
+  }
+  M.borderLight(document.querySelectorAll('.inside > div'));
+})();
+</script>
+<!-- How it works: the thread down the steps, drawn by anime.js
+     (vendor/anime.esm.min.js, MIT, Julian Garnier) in step with the scroll.
+     Fetched only when it will be seen: a wide screen, motion allowed. -->
+<script type="module">
+  const how = document.querySelector('.how-steps');
+  const wide = window.matchMedia('(min-width: 900px)');
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    || !document.documentElement.classList.contains('motion');
+  if (how && wide.matches && !calm) {
+    const { animate, createDrawable } = await import('./vendor/anime.esm.min.js');
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('class', 'how-thread');
+    svg.setAttribute('aria-hidden', 'true');
+    how.prepend(svg);
+    let marks = [], anim = null;
+
+    // Where each step's big word sits, down the column.
+    const build = () => {
+      const top = how.getBoundingClientRect().top;
+      const ys = [...how.querySelectorAll('.step-word')].map(w => {
+        const r = w.getBoundingClientRect();
+        return Math.round(r.top - top + r.height / 2);
+      });
+      const h = how.offsetHeight;
+      svg.setAttribute('viewBox', `0 0 24 ${h}`);
+      svg.setAttribute('height', h);
+      svg.textContent = '';
+      if (ys.length < 2) return;
+      // One line the height of the column with a tick out to each word, in
+      // the order the scroll reaches them: the drawn tip is always where the
+      // middle of the screen is, so a tick draws as its word arrives there.
+      const d = 'M12 0 ' + ys.map(y => `V ${y} H 24 M12 ${y}`).join(' ') + ` V ${h}`;
+      const path = document.createElementNS(ns, 'path');
+      path.setAttribute('d', d);
+      svg.appendChild(path);
+      marks = ys.map(y => {
+        const r = document.createElementNS(ns, 'rect');
+        r.setAttribute('x', 8); r.setAttribute('y', y - 4);
+        r.setAttribute('width', 8); r.setAttribute('height', 8);
+        svg.appendChild(r);
+        return { r, y };
+      });
+      if (anim) anim.revert();
+      // Paused, and moved by the scroll below rather than by anime's own
+      // scroll observer, so the tip and the markers read the same position.
+      anim = animate(createDrawable(path), {
+        draw: ['0 0', '0 1'], ease: 'linear', duration: 1000, autoplay: false,
+      });
+      light();
+    };
+    // The tip sits at the middle of the screen; a square marker fills once
+    // its word has reached it — the moment the pinned picture changes too.
+    const light = () => {
+      const top = how.getBoundingClientRect().top, mid = innerHeight / 2;
+      const h = how.offsetHeight || 1;
+      if (anim) anim.seek(Math.max(0, Math.min(1, (mid - top) / h)) * 1000);
+      marks.forEach(m => m.r.classList.toggle('lit', top + m.y <= mid));
+    };
+    svg.classList.add('on');
+    build();
+    addEventListener('scroll', light, { passive: true });
+    let t = 0;
+    addEventListener('resize', () => { clearTimeout(t); t = setTimeout(build, 200); });
+    if (document.fonts) document.fonts.ready.then(build);
+  }
 </script>
 </body>
 </html>

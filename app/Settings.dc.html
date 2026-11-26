@@ -32,6 +32,10 @@
 <script src="./legal-licenses.js"></script>
 <script src="./auth.js"></script>
 <script src="./support.js"></script>
+<!-- Shared movement: rolling numbers, the study heatmap, hold-to-confirm,
+     the sliding tab marker. Defines custom elements, so it only has to be
+     loaded before the page is looked at, not before it renders. -->
+<script src="./motion.js"></script>
 <script src="./quick.js" defer></script>
 <script src="./session.js" defer></script>
 <!-- The backend. Inert while supabase-config.js holds no project: with it
@@ -53,6 +57,7 @@
 <link rel="stylesheet" href="soft-clay.css">
 <!-- Flat theme over the clay one. See the file head; remove this line to go back. -->
 <link rel="stylesheet" href="concrete-signal.css">
+<link rel="stylesheet" href="motion.css">
 <script src="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/_ds_bundle.js"></script>
 <style>
   body{margin:0;background:var(--color-bg);color:var(--color-text)}
@@ -105,6 +110,13 @@
   .set-nav-item-danger:hover{background:rgba(168,50,42,.1);color:var(--color-danger-strong)}
   .set-nav-item-danger.set-nav-item-active{background:rgba(168,50,42,.14);color:var(--color-danger-strong)}
   .set-nav-item-danger.set-nav-item-active:hover{background:rgba(168,50,42,.14)}
+  /* One marker slides to the active section and tab (motion.js,
+     data-mo-tabs); while it is on, the active item's own fill steps aside. */
+  .set-nav[data-mo-tabs]{--mo-tab-bg:var(--color-primary)}
+  .set-nav:has(.set-nav-item-danger.set-nav-item-active){--mo-tab-bg:rgba(168,50,42,.14)}
+  html .set-nav.mo-tabs-on .set-nav-item-active{background:transparent !important}
+  .legal-tabs[data-mo-tabs]{--mo-tab-bg:var(--color-surface)}
+  html .legal-tabs.mo-tabs-on .legal-tab-active{background:transparent !important;box-shadow:none !important}
   .set-pane{display:flex;flex-direction:column;gap:var(--space-6);min-width:0}
   .pw-rules{display:flex;flex-direction:column;gap:3px;margin-top:6px}
   .pw-rule{display:flex;align-items:center;gap:7px;font-size:13px;line-height:1.4;transition:color .15s ease}
@@ -177,7 +189,7 @@
       <!-- Section list. Each entry is its own address (?section=slug), so a
            section can be linked to directly and the browser's back button
            steps between them. -->
-      <nav class="set-nav" aria-label="Settings sections">
+      <nav class="set-nav" data-mo-tabs=".set-nav-item-active" aria-label="Settings sections">
         <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="8">
           <button type="button" class="set-nav-item {{ sec.activeClass }}" onClick="{{ sec.go }}" aria-current="{{ sec.current }}">{{ sec.label }}</button>
         </sc-for>
@@ -596,7 +608,7 @@
             <div class="legal-draft"><strong>Draft.</strong> These documents are templates written to match how notivlo actually works. They aren't legal advice: have them reviewed, then fill in the company name, contact email, jurisdiction and effective date in legal-documents.js and mark them reviewed.</div>
           </sc-if>
 
-          <div class="legal-tabs" role="tablist" aria-label="Legal documents">
+          <div class="legal-tabs" data-mo-tabs=".legal-tab-active" role="tablist" aria-label="Legal documents">
             <sc-for list="{{ legalTabs }}" as="tab" hint-placeholder-count="3">
               <button type="button" role="tab" class="legal-tab {{ tab.activeClass }}" aria-selected="{{ tab.selected }}" onClick="{{ tab.go }}">{{ tab.label }}</button>
             </sc-for>
@@ -704,7 +716,10 @@
       <div style="display:flex;justify-content:flex-end;gap:var(--space-2);flex-wrap:wrap">
         <button type="button" class="btn btn-ghost glass-btn-ghost" onClick="{{ cancelGate }}" disabled="{{ gateBusy }}" style="border-radius:999px;background:var(--color-surface)">Cancel</button>
         <sc-if value="{{ gateDanger }}" hint-placeholder-val="{{ true }}">
-          <button type="button" class="btn btn-ghost danger-btn" onClick="{{ submitGate }}" disabled="{{ gateBusy }}" style="border-radius:999px;border:1px solid rgba(168,50,42,.45);color:var(--color-danger);background:var(--color-surface)">{{ gateConfirmLabel }}</button>
+          <!-- Press and hold: a click alone does nothing here (motion.js,
+               data-mo-hold). The password above already proves who it is;
+               the hold makes sure they meant it. -->
+          <button type="button" class="btn btn-ghost danger-btn" data-mo-hold="1200" title="Press and hold to confirm" onClick="{{ submitGate }}" disabled="{{ gateBusy }}" style="border-radius:999px;border:1px solid rgba(168,50,42,.45);color:var(--color-danger);background:var(--color-surface)">{{ gateConfirmLabel }}</button>
         </sc-if>
         <sc-if value="{{ gateSafe }}" hint-placeholder-val="{{ false }}">
           <button type="button" class="btn btn-primary glass-btn-primary" onClick="{{ submitGate }}" disabled="{{ gateBusy }}" style="border-radius:999px;background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary)">{{ gateConfirmLabel }}</button>
@@ -1179,7 +1194,7 @@ class Component extends DCLogic {
       kicker: 'Notebook',
       title: 'Delete "' + title + '"',
       detail: detail + " This can't be undone.",
-      confirmLabel: 'Delete notebook',
+      confirmLabel: 'Hold to delete notebook',
       danger: true,
     });
   }
@@ -1191,7 +1206,7 @@ class Component extends DCLogic {
       title: 'Erase all notebooks & agenda',
       detail: 'Every notebook, chapter, note, agenda entry and study record goes, on this device and on your account. '
         + 'Your sign-in, your profile and your preferences stay. This cannot be undone.',
-      confirmLabel: 'Erase content',
+      confirmLabel: 'Hold to erase content',
       danger: true,
     });
   }
@@ -1203,7 +1218,7 @@ class Component extends DCLogic {
       title: 'Delete your account',
       detail: 'Your sign-in goes, along with every notebook, chapter, note, agenda entry and study record. '
         + 'This cannot be undone, and it ends with you back at sign-up.',
-      confirmLabel: 'Delete account',
+      confirmLabel: 'Hold to delete account',
       danger: true,
     });
   }
@@ -1887,7 +1902,16 @@ class Component extends DCLogic {
       gatePassword: this.state.gatePassword,
       onGatePasswordChange: (e) => this.setState({ gatePassword: e.target.value, gateMessage: '' }),
       onGateKeyDown: (e) => {
-        if (e.key === 'Enter') { if (e.preventDefault) e.preventDefault(); this.submitGate(); }
+        if (e.key === 'Enter') {
+          if (e.preventDefault) e.preventDefault();
+          // A dangerous gate is confirmed by holding its button, so Enter in
+          // the password only takes you to it; a safe one submits as before.
+          const g = this.state.gate;
+          if (g && g.danger) {
+            const btn = document.querySelector('.gate-card [data-mo-hold]');
+            if (btn) btn.focus();
+          } else this.submitGate();
+        }
         if (e.key === 'Escape') this.cancelGate();
       },
       submitGate: () => this.submitGate(),

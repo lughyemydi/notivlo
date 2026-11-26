@@ -29,6 +29,10 @@
 <script src="./text-size.js"></script>
 <script src="./auth.js"></script>
 <script src="./support.js"></script>
+<!-- Shared movement: rolling numbers, the study heatmap, hold-to-confirm,
+     the sliding tab marker. Defines custom elements, so it only has to be
+     loaded before the page is looked at, not before it renders. -->
+<script src="./motion.js"></script>
 <!-- The backend. Inert while supabase-config.js holds no project: with it
      empty every page below falls back to localStorage, which is how the app
      worked before there was a server. Order matters — each file depends on
@@ -52,6 +56,7 @@
 <link rel="stylesheet" href="soft-clay.css">
 <!-- Flat theme over the clay one. See the file head; remove this line to go back. -->
 <link rel="stylesheet" href="concrete-signal.css">
+<link rel="stylesheet" href="motion.css">
 <script src="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/_ds_bundle.js"></script>
 <style>
   /* --------------------------------------------------------------------
@@ -187,7 +192,7 @@
             <div class="pw-rule" style="color:{{ pwSymbolColor }};border-color:{{ pwSymbolBorder }}"><span class="pw-mark">{{ pwSymbolMark }}</span>A symbol, like ! ? @ or #</div>
           </div>
         </div>
-        <button type="submit" class="btn btn-primary glass-btn-primary" disabled="{{ submitting }}" style="margin-top:var(--space-2);border-radius:999px;height:44px;background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .35)">{{ submitLabel }}</button>
+        <button type="submit" class="btn btn-primary glass-btn-primary" disabled="{{ submitting }}" style="margin-top:var(--space-2);border-radius:999px;height:44px;background:var(--color-primary);border:1px solid var(--color-primary);color:var(--color-text-primary);box-shadow:inset 0 1px 0 rgb(var(--clay-edge) / .35)"><sc-if value="{{ submitting }}" hint-placeholder-val="{{ false }}"><nv-loader data-small label="{{ submitLabel }}" style="--nv-size:15px;margin-right:8px;color:currentColor"></nv-loader></sc-if>{{ submitLabel }}</button>
       </form>
 
       <p style="text-align:center;margin:0;font-size:13px;color:var(--color-neutral-600)">

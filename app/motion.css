@@ -1,0 +1,186 @@
+/* ==========================================================================
+   notivlo motion — the styles for motion.js
+   --------------------------------------------------------------------------
+   Load after concrete-signal.css, in each page's <helmet>. Everything reads
+   the Concrete & Signal tokens (--cs-*), falling back to soft-clay's, so it
+   is correct in both themes and still sensible if the flat layer is removed.
+
+   No fill modes, no bounce, no scale: concrete-signal.css section 13. Its
+   reduced-motion rule already stops every CSS animation and transition here;
+   motion.js skips its own animations for the same people.
+   ========================================================================== */
+
+.nv-sr {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+/* ---- Odometer ------------------------------------------------------------
+   Each column is ten 1em rows; translating it by -10% moves it one digit. */
+nv-odometer { display: inline-flex; line-height: 1; font-variant-numeric: tabular-nums; }
+.nv-odo { display: inline-flex; align-items: flex-start; line-height: 1; }
+.nv-odo-d { display: inline-block; height: 1em; overflow: hidden; }
+.nv-odo-col { display: flex; flex-direction: column; }
+.nv-odo-col > span { display: block; height: 1em; line-height: 1; text-align: center; }
+.nv-odo-c { display: inline-block; height: 1em; line-height: 1; }
+
+/* ---- Meter --------------------------------------------------------------- */
+nv-meter {
+  display: block; position: relative; overflow: hidden;
+  height: var(--nv-meter-h, 4px);
+  background: var(--nv-meter-track, var(--cs-rule-faint, rgba(72, 62, 50, .12)));
+}
+.nv-meter-in { position: absolute; inset: 0; display: block; }
+.nv-meter-fill {
+  position: absolute; inset: 0;
+  background: var(--nv-meter-fill, var(--cs-signal, var(--color-accent-600)));
+  transform: translateX(-100%);
+}
+
+/* ---- Heatmap -------------------------------------------------------------
+   Columns are weeks, rows Monday to Sunday. Five steps from empty to signal. */
+nv-heatmap { display: block; }
+.nv-heat-grid {
+  --nv-cell: 13px;
+  display: grid; gap: 3px; width: max-content;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, var(--nv-cell));
+  grid-template-columns: repeat(var(--nv-weeks, 12), var(--nv-cell));
+}
+.nv-heat-cell { min-width: 0; min-height: 0; background: rgba(20, 22, 27, .07); }
+.nv-heat-cell[data-level="0"] { background: color-mix(in srgb, var(--cs-ink, #14161b) 8%, transparent); }
+.nv-heat-cell[data-level="1"] { background: color-mix(in srgb, var(--cs-signal, #6CCDB1) 30%, transparent); }
+.nv-heat-cell[data-level="2"] { background: color-mix(in srgb, var(--cs-signal, #6CCDB1) 55%, transparent); }
+.nv-heat-cell[data-level="3"] { background: color-mix(in srgb, var(--cs-signal, #6CCDB1) 80%, transparent); }
+.nv-heat-cell[data-level="4"] { background: var(--cs-signal, #6CCDB1); }
+.nv-heat-cell.is-future { background: transparent; }
+.nv-heat-legend {
+  display: flex; align-items: center; gap: 3px;
+  font-family: var(--cs-mono, inherit); font-size: 11px; letter-spacing: .04em;
+  color: var(--cs-ink-soft, var(--color-neutral-500));
+}
+.nv-heat-legend i { display: inline-block; width: 9px; height: 9px; }
+.nv-heat-legend span:first-child { margin-right: 4px; }
+.nv-heat-legend span:last-child { margin-left: 4px; }
+
+/* ---- Loader --------------------------------------------------------------
+   Three square hairline frames, each with a light sweeping round it. The
+   frame is the element's padding: two masks, the content box cut out of the
+   whole, leave only the border ring for the conic gradient to show through.
+   Speeds are Kokonut's: 3s, 1.2s, 4s backwards. */
+@property --nv-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes nv-sweep { to { --nv-a: 360deg; } }
+
+nv-loader {
+  --nv-size: 40px;
+  position: relative; display: inline-block; flex: none; vertical-align: middle;
+  width: var(--nv-size); height: var(--nv-size);
+  color: var(--cs-ink, currentColor);
+}
+.nv-loader-f {
+  position: absolute; box-sizing: border-box;
+  padding: var(--cs-hair, 2px);
+  background: conic-gradient(from var(--nv-a), transparent 0deg, currentColor 90deg, transparent 180deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: nv-sweep 3s linear infinite;
+}
+.nv-loader-f1 { inset: 0; opacity: .8; }
+.nv-loader-f2 {
+  inset: 22%; color: var(--cs-signal, var(--color-accent-600));
+  background: conic-gradient(from var(--nv-a), transparent 0deg, currentColor 120deg, transparent 240deg);
+  animation-duration: 1.2s;
+}
+.nv-loader-f3 { inset: 40%; opacity: .5; animation-duration: 4s; animation-direction: reverse; }
+/* Small loaders, inside a button: one frame is all there is room for. */
+nv-loader[data-small] .nv-loader-f1 { opacity: .9; padding: 1.5px; }
+nv-loader[data-small] .nv-loader-f2 { inset: 30%; padding: 1.5px; color: currentColor; }
+nv-loader[data-small] .nv-loader-f3 { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .nv-loader-f { background: currentColor; opacity: .45; }
+}
+
+/* ---- Hold to confirm -----------------------------------------------------
+   The fill is a layer under the label, clipped from the right as --mo-hold
+   goes 0 → 1. motion.js drives the number; this only draws it. */
+[data-mo-hold] {
+  position: relative; isolation: isolate; overflow: hidden;
+  touch-action: none; -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+}
+[data-mo-hold]::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: currentColor; opacity: .18;
+  clip-path: inset(0 calc((1 - var(--mo-hold, 0)) * 100%) 0 0);
+}
+[data-mo-hold].is-held::after { opacity: .3; }
+.mo-hold-hint {
+  font-family: var(--cs-mono, inherit); font-size: 11px; letter-spacing: .04em;
+  color: var(--cs-ink-soft, var(--color-neutral-500));
+}
+
+/* ---- Sliding tab indicator -----------------------------------------------
+   One block behind the tabs, moved to the active one. Pages say what colour
+   it is with --mo-tab-bg, matching their own active tab, whose background
+   then steps aside so the block is what you see. */
+[data-mo-tabs] { position: relative; isolation: isolate; }
+[data-mo-tabs]::before {
+  content: ""; position: absolute; left: 0; top: 0; z-index: -1; pointer-events: none;
+  width: var(--mo-tab-w, 0); height: var(--mo-tab-h, 0);
+  translate: var(--mo-tab-x, 0) var(--mo-tab-y, 0);
+  background: var(--mo-tab-bg, var(--cs-ink, currentColor));
+  opacity: 0;
+  transition: translate .2s var(--cs-ease, cubic-bezier(.2, 0, 0, 1)),
+              width .2s var(--cs-ease, cubic-bezier(.2, 0, 0, 1)),
+              height .2s var(--cs-ease, cubic-bezier(.2, 0, 0, 1)),
+              opacity .11s linear;
+}
+[data-mo-tabs].mo-tabs-on::before { opacity: 1; }
+[data-mo-tabs].mo-tabs-still::before { transition: opacity .11s linear; }
+
+/* ---- Scroller edges ------------------------------------------------------
+   Where a horizontal strip is cut off, the cut blurs and fades into the page
+   instead of slicing a card in half (motion-primitives progressive blur, one
+   layer a side). Only shown on the side that actually has more. */
+[data-mo-edges-host] { position: relative; }
+[data-mo-edges-host]::before,
+[data-mo-edges-host]::after {
+  content: ""; position: absolute; top: 0; bottom: 0; z-index: 2; width: 44px;
+  pointer-events: none; opacity: 0; transition: opacity .16s linear;
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+}
+[data-mo-edges-host]::before {
+  left: 0;
+  background: linear-gradient(to right, var(--color-bg, #fff), transparent);
+  -webkit-mask: linear-gradient(to right, #000 30%, transparent); mask: linear-gradient(to right, #000 30%, transparent);
+}
+[data-mo-edges-host]::after {
+  right: 0;
+  background: linear-gradient(to left, var(--color-bg, #fff), transparent);
+  -webkit-mask: linear-gradient(to left, #000 30%, transparent); mask: linear-gradient(to left, #000 30%, transparent);
+}
+[data-mo-edges-host][data-mo-cut-start]::before,
+[data-mo-edges-host][data-mo-cut-end]::after { opacity: 1; }
+
+/* ---- Shimmer text --------------------------------------------------------
+   motion-primitives' text shimmer: the words in their own colour with a band
+   of ink passing across them, 2s, linear. With motion off it is plain text. */
+.mo-shimmer {
+  color: transparent;
+  background-image:
+    linear-gradient(90deg, transparent calc(50% - 2.5em), var(--mo-shimmer-hi, var(--cs-ink, #000)) 50%, transparent calc(50% + 2.5em)),
+    linear-gradient(var(--mo-shimmer-base, var(--cs-ink-soft, #71717a)), var(--mo-shimmer-base, var(--cs-ink-soft, #71717a)));
+  background-size: 250% 100%, auto;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text; background-clip: text;
+  animation: mo-shimmer 2s linear infinite;
+}
+@keyframes mo-shimmer {
+  from { background-position: 100% center, 0 0; }
+  to   { background-position: 0% center, 0 0; }
+}
+
+/* ---- Drawn check (motion.js checkmark()) ---------------------------------- */
+.mo-check { width: 1em; height: 1em; flex: none; }
+.mo-check path { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: square; stroke-linejoin: miter; }

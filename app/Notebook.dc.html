@@ -47,6 +47,10 @@
 <script src="./exam-bank.js"></script>
 <script src="./exam-session.js"></script>
 <script src="./support.js"></script>
+<!-- Shared movement: rolling numbers, the study heatmap, hold-to-confirm,
+     the sliding tab marker. Defines custom elements, so it only has to be
+     loaded before the page is looked at, not before it renders. -->
+<script src="./motion.js"></script>
 <script src="./quick.js" defer></script>
 <script src="./session.js" defer></script>
 <!-- Blurt: write everything you remember about the chapter, then compare.
@@ -79,6 +83,7 @@
 <link rel="stylesheet" href="soft-clay.css">
 <!-- Flat theme over the clay one. See the file head; remove this line to go back. -->
 <link rel="stylesheet" href="concrete-signal.css">
+<link rel="stylesheet" href="motion.css">
 <script src="_ds/classical-7f8d5a7b-9468-49ed-9e34-e366ba30e0e2/_ds_bundle.js"></script>
 <style>
   body{margin:0;background:var(--color-bg);color:var(--color-text)}
@@ -504,7 +509,13 @@
   .tx-topic{display:flex;align-items:center;gap:var(--space-3);padding:9px 12px;border-radius:var(--radius-md);background:var(--color-surface-sunken);border:1px solid var(--color-border)}
   .tx-topic-name{flex:1;min-width:0;font-size:13.5px}
   .tx-topic-bar{flex:none;width:92px;height:6px;border-radius:var(--radius-full);background:var(--color-neutral-200);overflow:hidden}
-  .tx-topic-fill{height:100%;border-radius:var(--radius-full);background:var(--color-accent-600)}
+  .tx-topic-fill{height:100%;border-radius:var(--radius-full);background:var(--color-accent-600);transform-origin:left center}
+  /* The result's topic bars fill as the result opens, all together: a
+     stagger would need a fill mode or a delay that shows them full first. */
+  @keyframes txGrow{from{transform:scaleX(0)}}
+  @media (prefers-reduced-motion: no-preference){
+    .tx-topic-fill{animation:txGrow .9s cubic-bezier(.85,0,.15,1)}
+  }
   .tx-topic-fill-weak{background:var(--color-danger-strong)}
   .tx-topic-score{flex:none;font-size:12.5px;color:var(--color-neutral-600);font-variant-numeric:tabular-nums;min-width:44px;text-align:right}
   .tx-work{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--space-3)}
@@ -582,7 +593,7 @@
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
       {{ studiedTodayLabel }}
     </span>
-    <span class="nb-status-text {{ saveClass }}" title="{{ saveTitle }}" style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-neutral-600)">
+    <span class="nb-status-text {{ saveClass }}" title="{{ saveTitle }}" data-mo-swap style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-neutral-600)">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
       {{ saveLabel }}
     </span>
@@ -956,8 +967,8 @@
           <div class="rc-body">
             <sc-if value="{{ lessonNone }}" hint-placeholder-val="{{ false }}">
               <div class="rc-empty">
-                <p style="margin:0">There are no lessons for this notebook yet.</p>
-                <p style="margin:0">Lessons are matched to the subject by the notebook&rsquo;s name, so one called <strong>Physics</strong>, <strong>Chemistry</strong>, <strong>Biology</strong>, <strong>Mathematics</strong>, <strong>Economics</strong>, <strong>English Literature</strong> or <strong>Computer Science</strong> will find its own.</p>
+                <p style="margin:0">Each chapter of this notebook is a lesson, and none of them is written yet.</p>
+                <p style="margin:0">Written lessons are matched to the subject by the notebook&rsquo;s name, so one called <strong>Physics</strong>, <strong>Chemistry</strong>, <strong>Biology</strong>, <strong>Mathematics</strong>, <strong>Economics</strong>, <strong>English Literature</strong> or <strong>Computer Science</strong> will find its own.</p>
                 <p style="margin:0">Recall still works here, and it is built from whatever you have already written.</p>
               </div>
             </sc-if>
@@ -972,8 +983,13 @@
                       <div class="ls-sub">{{ l.title }}</div>
                       <div class="ls-meta" style="margin-top:3px">{{ l.meta }}</div>
                       <div class="ls-chips">
-                        <span class="ls-chip">{{ l.minutes }}</span>
-                        <span class="ls-chip">{{ l.marks }}</span>
+                        <sc-if value="{{ l.unwritten }}" hint-placeholder-val="{{ false }}">
+                          <span class="ls-chip">{{ l.soonLabel }}</span>
+                        </sc-if>
+                        <sc-if value="{{ l.ready }}" hint-placeholder-val="{{ true }}">
+                          <span class="ls-chip">{{ l.minutes }}</span>
+                          <span class="ls-chip">{{ l.marks }}</span>
+                        </sc-if>
                         <sc-if value="{{ l.done }}" hint-placeholder-val="{{ false }}">
                           <span class="ls-chip ls-chip-done">{{ l.doneLabel }}</span>
                         </sc-if>
@@ -1007,7 +1023,7 @@
                   <div class="card-kicker">Written for you</div>
                   <span class="ls-chip ls-chip-done">Coming soon</span>
                 </div>
-                <p style="margin:0;font-size:14px;line-height:1.55;color:var(--color-neutral-700)">Soon notivlo will write you new lessons on what this notebook hasn't covered yet, aimed at what you keep getting wrong. The written lessons above are ready now, and free.</p>
+                <p style="margin:0;font-size:14px;line-height:1.55;color:var(--color-neutral-700)">Soon notivlo will write the lesson for every chapter above that doesn&rsquo;t have one yet, aimed at what you keep getting wrong. Chapters with their lesson ready can be sat now, free.</p>
               </div>
             </sc-if>
             <sc-if value="{{ lessonCanMake }}" hint-placeholder-val="{{ false }}">
@@ -1206,7 +1222,7 @@
       <div class="tx-lock-kicker">{{ testLockKicker }}</div>
       <h2 class="tx-lock-title">{{ testLockTitle }}</h2>
 
-      <p class="tx-clock {{ testClockClass }}" aria-live="off">{{ testClockLabel }}</p>
+      <p class="tx-clock {{ testClockClass }}" aria-live="off"><nv-odometer value="{{ testClockLabel }}"></nv-odometer></p>
       <p class="tx-clock-sub">{{ testClockSub }}</p>
 
       <sc-if value="{{ testHasAway }}" hint-placeholder-val="{{ false }}">
@@ -2926,7 +2942,7 @@ class Component extends DCLogic {
       lessonAnswer: '', lessonChecked: false, lessonAwarded: null,
       lessonWork: { answers: {}, test: {} },
       lessonChapterIdx: null,
-      lessonMade: [], lessonMaking: false, lessonMakeError: '',
+      lessonMade: [], lessonHome: {}, lessonMakingIdx: null, lessonMaking: false, lessonMakeError: '',
       // Lesson credits. `lessonCredits` is null until billing.js has read a
       // balance, which is a different thing from zero: null means "not known
       // yet", and the panel does not tell a student they have none on the
@@ -3115,10 +3131,58 @@ class Component extends DCLogic {
     return (this.state.lessonMade || []).concat(bank);
   }
 
+  // The chapter a lesson is, or -1. A chapter that already holds the lesson's
+  // worksheet wins; then the chapter it was written for; then whichever
+  // chapter its topic names.
+  lessonChapterOf(lesson, chapters) {
+    const api = window.notivloLessons;
+    if (!lesson) return -1;
+    const list = chapters || this.state.chapters || [];
+    const marker = 'data-lesson="' + lesson.id + '"';
+    const placed = list.findIndex(c => c && typeof c.contentHtml === 'string' && c.contentHtml.indexOf(marker) >= 0);
+    if (placed >= 0) return placed;
+    const wanted = (this.state.lessonHome || {})[lesson.id];
+    if (wanted) {
+      const at = list.findIndex(c => c && typeof c.title === 'string' && c.title.trim() === wanted);
+      if (at >= 0) return at;
+    }
+    try { return api ? api.homeChapter(lesson, list) : -1; } catch (e) { return -1; }
+  }
+
+  // The notebook's chapters as its lessons, in the rail's order. A chapter
+  // with a lesson starts it; a chapter without one is still listed, because
+  // it is one of the lessons this notebook is made of — it just isn't written
+  // yet. A lesson whose chapter does not exist yet comes last, and becomes a
+  // chapter the first time it is opened.
+  lessonRows() {
+    const chapters = this.state.chapters || [];
+    const units = chapterUnits(chapters);
+    const byChapter = chapters.map(() => []);
+    const loose = [];
+    this.lessonBank().forEach(l => {
+      const i = this.lessonChapterOf(l, chapters);
+      if (i >= 0) byChapter[i].push(l); else loose.push(l);
+    });
+    const rows = [];
+    chapters.forEach((c, i) => {
+      const title = (c && typeof c.title === 'string' && c.title.trim()) || 'Untitled chapter';
+      const unit = c && c.unitName ? c.unitName : 'Vol ' + units[i];
+      const where = 'Chapter ' + String(i + 1).padStart(2, '0') + ' · ' + unit;
+      if (!byChapter[i].length) rows.push({ chapterIdx: i, title, where, lesson: null });
+      byChapter[i].forEach(l => rows.push({ chapterIdx: i, title, where, lesson: l }));
+    });
+    loose.forEach(l => {
+      let title = l.title;
+      try { title = window.notivloLessons.topicName(l); } catch (e) {}
+      rows.push({ chapterIdx: -1, title, where: 'New chapter', lesson: l });
+    });
+    return rows;
+  }
+
   // Asks for a lesson on something the bank does not cover, aimed at whatever
   // this student has been getting wrong. lessons-ai.js decides whether that is
   // possible at all; this only has to handle it not being.
-  makeLesson() {
+  makeLesson(chapterIdx) {
     const api = window.notivloLessons;
     if (!api || typeof api.generate !== 'function' || this.state.lessonMaking) return;
     const bank = this.lessonBank();
@@ -3133,9 +3197,12 @@ class Component extends DCLogic {
     // What the student said they are here to do, and — for the goals that
     // are about a particular class — the chapter they have open as the topic.
     const goal = this.studyGoal();
-    const topic = goal && goal.topic === 'chapter' ? this.openChapterTitle() : '';
+    // A chapter picked from the list is the lesson being asked for.
+    const picked = chapterIdx != null ? (this.state.chapters || [])[chapterIdx] : null;
+    const pickedTitle = picked && typeof picked.title === 'string' ? picked.title.trim().slice(0, 120) : '';
+    const topic = pickedTitle || (goal && goal.topic === 'chapter' ? this.openChapterTitle() : '');
 
-    this.setState({ lessonMaking: true, lessonMakeError: '' });
+    this.setState({ lessonMaking: true, lessonMakeError: '', lessonMakingIdx: chapterIdx != null ? chapterIdx : null });
     Promise.resolve()
       .then(() => api.generate({
         subject: this.state.title,
@@ -3156,12 +3223,16 @@ class Component extends DCLogic {
           this.setState({ lessonMaking: false, lessonMakeError: 'Sign in to have a lesson written for you.' });
           return;
         }
-        this.setState(s => ({ lessonMaking: false, lessonMade: [lesson].concat(s.lessonMade || []) }));
+        this.setState(s => ({
+          lessonMaking: false, lessonMakingIdx: null,
+          lessonMade: [lesson].concat(s.lessonMade || []),
+          lessonHome: pickedTitle ? Object.assign({}, s.lessonHome, { [lesson.id]: pickedTitle }) : s.lessonHome,
+        }));
         this.startLesson(lesson.id);
       })
       .catch((err) => {
         this.setState({
-          lessonMaking: false,
+          lessonMaking: false, lessonMakingIdx: null,
           lessonMakeError: (err && err.message) || 'The lesson could not be written just now.',
         });
       });
@@ -3420,7 +3491,7 @@ class Component extends DCLogic {
 
     this.setState(s => {
       const chapters = s.chapters.slice();
-      let idx = api.homeChapter(lesson, chapters);
+      let idx = this.lessonChapterOf(lesson, chapters);
       if (idx >= 0) {
         const c = chapters[idx];
         const base = idx === s.activeIdx && live != null ? live : chapterMarkup(c);
@@ -4688,6 +4759,8 @@ class Component extends DCLogic {
     const lsGoal = this.studyGoal();
     const lsGoalLessons = !!(lsGoal && lsGoal.make);
     const lsChapter = this.openChapterTitle();
+    const lsRows = this.lessonRows();
+    const lsCanMake = !!(lsApi && typeof lsApi.generate === 'function' && !lsApi.comingSoon);
 
     // Lesson text carries LaTeX between dollar signs, rendered through this
     // page's own converter — so maths in a lesson looks like maths the student
@@ -5186,14 +5259,32 @@ class Component extends DCLogic {
       lessonProgress: lsSteps ? Math.round((lsAt / lsSteps) * 100) + '%' : '0%',
 
       lessonShowList: lsPhase === 'list',
-      lessonNone: lsBank.length === 0,
-      lessonHasList: lsBank.length > 0,
-      lessonList: lsBank.map(l => {
+      // Every chapter is listed: the chapters are this notebook's lessons.
+      lessonNone: !lsRows.some(r => r.lesson),
+      lessonHasList: lsRows.length > 0,
+      lessonList: lsRows.map(r => {
+        const l = r.lesson;
+        if (!l) {
+          const canWrite = lsCanMake && !this.state.lessonMaking;
+          const writing = this.state.lessonMaking && this.state.lessonMakingIdx === r.chapterIdx;
+          return {
+            title: r.title, meta: r.where, ready: false, unwritten: true,
+            soonLabel: writing ? 'Writing it…' : (lsCanMake ? 'Write this lesson' : 'Lesson coming soon'),
+            minutes: '', marks: '', done: false, doneLabel: '', generated: false,
+            // Until it can be written, the chapter itself is what there is.
+            start: () => {
+              if (canWrite) this.makeLesson(r.chapterIdx);
+              else if (!lsCanMake) this.setState({ lessonOpen: false, activeIdx: r.chapterIdx, chapterSearch: '', mobileDrawerOpen: false });
+            },
+            canCheckOnly: false, checkOnlyLabel: '', startCheck: () => {},
+          };
+        }
         const marks = lsApi ? lsApi.totalMarks(l).all : 0;
         const sat = lsSat[l.id];
         return {
-          title: l.title,
-          meta: [l.board, l.code, l.paper, l.topic].filter(Boolean).join(' · '),
+          title: r.title,
+          meta: [r.where, l.title].filter(Boolean).join(' · '),
+          ready: true, unwritten: false, soonLabel: '',
           minutes: (l.minutes || 20) + ' min',
           marks: marks + ' marks',
           done: !!sat,
@@ -5215,7 +5306,7 @@ class Component extends DCLogic {
       // sees the panel and is told what it costs, because hiding a feature is
       // not the same as explaining it. The seven written lessons are in the
       // list above either way, and free.
-      lessonCanMake: !!(lsApi && typeof lsApi.generate === 'function' && !lsApi.comingSoon),
+      lessonCanMake: lsCanMake,
       // Switched off in lessons-ai.js until the model host is paid for: the
       // panel still says what is coming, with no button and no credit talk.
       lessonComingSoon: !!(lsApi && lsApi.comingSoon),
@@ -5228,7 +5319,7 @@ class Component extends DCLogic {
       lessonMaking: this.state.lessonMaking,
       lessonMakeLabel: this.state.lessonMaking ? 'Writing it…' : (lsGoalLessons ? lsGoal.make : 'Write me a lesson'),
       // Only above a list: it talks about the lessons in it.
-      lessonHasGoalLine: !!(lsGoal && lsGoal.list) && lsBank.length > 0,
+      lessonHasGoalLine: !!(lsGoal && lsGoal.list) && lsRows.some(r => r.lesson),
       lessonGoalLine: lsGoal ? lsGoal.list : '',
       lessonMakeOpacity: this.state.lessonMaking ? '.65' : '1',
       lessonMakeNote: lsGoalLessons
